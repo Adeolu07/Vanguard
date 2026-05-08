@@ -1,0 +1,82 @@
+Control Flow of the Smart Transportation Booking System
+The control flow of the Smart Transportation Booking System describes the interaction between the user, authentication service, transport module, booking system, wallet station, e-ticket service, and refund module during transportation booking and payment operations.
+1. Authentication Flow
+The process begins when the user opens the application and submits registration or login details including first name, last name, email, and password.
+The Authentication Service handles two possible conditions:
+New User Flow
+If the user does not already exist in the database:
+1.	The Authentication Service creates a new account. 
+2.	User credentials are stored securely. 
+3.	The system returns a successful account creation response. 
+Existing User Flow
+If the user already exists:
+1.	The system validates the login credentials. 
+2.	The user is authenticated successfully. 
+3.	Access to the transportation module is granted. 
+This stage ensures that only verified users can access booking services.
+2. Transportation Selection Flow
+After authentication, the user proceeds to the transportation module where available transport options are displayed.
+The user selects a preferred transportation type. The system supports multiple transportation services:
+Bus Transport
+If bus transport is selected:
+•	The Transport Module loads available shuttle or “Korope” transport options. 
+•	Fare and trip schedules are retrieved. 
+Taxi Transport
+If taxi transport is selected:
+•	The system communicates with Uber’s Public API. 
+•	Nearby taxi availability, estimated fare, and trip duration are returned. 
+Railway Transport
+If railway transport is selected:
+•	The system loads the NRC railway timetable. 
+•	Available train schedules and routes are displayed. 
+After processing the request, the Transport Module returns available transport options including:
+•	Transport type 
+•	Fare 
+•	Estimated trip time
+3. Booking and Payment Flow
+Once transport selection is completed, the user initiates the booking process.
+The Booking System performs the following operations:
+1.	Generates a booking request using the user ID and transport type. 
+2.	Retrieves booking information. 
+3.	Displays booking details and ticket price for confirmation. 
+The user then proceeds to payment through the Wallet Station.
+Sufficient Balance Condition
+If the user’s wallet balance is sufficient:
+1.	The Wallet Station deducts the transport fare. 
+2.	Payment confirmation is sent to the Booking System. 
+3.	The booking status changes to “Booked.” 
+4.	The E-Ticket Service generates a digital ticket. 
+5.	The ticket is delivered to the user. 
+This flow represents successful transaction completion.
+Insufficient Balance Condition
+If the user’s wallet balance is insufficient:
+1.	The system displays an insufficient funds notification. 
+2.	The user is prompted to fund the wallet. 
+3.	The Wallet Station processes the wallet top-up request. 
+4.	After successful funding, the wallet balance is updated. 
+5.	The booking process resumes. 
+This ensures continuity of transaction flow without restarting the booking session.
+4. E-Ticket Generation Flow
+After successful payment confirmation:
+1.	The Booking System sends booking details to the E-Ticket Service. 
+2.	The E-Ticket Service generates a digital ticket. 
+3.	The ticket may contain: 
+o	Booking ID 
+o	User information 
+o	QR code 
+o	Transport details 
+o	Departure time 
+The generated e-ticket serves as proof of booking and travel authorization.
+5. Cancellation and Refund Flow
+The system also supports trip cancellation and refund processing.
+When the user cancels a booked trip:
+1.	A cancellation request is sent to the Booking System. 
+2.	The booking status changes from “Booked” to “Cancelled.” 
+3.	The Refund Module initiates the refund process. 
+4.	Refund details are forwarded to the Wallet Station. 
+5.	The refunded amount is returned to the user wallet. 
+6.	The system sends a refund confirmation notification to the user. 
+This process ensures financial accountability and transaction reversibility.
+
+
+
