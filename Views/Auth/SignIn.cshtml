@@ -1,0 +1,66 @@
+@model _Tripfinity.Models.ViewModels.LoginViewModel
+
+@{
+    ViewData["Title"] = "Sign In";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign In - Transport Booking</title>
+    <link rel="stylesheet" href="~/css/auth.css"/>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome Back</h1>
+        <div class="subtitle">Sign in to book your ride</div>
+        
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success">✅ @TempData["Success"]</div>
+        }
+        
+        @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
+        {
+            <div class="validation-summary">
+                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    <div>⚠️ @error.ErrorMessage</div>
+                }
+            </div>
+        }
+        
+        <form asp-action="SignIn" method="post">
+            <div class="form-group">
+                <label asp-for="Email">Email Address</label>
+                <input asp-for="Email" type="email" placeholder="you@example.com" />
+                <span asp-validation-for="Email" class="error"></span>
+            </div>
+            
+            <div class="form-group">
+                <label asp-for="Password">Password</label>
+                <input asp-for="Password" type="password" placeholder="••••••" />
+                <span asp-validation-for="Password" class="error"></span>
+            </div>
+            
+            <div class="form-group checkbox">
+                <input asp-for="RememberMe" />
+                <label asp-for="RememberMe">Remember me</label>
+            </div>
+            
+            <button type="submit" class="btn">Sign In →</button>
+        </form>
+        
+        <div class="signup-link">
+            Don't have an account? <a asp-action="SignUp">Sign Up</a>
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+</body>
+</html>

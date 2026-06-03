@@ -1,0 +1,102 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - Transport Booking</title>
+    <link rel="stylesheet" href="~/css/site.css"/>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">🚆 Smart Transport</div>
+        <div class="user-info">
+            <span class="user-name">👋 Hello, @ViewBag.UserName</span>
+            <a href="/Auth/SignOut" class="logout-btn">Sign Out</a>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="welcome-card">
+            <h1>Where would you like to go today?</h1>
+            <p>Choose your preferred mode of transport and book your trip instantly</p>
+        </div>
+        
+        <h2 class="section-title">Select Transport Mode</h2>
+        
+        <div class="trip-options">
+            <!-- Bus Trip Card -->
+            <a href="/BusTrips/Index" class="trip-card">
+                <div class="trip-icon bus">🚌</div>
+                <div class="trip-content">
+                    <h3>Bus Trip</h3>
+                    <p>Comfortable bus rides across cities. Affordable prices with scheduled departures.</p>
+                    <div class="trip-features">
+                        <span class="trip-feature">📍 50+ Routes</span>
+                        <span class="trip-feature">💺 Reserved Seating</span>
+                        <span class="trip-feature">⏱️ Hourly Departures</span>
+                    </div>
+                    <span class="btn-book">Book Bus →</span>
+                </div>
+            </a>
+            
+            <!-- Taxi Trip Card -->
+            <a href="/Booking/TaxiTrips" class="trip-card">
+                <div class="trip-icon taxi">🚕</div>
+                <div class="trip-content">
+                    <h3>Taxi Trip</h3>
+                    <p>Private rides for you and your group. Flexible timing and door-to-door service.</p>
+                    <div class="trip-features">
+                        <span class="trip-feature">🚪 Door-to-Door</span>
+                        <span class="trip-feature">👥 Up to 4 People</span>
+                        <span class="trip-feature">⏰ 24/7 Service</span>
+                    </div>
+                    <span class="btn-book">Book Taxi →</span>
+                </div>
+            </a>
+            
+            <!-- Railway/Train Trip Card -->
+            <a href="/Booking/TrainTrips" class="trip-card">
+                <div class="trip-icon train">🚆</div>
+                <div class="trip-content">
+                    <h3>Railway Trip</h3>
+                    <p>Fast and reliable railway travel. Enjoy scenic routes and spacious seating.</p>
+                    <div class="trip-features">
+                        <span class="trip-feature">🛤️ Express Routes</span>
+                        <span class="trip-feature">💺 AC & Sleeper</span>
+                        <span class="trip-feature">📱 E-Tickets</span>
+                    </div>
+                    <span class="btn-book">Book Train →</span>
+                </div>
+            </a>
+        </div>
+        
+        <div class="features">
+            <div class="feature-card">
+                <div class="feature-icon">👛</div>
+                <h3>Digital Wallet</h3>
+                <p>Secure payments with your digital wallet. No cash needed.</p>
+                <a href="#" class="btn-book">View Wallet →</a>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🎫</div>
+                <h3>Instant E-Tickets</h3>
+                <p>Get QR tickets immediately after booking.</p>
+                <a href="#" class="btn-book">My Bookings →</a>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">✓</div>
+                <h3>Easy Cancellation</h3>
+                <p>Cancel online with automated refunds to your wallet.</p>
+                <a href="#" class="btn-book">Learn More →</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
