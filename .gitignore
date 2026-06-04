@@ -1,8 +1,10 @@
 bin/
 obj/
 appsettings.json
+appsettings.Development.json
 *.db
 *.sqlite
 Migrations/
 .env
 .DS_Store
+.vs
