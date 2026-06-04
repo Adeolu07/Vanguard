@@ -6,3 +6,4 @@ appsettings.json
 Migrations/
 .env
 .DS_Store
+appsettings.Development.json
