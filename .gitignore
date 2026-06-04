@@ -7,4 +7,8 @@ appsettings.Development.json
 Migrations/
 .env
 .DS_Store
+<<<<<<< HEAD
 .vs
+=======
+appsettings.Development.json
+>>>>>>> efe1a69c9b31e5df5691f81d760d351eb55a7e1e
