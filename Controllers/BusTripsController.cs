@@ -13,19 +13,16 @@ public class BusTripsController : Controller
         _context = context;
     }
     
-    [HttpGet]
-    public async Task<IActionResult> Index()
+    // GET: HTML View
+    public IActionResult Index()
     {
         if (HttpContext.Session.GetString("UserEmail") == null)
         {
             return RedirectToAction("SignIn", "Auth");
         }
-
-        var trips = await _context.BusTrips
-            .Where(trip => trip.IsActive && trip.DepartureTime > DateTime.Now)
-            .OrderBy(trip => trip.DepartureTime)
-            .ToListAsync();
         
-        return View(trips);
+        ViewBag.UserName = HttpContext.Session.GetString("Username");
+        return View();
     }
+    
 }

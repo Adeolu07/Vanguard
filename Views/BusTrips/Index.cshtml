@@ -1,35 +1,100 @@
-@model List<_Tripfinity.Models.BusTrip>
-
 @{
-    Layout = null;
+Layout = "_Layout";
+ViewData["Title"] = "Bus Trips";
 }
 
-<!DOCTYPE html>
-
-<html>
-<head>
-    <title>title</title>
-</head>
-<body>
 <h2>Available Bus Trips</h2>
+<div id="trips-container">
+    <p>Loading trips...</p>
+</div>
 
-<table border="1">
-    <thead>
-    <tr><th>From</th><th>To</th><th>Departure</th><th>Price</th><th>Seats</th><th></th></tr>
-    </thead>
-    <tbody>
-    @foreach (var trip in Model)
-    {
-        <tr>
-            <td>@trip.From</td>
-            <td>@trip.Destination</td>
-            <td>@trip.DepartureTime.ToString("MMM dd, hh:mm tt")</td>
-            <td>₦@trip.Price</td>
-            <td>@trip.AvailableSeats/@trip.TotalSeats</td>
-            <td><a href="#">Select</a></td>
-        </tr>
+@section Scripts {
+<script>
+    let currentPage = 1;
+    let totalPages = 1;
+    let isLoading = false;
+
+    async function loadTrips(page = 1) {
+        if (isLoading) return;
+
+        isLoading = true;
+        document.getElementById('trips-container').innerHTML = '<p>Loading trips...</p>';
+
+        try {
+            const response = await fetch(`/api/bustrips?page=${page}&pageSize=9`);
+            const result = await response.json();
+
+            if (result.success) {
+                displayTrips(result.data);
+                currentPage = result.pagination.pageIndex;
+                totalPages = result.pagination.totalPages;
+                displayPagination(result.pagination);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('trips-container').innerHTML = '<p>Error loading trips.</p>';
+        } finally {
+            isLoading = false;
+        }
     }
-    </tbody>
-</table>
-</body>
-</html>
+
+    function displayTrips(trips) {
+        if (!trips || trips.length === 0) {
+            document.getElementById('trips-container').innerHTML = '<p>No trips available.</p>';
+            return;
+        }
+
+        let html = '<div class="trip-options">';
+
+        trips.forEach(trip => {
+            html += `
+                    <div class="trip-card">
+                        <div class="trip-icon bus">🚌</div>
+                        <div class="trip-content">
+                            <h3>${trip.from} → ${trip.destination}</h3>
+                            <p>Departure: ${new Date(trip.departureTime).toLocaleString()}</p>
+                            <p>Price: ₦${trip.price}</p>
+                            <p>Available Seats: ${trip.availableSeats}/${trip.totalSeats}</p>
+                            <button class="btn-book" onclick="bookTrip(${trip.id})">Book Now →</button>
+                        </div>
+                    </div>
+                `;
+        });
+
+        html += '</div>';
+        document.getElementById('trips-container').innerHTML = html;
+    }
+
+    function displayPagination(pagination) {
+        // Remove existing pagination if any
+        const existingPagination = document.querySelector('.pagination');
+        if (existingPagination) {
+            existingPagination.remove();
+        }
+
+        let html = '<div class="pagination">';
+
+        if (pagination.hasPreviousPage) {
+            html += `<button onclick="loadTrips(${pagination.pageIndex - 1})">← Previous</button>`;
+        }
+
+        html += `<span>Page ${pagination.pageIndex} of ${pagination.totalPages}</span>`;
+
+        if (pagination.hasNextPage) {
+            html += `<button onclick="loadTrips(${pagination.pageIndex + 1})">Next →</button>`;
+        }
+
+        html += '</div>';
+
+        // Add pagination to the page
+        document.getElementById('trips-container').insertAdjacentHTML('afterend', html);
+    }
+
+    function bookTrip(tripId) {
+        window.location.href = `/Booking/Create?tripId=${tripId}`;
+    }
+
+    // Load trips when page loads
+    loadTrips();
+</script>
+}

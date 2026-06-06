@@ -1,6 +1,7 @@
 using _Tripfinity.Interfaces;
 using _Tripfinity.Models.Data;
 using _Tripfinity.Services;
+using _Tripfinity.Utility;
 using Microsoft.EntityFrameworkCore;
 
 namespace _Tripfinity;
@@ -14,7 +15,6 @@ public class Program
         builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer
             (builder.Configuration.GetConnectionString("DefaultConnection")));
         builder.Services.AddDistributedMemoryCache();
-        
         builder.Services.AddSession(options =>
         {
             options.IdleTimeout = TimeSpan.FromMinutes(30);
@@ -23,13 +23,25 @@ public class Program
         });
         
         builder.Services.AddControllersWithViews();
+        builder.Services.AddControllers(); // Add API controllers
 
         var app = builder.Build();
+        
+        // using (var scope = app.Services.CreateScope())
+        // {
+        //     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        //     dbContext.Database.EnsureCreated();
+        // }
+        app.UseMiddleware<ExceptionMiddleware>();
         app.UseStaticFiles();
         app.UseSession();
+        
+        app.UseRouting();
         app.MapControllerRoute(
             name: "default",
-            pattern: "{controller=Home}/{action=Index}/");
+            pattern: "{controller=Home}/{action=Index}/{id?}");
+        
+        app.MapControllers(); // For API controllers
         
         app.Run();
     }

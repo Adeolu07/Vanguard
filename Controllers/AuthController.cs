@@ -68,7 +68,7 @@ public class AuthController : Controller
         return RedirectToAction("Index", "Home");
     }
     
-    public IActionResult SignOut()
+    public IActionResult Logout()
     {
         _authService.ClearUserSession(HttpContext);
         TempData["Success"] = "You've been signed out";

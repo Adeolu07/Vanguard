@@ -6,6 +6,7 @@ namespace _Tripfinity.Controllers;
 
 public class HomeController : Controller
 {
+    [HttpGet]
     public IActionResult Index()
     {
         if (HttpContext.Session.GetString("UserEmail") == null)
@@ -17,6 +18,7 @@ public class HomeController : Controller
         return View();
     }
 
+    [HttpGet]
     public IActionResult Privacy()
     {
         return View();
