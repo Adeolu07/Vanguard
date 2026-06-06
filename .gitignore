@@ -4,12 +4,8 @@ appsettings.json
 appsettings.Development.json
 *.db
 *.sqlite
-*.idea
 Migrations/
 .env
 .DS_Store
-<<<<<<< HEAD
 .vs
 appsettings.Development.json
-=======
->>>>>>> 6d9405a2b2dfaf3d5f9d7549318779d93e275ff7
