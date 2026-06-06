@@ -15,17 +15,11 @@ public class AppDbContext : DbContext
     {
         base.OnModelCreating(builder);
     
-        builder.Entity<User>()
-            .HasIndex(user => user.Email)
-            .IsUnique();
+        builder.Entity<User>() .HasIndex(user => user.Email) .IsUnique();
         
-        builder.Entity<Booking>()
-            .Property(booking=> booking.Amount)
-            .HasPrecision(18, 2);
+        builder.Entity<Booking>() .Property(booking=> booking.Amount) .HasPrecision(18, 2);
     
-        builder.Entity<BusTrip>()
-            .Property(booking=> booking.Price)
-            .HasPrecision(18, 2);
+        builder.Entity<BusTrip>() .Property(booking=> booking.Price) .HasPrecision(18, 2);
     
         builder.Entity<Booking>()
             .HasOne(booking => booking.User)
@@ -38,5 +32,7 @@ public class AppDbContext : DbContext
             .WithMany()
             .HasForeignKey(booking=> booking.BusTripId)
             .OnDelete(DeleteBehavior.Restrict);
+        
+        DataSeeding.Seed(builder);
     }
 }
