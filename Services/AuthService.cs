@@ -13,18 +13,20 @@ public class AuthService : IAuthService
         _context = context;
     }
 
-    public async Task<bool> SignUpAsync(string email, string password, string firstName, string lastName)
+    public async Task<User?> SignUpAsync(string email, string password, string firstName, string lastName, string role)
     {
         var user = new User
         {
             Email = email,
             FirstName = firstName,
             LastName = lastName,
-            Password = password
+            Password = password,
+            Role = role,
+            CreatedAt = DateTime.UtcNow
         };
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
-        return true;
+        return user;
     }
     
     public async Task<User?> SignInAsync(string email, string password)

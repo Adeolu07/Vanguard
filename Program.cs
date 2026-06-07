@@ -39,7 +39,7 @@ public class Program
         app.UseRouting();
         app.MapControllerRoute(
             name: "default",
-            pattern: "{controller=Home}/{action=Index}/{id?}");
+            pattern: "{controller=Auth}/{action=SelectRole}/{id?}");
         
         app.MapControllers(); // For API controllers
         

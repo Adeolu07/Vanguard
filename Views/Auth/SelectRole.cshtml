@@ -1,0 +1,36 @@
+﻿@{
+    ViewData["Title"] = "Select Role";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Select Role - Transport Booking</title>
+    <link rel="stylesheet" href="~/css/auth.css" />
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to Tripfinity</h1>
+        <div class="subtitle">Choose how you want to continue</div>
+
+        <div class="role-selection">
+            <div class="role-option">
+                <h2>Passenger</h2>
+                <p class="role-desc">Book rides, fund wallet, track trips</p>
+                <a asp-action="SignUp" class="btn">Passenger Sign Up →</a>
+                <a asp-action="SignIn" class="btn secondary">Passenger Sign In →</a>
+            </div>
+
+            <div class="role-option">
+                <h2>Marshal</h2>
+                <p class="role-desc">Manage trips, oversee passengers, monitor rides</p>
+                <a asp-action="MarshalSignUp" class="btn">Marshal Sign Up →</a>
+                <a asp-action="MarshalSignIn" class="btn secondary">Marshal Sign In →</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
