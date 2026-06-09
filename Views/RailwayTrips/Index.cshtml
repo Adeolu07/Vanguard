@@ -1,0 +1,96 @@
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Railway Trips";
+}
+
+<h2>Available Railway Trips</h2>
+<div id="trips-container">
+    <p>Loading trips...</p>
+</div>
+
+@section Scripts {
+<script>
+    let currentPage = 1;
+    let totalPages = 1;
+    let isLoading = false;
+
+    async function loadTrips(page = 1) {
+        if (isLoading) return;
+
+        isLoading = true;
+        document.getElementById('trips-container').innerHTML = '<p>Loading trips...</p>';
+
+        try {
+            const response = await fetch(`/api/railwaytrips?page=${page}&pageSize=9`);
+            const result = await response.json();
+
+            if (result.success) {
+                displayTrips(result.data);
+                currentPage = result.pagination.pageIndex;
+                totalPages = result.pagination.totalPages;
+                displayPagination(result.pagination);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('trips-container').innerHTML = '<p>Error loading trips.</p>';
+        } finally {
+            isLoading = false;
+        }
+    }
+
+    function displayTrips(trips) {
+        if (!trips || trips.length === 0) {
+            document.getElementById('trips-container').innerHTML = '<p>No trips available.</p>';
+            return;
+        }
+
+        let html = '<div class="trip-options">';
+
+        trips.forEach(trip => {
+            html += `
+                <div class="trip-card">
+                    <div class="trip-icon train">🚆</div>
+                    <div class="trip-content">
+                        <h3>${trip.from} → ${trip.destination}</h3>
+                        <p><strong>Route:</strong> ${trip.route}</p>
+                        <p><strong>Class:</strong> ${trip.trainClass}</p>
+                        <p><strong>Departure:</strong> ${new Date(trip.departureTime).toLocaleString()}</p>
+                        <p><strong>Price:</strong> ₦${trip.price.toLocaleString()}</p>
+                        <p><strong>Available Seats:</strong> ${trip.availableSeats}/${trip.totalSeats}</p>
+                        <button class="btn-book" onclick="bookTrip(${trip.id})">Book Now →</button>
+                    </div>
+                </div>
+            `;
+        });
+
+        html += '</div>';
+        document.getElementById('trips-container').innerHTML = html;
+    }
+
+    function displayPagination(pagination) {
+        const existingPagination = document.querySelector('.pagination');
+        if (existingPagination) existingPagination.remove();
+
+        let html = '<div class="pagination">';
+
+        if (pagination.hasPreviousPage) {
+            html += `<button onclick="loadTrips(${pagination.pageIndex - 1})">← Previous</button>`;
+        }
+
+        html += `<span>Page ${pagination.pageIndex} of ${pagination.totalPages}</span>`;
+
+        if (pagination.hasNextPage) {
+            html += `<button onclick="loadTrips(${pagination.pageIndex + 1})">Next →</button>`;
+        }
+
+        html += '</div>';
+        document.getElementById('trips-container').insertAdjacentHTML('afterend', html);
+    }
+
+    function bookTrip(tripId) {
+        window.location.href = `/RailwayBooking/Create?tripId=${tripId}`;
+    }
+
+    loadTrips();
+</script>
+}

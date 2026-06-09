@@ -1,0 +1,29 @@
+@model _Tripfinity.Models.RailwayBooking
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Booking Confirmed";
+}
+
+<div class="confirmation-container">
+    <div class="confirmation-card">
+        <div class="confirmation-icon">✅</div>
+        <h2>Booking Confirmed!</h2>
+        <p>Your railway trip has been booked successfully.</p>
+
+        <div class="booking-details">
+            <h3>Booking Details</h3>
+            <p><strong>Booking ID:</strong> #@Model.Id</p>
+            <p><strong>Route:</strong> @Model.RailwayTrip.From → @Model.RailwayTrip.Destination</p>
+            <p><strong>Train Class:</strong> @Model.RailwayTrip.TrainClass</p>
+            <p><strong>Departure:</strong> @Model.RailwayTrip.DepartureTime.ToString("dddd, MMMM dd yyyy - HH:mm")</p>
+            <p><strong>Amount Paid:</strong> ₦@Model.Amount.ToString("N0")</p>
+            <p><strong>Status:</strong> @Model.Status</p>
+            <p><strong>Booked On:</strong> @Model.BookingDate.ToString("MMMM dd yyyy - HH:mm")</p>
+        </div>
+
+        <div class="confirmation-actions">
+            <a href="/RailwayTrips" class="btn-book">Book Another Trip</a>
+            <a href="/" class="btn-secondary">Back to Home</a>
+        </div>
+    </div>
+</div>
