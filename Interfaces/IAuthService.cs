@@ -1,5 +1,5 @@
 using _Tripfinity.Models;
-using Microsoft.AspNetCore.Mvc; // ✅ Added for IUrlHelper
+using Microsoft.AspNetCore.Mvc;
 
 namespace _Tripfinity.Interfaces;
 
@@ -9,11 +9,14 @@ public interface IAuthService
 
     Task<User?> SignInAsync(string email, string password);
 
+    string GetSignInError(User? existingUser);
+
     Task<bool> EmailExistsAsync(string email);
 
     Task<string> GenerateEmailConfirmationTokenAsync(User user);
     Task<bool> ConfirmEmailAsync(string userId, string token);
 
+    
     Task<string?> GeneratePasswordResetTokenAsync(string email);
     Task<bool> ResetPasswordAsync(string email, string token, string newPassword);
 
@@ -26,6 +29,5 @@ public interface IAuthService
         string scheme);
 
     void SetUserSession(HttpContext httpContext, User user);
-
     void ClearUserSession(HttpContext httpContext);
 }

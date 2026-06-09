@@ -11,22 +11,15 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Resend Confirmation - Transport Booking</title>
-    <link rel="stylesheet" href="~/css/auth.css"/>
+    <link rel="stylesheet" href="~/css/auth.css" />
 </head>
 <body>
     <div class="container">
+        <partial name="_Messages" />
+
+
         <h1>Resend Confirmation Email</h1>
         <div class="subtitle">Enter your email to receive a new confirmation link</div>
-
-        @if (TempData["Success"] != null)
-        {
-            <div class="alert alert-success">✅ @TempData["Success"]</div>
-        }
-
-        @if (TempData["Error"] != null)
-        {
-            <div class="alert alert-danger">⚠️ @TempData["Error"]</div>
-        }
 
         @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
         {
