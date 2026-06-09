@@ -22,7 +22,7 @@ public class ExceptionMiddleware
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "An error occurred");
+            _logger.LogError(ex, "An unhandled error occurred");
             await HandleExceptionAsync(context, ex);
         }
     }
@@ -32,11 +32,13 @@ public class ExceptionMiddleware
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 
+        
         var response = new
         {
             success = false,
             message = "Service unavailable. Please try again later.",
-            error = ex.Message // Remove in production
+            // In production you’d remove this or log it only
+            error = ex.Message
         };
 
         await context.Response.WriteAsync(JsonSerializer.Serialize(response));

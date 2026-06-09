@@ -35,4 +35,20 @@ public class User
     public string? Role { get; set; }  // "Passenger", "Marshal", "Admin"
     
     public bool IsActive { get; set; }
+
+    // 🔑 New fields for email verification
+    public bool EmailConfirmed { get; set; } = false;
+
+    [MaxLength(255)]
+    public string? EmailConfirmationToken { get; set; }
+
+    public DateTime? TokenGeneratedAt { get; set; }
+
+    public string? PasswordResetToken { get; set; }
+    public DateTime? PasswordResetTokenGeneratedAt { get; set; }
+
+    public int FailedLoginAttempts { get; set; } = 0;
+    public DateTime? LockoutEnd { get; set; }
+
+
 }
