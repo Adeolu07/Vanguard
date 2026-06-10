@@ -1,3 +1,4 @@
+using _Tripfinity.Models.Tables;
 using Microsoft.EntityFrameworkCore;
 
 namespace _Tripfinity.Models.Data;
@@ -6,48 +7,55 @@ public class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options)
         : base(options)
-    { }
+    {
+    }
+
     public DbSet<User> Users { get; set; }
     public DbSet<BusTrip> BusTrips { get; set; }
-    public DbSet<Booking> Bookings { get; set; }
+    public DbSet<TaxiTrip> TaxiTrips { get; set; }
     public DbSet<RailwayTrip> RailwayTrips { get; set; }
-    public DbSet<RailwayBooking> RailwayBookings { get; set; }
+    public DbSet<Booking> Bookings { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
 
-        builder.Entity<User>().HasIndex(user => user.Email).IsUnique();
-
-        builder.Entity<Booking>().Property(booking => booking.Amount).HasPrecision(18, 2);
-        builder.Entity<BusTrip>().Property(b => b.Price).HasPrecision(18, 2);
-
-        builder.Entity<Booking>()
-            .HasOne(booking => booking.User)
-            .WithMany()
-            .HasForeignKey(booking => booking.UserId)
-            .OnDelete(DeleteBehavior.Restrict);
+        builder.Entity<User>()
+            .HasIndex(user => user.Email)
+            .IsUnique();
 
         builder.Entity<Booking>()
-            .HasOne(booking => booking.BusTrip)
+            .Property(booking => booking.TotalAmount)
+            .HasPrecision(18, 2);
+
+        builder.Entity<BusTrip>()
+            .Property(b => b.Price)
+            .HasPrecision(18, 2);
+
+        builder.Entity<TaxiTrip>()
+            .Property(t => t.Price)
+            .HasPrecision(18, 2);
+
+        builder.Entity<RailwayTrip>()
+            .Property(r => r.Price)
+            .HasPrecision(18, 2);
+
+        builder.Entity<Booking>()
+            .HasOne(b => b.BusTrip)
             .WithMany()
-            .HasForeignKey(booking => booking.BusTripId)
+            .HasForeignKey(b => b.BusTripId)
             .OnDelete(DeleteBehavior.Restrict);
 
-     
-        builder.Entity<RailwayTrip>().Property(r => r.Price).HasPrecision(18, 2);
-        builder.Entity<RailwayBooking>().Property(r => r.Amount).HasPrecision(18, 2);
-
-        builder.Entity<RailwayBooking>()
-            .HasOne(r => r.User)
+        builder.Entity<Booking>()
+            .HasOne(b => b.TaxiTrip)
             .WithMany()
-            .HasForeignKey(r => r.UserId)
+            .HasForeignKey(b => b.TaxiTripId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.Entity<RailwayBooking>()
-            .HasOne(r => r.RailwayTrip)
+        builder.Entity<Booking>()
+            .HasOne(b => b.RailwayTrip)
             .WithMany()
-            .HasForeignKey(r => r.RailwayTripId)
+            .HasForeignKey(b => b.RailwayTripId)
             .OnDelete(DeleteBehavior.Restrict);
 
         DataSeeding.Seed(builder);

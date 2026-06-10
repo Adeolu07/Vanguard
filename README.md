@@ -41,7 +41,6 @@ docker run -e "ACCEPT_EULA=Y" \
    -d mcr.microsoft.com/mssql/server:2022-latest
 ```
 
-
 ### 3. Configure database connection
 
 ```json
@@ -52,14 +51,12 @@ docker run -e "ACCEPT_EULA=Y" \
 }
 ```
 
-
 ### 4. Run migrations
 
 ```bash
 dotnet ef migrations add InitialCreate
 dotnet ef database update
 ```
-
 
 ### 5. Run the app
 

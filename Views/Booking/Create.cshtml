@@ -1,0 +1,80 @@
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Confirm Booking";
+}
+
+<div class="booking-container">
+    <h2>Confirm Your Booking</h2>
+
+    <div class="trip-summary">
+        <h3>@ViewBag.From → @ViewBag.To</h3>
+        <p>Departure: @ViewBag.DepartureTime</p>
+        <p>Price per seat: ₦@ViewBag.Price</p>
+        <p>Available seats: @ViewBag.AvailableSeats</p>
+    </div>
+
+    <form method="post">
+        <input type="hidden" name="tripId" value="@ViewBag.Trip.Id"/>
+        <input type="hidden" name="type" value="@ViewBag.TransportType"/>
+
+        <div class="form-group">
+            <label for="seats">Number of Seats:</label>
+            <input type="number" name="seats" id="seats" min="1" max="@ViewBag.AvailableSeats" required/>
+        </div>
+
+        <div class="total-price">
+            Total: ₦<span id="totalPrice">0</span>
+        </div>
+
+        <button type="submit" class="btn-book">Confirm Booking →</button>
+    </form>
+</div>
+
+<style>
+    .booking-container {
+        max-width: 500px;
+        margin: 40px auto;
+        padding: 30px;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .trip-summary {
+        margin-bottom: 30px;
+        padding: 20px;
+        background: #f5f5f5;
+        border-radius: 12px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+    }
+
+    .total-price {
+        font-size: 24px;
+        font-weight: bold;
+        margin: 20px 0;
+        text-align: center;
+    }
+</style>
+
+<script>
+    const price = @ViewBag.Price;
+    const seatsInput = document.getElementById('seats');
+    const totalSpan = document.getElementById('totalPrice');
+
+    seatsInput.addEventListener('input', function () {
+        const total = price * this.value;
+        totalSpan.textContent = total.toLocaleString();
+    });
+
+    seatsInput.dispatchEvent(new Event('input'));
+</script>

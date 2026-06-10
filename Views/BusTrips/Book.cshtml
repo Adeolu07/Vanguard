@@ -1,0 +1,39 @@
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Book Bus Trip";
+}
+
+<div class="booking-container">
+    <h2>Confirm Bus Booking</h2>
+
+    <div class="trip-details">
+        <p><strong>From:</strong> @ViewBag.Trip.From</p>
+        <p><strong>To:</strong> @ViewBag.Trip.Destination</p>
+        <p><strong>Departure:</strong> @ViewBag.Trip.DepartureTime</p>
+        <p><strong>Price per seat:</strong> ₦@ViewBag.Trip.Price</p>
+        <p><strong>Available seats:</strong> @ViewBag.Trip.AvailableSeats</p>
+    </div>
+
+    <form method="post">
+        <input type="hidden" name="tripId" value="@ViewBag.Trip.Id"/>
+
+        <div class="form-group">
+            <label for="seats">Number of Seats:</label>
+            <input type="number" name="seats" id="seats" min="1" max="@ViewBag.Trip.AvailableSeats" required/>
+        </div>
+
+        <div class="total">Total: ₦<span id="total">0</span></div>
+
+        <button type="submit" class="btn-primary">Confirm Booking</button>
+    </form>
+</div>
+
+<script>
+    const price = @ViewBag.Trip.Price;
+    const seatsInput = document.getElementById('seats');
+    const totalSpan = document.getElementById('total');
+
+    seatsInput.addEventListener('input', function () {
+        totalSpan.textContent = price * this.value;
+    });
+</script>

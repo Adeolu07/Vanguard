@@ -1,12 +1,12 @@
 using System.Net;
 using System.Text.Json;
 
-namespace _Tripfinity.Utility;
+namespace _Tripfinity.Utilities;
 
 public class ExceptionMiddleware
 {
-    private readonly RequestDelegate _next;
     private readonly ILogger<ExceptionMiddleware> _logger;
+    private readonly RequestDelegate _next;
 
     public ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddleware> logger)
     {
@@ -36,7 +36,7 @@ public class ExceptionMiddleware
         {
             success = false,
             message = "Service unavailable. Please try again later.",
-            error = ex.Message // Remove in production
+            error = ex.Message
         };
 
         await context.Response.WriteAsync(JsonSerializer.Serialize(response));

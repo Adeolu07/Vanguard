@@ -1,0 +1,90 @@
+@model List<Booking>
+
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Dashboard";
+}
+
+<link rel="stylesheet" href="~/css/dashboard.css"/>
+
+<div class="welcome-section">
+    <h1>Welcome back, @ViewBag.UserName! 👋</h1>
+    <p>Ready for your next trip?</p>
+</div>
+
+<div class="quick-actions">
+    <a href="/BusTrips/Index" class="action-card">
+        <div class="action-icon">🚌</div>
+        <h3>Book a Bus</h3>
+        <p>Find and book available bus trips</p>
+    </a>
+    <a href="/TaxiTrips/Index" class="action-card">
+        <div class="action-icon">🚕</div>
+        <h3>Book a Taxi</h3>
+        <p>Private rides, door-to-door service</p>
+    </a>
+    <a href="/RailwayTrips/Index" class="action-card">
+        <div class="action-icon">🚆</div>
+        <h3>Book a Train</h3>
+        <p>Fast and reliable railway travel</p>
+    </a>
+</div>
+
+<div class="recent-section">
+    <h2>Recent Bookings</h2>
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="bookings-list">
+            @foreach (var booking in Model)
+            {
+                <div class="booking-card">
+                    <div class="booking-header">
+                        <div class="booking-route">
+                            @if (booking.BusTrip != null)
+                            {
+                                <span>🚌 @booking.BusTrip.From → @booking.BusTrip.Destination</span>
+                            }
+                            else if (booking.TaxiTrip != null)
+                            {
+                                <span>🚕 @booking.TaxiTrip.PickupLocation → @booking.TaxiTrip.DropoffLocation</span>
+                            }
+                            else if (booking.RailwayTrip != null)
+                            {
+                                <span>🚆 @booking.RailwayTrip.From → @booking.RailwayTrip.Destination</span>
+                            }
+                            else
+                            {
+                                <span>🎫 Trip Booking</span>
+                            }
+                        </div>
+                        <div class="booking-status @booking.Status?.ToLower()">
+                            @booking.Status
+                        </div>
+                    </div>
+                    <div class="booking-details">
+                        <span>📅 @booking.BookingDate.ToString("MMM dd, yyyy")</span>
+                        <span>💰 ₦@booking.TotalAmount.ToString("N0")</span>
+                        <span>🎫 @booking.NumberOfSeats seat(s)</span>
+                    </div>
+                    <div class="booking-actions">
+                        <a href="/Tickets/View/@booking.Id" class="btn-small">View Ticket →</a>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="empty-icon">🚀</div>
+            <h3>No trips yet</h3>
+            <p>You haven't made any bookings. Start your first journey!</p>
+            <div style="display: flex; gap: 16px; justify-content: center; margin-top: 20px;">
+                <a href="/BusTrips/Index" class="btn-primary">🚌 Book a Bus</a>
+                <a href="/TaxiTrips/Index" class="btn-primary">🚕 Book a Taxi</a>
+                <a href="/RailwayTrips/Index" class="btn-primary">🚆 Book a Train</a>
+            </div>
+        </div>
+    }
+</div>
