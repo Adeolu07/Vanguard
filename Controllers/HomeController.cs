@@ -1,37 +1,39 @@
 using System.Diagnostics;
-using Microsoft.AspNetCore.Mvc;
 using _Tripfinity.Models;
+using _Tripfinity.Models.Data;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace _Tripfinity.Controllers;
 
 public class HomeController : Controller
 {
-    [HttpGet]
-    public IActionResult Index()
+    private readonly AppDbContext _context;
+
+    public HomeController(AppDbContext context)
     {
-        if (HttpContext.Session.GetString("UserEmail") == null)
-        {
-            return RedirectToAction("SignIn", "Auth");
-        }
-        
-        ViewBag.UserName = HttpContext.Session.GetString("Username");
-        return View();
+        _context = context;
     }
 
     [HttpGet]
-    public IActionResult Privacy()
+    public async Task<IActionResult> Index()
     {
-        return View();
+        var userEmail = HttpContext.Session.GetString("UserEmail");
+        if (string.IsNullOrEmpty(userEmail))
+            return View("Landing");
+        ViewBag.UserName = HttpContext.Session.GetString("UserName");
+
+        var userId = HttpContext.Session.GetInt32("UserId").Value;
+        var recentBookings = await _context.Bookings
+            .Include(b => b.BusTrip)
+            .Where(b => b.UserId == userId)
+            .OrderByDescending(b => b.BookingDate)
+            .Take(5)
+            .ToListAsync();
+
+        return View("Dashboard", recentBookings);
     }
-    
-    public IActionResult About()
-    {
-        if (HttpContext.Session.GetString("UserEmail") == null)
-        {
-            return RedirectToAction("SignIn", "Auth");
-        }
-        return View();
-    }
+
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()

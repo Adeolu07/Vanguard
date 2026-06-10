@@ -1,4 +1,4 @@
-@model _Tripfinity.Models.RailwayBooking
+@model Booking
 @{
     Layout = "_Layout";
     ViewData["Title"] = "Booking Confirmed";
@@ -13,10 +13,10 @@
         <div class="booking-details">
             <h3>Booking Details</h3>
             <p><strong>Booking ID:</strong> #@Model.Id</p>
-            <p><strong>Route:</strong> @Model.RailwayTrip.From → @Model.RailwayTrip.Destination</p>
+            <p><strong>Route:</strong> @Model.RailwayTrip!.From → @Model.RailwayTrip.Destination</p>
             <p><strong>Train Class:</strong> @Model.RailwayTrip.TrainClass</p>
             <p><strong>Departure:</strong> @Model.RailwayTrip.DepartureTime.ToString("dddd, MMMM dd yyyy - HH:mm")</p>
-            <p><strong>Amount Paid:</strong> ₦@Model.Amount.ToString("N0")</p>
+            <p><strong>Amount Paid:</strong> ₦@Model.TotalAmount.ToString("N0")</p>
             <p><strong>Status:</strong> @Model.Status</p>
             <p><strong>Booked On:</strong> @Model.BookingDate.ToString("MMMM dd yyyy - HH:mm")</p>
         </div>

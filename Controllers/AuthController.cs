@@ -1,77 +1,75 @@
 using _Tripfinity.Interfaces;
-using Microsoft.AspNetCore.Mvc;
 using _Tripfinity.Models.ViewModels;
-using _Tripfinity.Services;
+using Microsoft.AspNetCore.Mvc;
 
 namespace _Tripfinity.Controllers;
 
 public class AuthController : Controller
 {
     private readonly IAuthService _authService;
+
     public AuthController(IAuthService authService)
     {
         _authService = authService;
     }
-    
+
     [HttpGet]
     public IActionResult SignUp()
     {
-        if (HttpContext.Session.GetString("UserEmail") != null)
-        {
-            return RedirectToAction("Index", "Home");
-        }
+        if (HttpContext.Session.GetString("UserEmail") != null) return RedirectToAction("Index", "Home");
         return View();
     }
-    
+
+    [HttpGet]
+    public IActionResult SignIn()
+    {
+        if (HttpContext.Session.GetString("UserEmail") != null) return RedirectToAction("Index", "Home");
+        return View();
+    }
+
     [HttpPost]
     public async Task<IActionResult> SignUp(RegisterViewModel model)
     {
         if (!ModelState.IsValid)
             return View(model);
-        if (await _authService.EmailExistsAsync(model.Email))
+
+        var result = await _authService.SignUpAsync(
+            model.Email,
+            model.Password,
+            model.FirstName,
+            model.LastName
+        );
+
+        if (!result.Success)
         {
-            ModelState.AddModelError("Email", "Email already exists");
+            ModelState.AddModelError("", result.Message);
             return View(model);
         }
-        await _authService.SignUpAsync(model.Email, model.Password, model.FirstName, model.LastName);
-        var user = await _authService.SignInAsync(model.Email, model.Password);
-        
-        _authService.SetUserSession(HttpContext, user!);
+
+        _authService.SetUserSession(HttpContext, result.User!);
+
         return RedirectToAction("Index", "Home");
     }
-    
-    [HttpGet]
-    public IActionResult SignIn()
-    {
-        if (HttpContext.Session.GetString("UserEmail") != null)
-        {
-            return RedirectToAction("Index", "Home");
-        }
-        return View();
-    }
-    
+
     [HttpPost]
     public async Task<IActionResult> SignIn(LoginViewModel model)
     {
-        if (!ModelState.IsValid)
+        if (!ModelState.IsValid) return View(model);
+        var result = await _authService.SignInAsync(model.Email, model.Password);
+        if (!result!.Success)
         {
+            ModelState.AddModelError("", result.Message);
             return View(model);
         }
-        var user = await _authService.SignInAsync(model.Email, model.Password);
-        if (user == null)
-        {
-            ModelState.AddModelError("", "Invalid email or password");
-            return View(model);
-        }
-        _authService.SetUserSession(HttpContext, user);
-        TempData["Success"] = $"Welcome back, {user.FirstName} {user.LastName}!";
+
+        _authService.SetUserSession(HttpContext, result.User!);
+
         return RedirectToAction("Index", "Home");
     }
-    
+
     public IActionResult Logout()
     {
         _authService.ClearUserSession(HttpContext);
-        TempData["Success"] = "You've been signed out";
-        return RedirectToAction("SignIn", "Auth");
+        return RedirectToAction("Index", "Home");
     }
 }

@@ -1,0 +1,143 @@
+.trips-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.trips-header h2 {
+    font-size: 28px;
+    color: #333;
+}
+
+.trip-filters {
+    display: flex;
+    gap: 16px;
+}
+
+.filter-select {
+    padding: 8px 16px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: white;
+}
+
+.trip-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px;
+}
+
+.trip-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    transition: transform 0.2s;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    text-decoration: none;
+    display: block;
+}
+
+.trip-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.trip-icon {
+    font-size: 48px;
+    text-align: center;
+    padding: 30px 20px 20px;
+}
+
+.trip-icon.bus {
+    background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
+}
+
+.trip-icon.taxi {
+    background: linear-gradient(135deg, #f093fb20 0%, #f5576c20 100%);
+}
+
+.trip-icon.train {
+    background: linear-gradient(135deg, #4facfe20 0%, #00f2fe20 100%);
+}
+
+.trip-content {
+    padding: 20px;
+}
+
+.trip-content h3 {
+    font-size: 20px;
+    color: #333;
+    margin-bottom: 12px;
+}
+
+.trip-details {
+    margin-bottom: 16px;
+}
+
+.trip-detail {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.trip-detail span:first-child {
+    color: #666;
+    font-size: 14px;
+}
+
+.trip-detail span:last-child {
+    font-weight: 500;
+    color: #333;
+}
+
+.trip-price {
+    font-size: 24px;
+    font-weight: bold;
+    color: #667eea;
+    margin: 16px 0;
+}
+
+.btn-book {
+    width: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 40px;
+    padding: 20px;
+}
+
+.pagination button {
+    padding: 8px 20px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.loading {
+    text-align: center;
+    padding: 60px;
+    color: #666;
+}
+
+@media (max-width: 768px) {
+    .trips-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

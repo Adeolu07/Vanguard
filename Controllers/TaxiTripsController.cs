@@ -1,26 +1,35 @@
-﻿using _Tripfinity.Models;
+using _Tripfinity.Models;
 using _Tripfinity.Models.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace _Tripfinity.Controllers;
 
-public class RailwayBookingController : Controller
+public class TaxiTripsController : Controller
 {
     private readonly AppDbContext _context;
 
-    public RailwayBookingController(AppDbContext context)
+    public TaxiTripsController(AppDbContext context)
     {
         _context = context;
     }
 
-    // GET: /RailwayBooking/Create?tripId=1
-    public async Task<IActionResult> Create(int tripId)
+    public IActionResult Index()
     {
         if (HttpContext.Session.GetString("UserEmail") == null)
             return RedirectToAction("SignIn", "Auth");
 
-        var trip = await _context.RailwayTrips.FindAsync(tripId);
+        ViewBag.UserName = HttpContext.Session.GetString("Username");
+        return View();
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Book(int tripId)
+    {
+        if (HttpContext.Session.GetString("UserEmail") == null)
+            return RedirectToAction("SignIn", "Auth");
+
+        var trip = await _context.TaxiTrips.FindAsync(tripId);
         if (trip == null) return NotFound();
 
         ViewBag.Trip = trip;
@@ -28,52 +37,50 @@ public class RailwayBookingController : Controller
         return View();
     }
 
-    // POST: /RailwayBooking/Create
     [HttpPost]
-    public async Task<IActionResult> Create(int tripId, int seats)
+    public async Task<IActionResult> Book(int tripId, int seats)
     {
         if (HttpContext.Session.GetString("UserEmail") == null)
             return RedirectToAction("SignIn", "Auth");
 
-        var trip = await _context.RailwayTrips.FindAsync(tripId);
-        if (trip == null) return NotFound();
-
-        if (seats > trip.AvailableSeats)
-        {
-            ViewBag.Error = "Not enough seats available.";
-            ViewBag.Trip = trip;
-            return View();
-        }
-
         var userEmail = HttpContext.Session.GetString("UserEmail");
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
-        if (user == null) return RedirectToAction("SignIn", "Auth");
 
-        var booking = new RailwayBooking
+        var trip = await _context.TaxiTrips.FindAsync(tripId);
+        if (trip == null) return NotFound();
+
+        if (seats > trip.MaxPassengers)
+        {
+            TempData["Error"] = $"Taxi can only take {trip.MaxPassengers} passengers.";
+            return RedirectToAction("Book", new { tripId });
+        }
+
+        var booking = new Booking
         {
             UserId = user.Id,
-            RailwayTripId = tripId,
-            Amount = trip.Price * seats,
+            TaxiTripId = tripId,
+            TransportType = "Taxi",
+            NumberOfSeats = seats,
+            TotalAmount = trip.Price,
             Status = "Confirmed",
             BookingDate = DateTime.Now
         };
 
-        trip.AvailableSeats -= seats;
-
-        _context.RailwayBookings.Add(booking);
+        _context.Bookings.Add(booking);
         await _context.SaveChangesAsync();
 
+        TempData["Success"] = "Taxi booking confirmed!";
         return RedirectToAction("Confirmation", new { id = booking.Id });
     }
 
-    // GET: /RailwayBooking/Confirmation/1
+    [HttpGet]
     public async Task<IActionResult> Confirmation(int id)
     {
         if (HttpContext.Session.GetString("UserEmail") == null)
             return RedirectToAction("SignIn", "Auth");
 
-        var booking = await _context.RailwayBookings
-            .Include(b => b.RailwayTrip)
+        var booking = await _context.Bookings
+            .Include(b => b.TaxiTrip)
             .Include(b => b.User)
             .FirstOrDefaultAsync(b => b.Id == id);
 

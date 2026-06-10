@@ -1,7 +1,7 @@
 using _Tripfinity.Interfaces;
 using _Tripfinity.Models.Data;
 using _Tripfinity.Services;
-using _Tripfinity.Utility;
+using _Tripfinity.Utilities;
 using Microsoft.EntityFrameworkCore;
 
 namespace _Tripfinity;
@@ -21,12 +21,12 @@ public class Program
             options.Cookie.HttpOnly = true;
             options.Cookie.IsEssential = true;
         });
-        
+
         builder.Services.AddControllersWithViews();
-        builder.Services.AddControllers(); // Add API controllers
+        builder.Services.AddControllers();
 
         var app = builder.Build();
-        
+
         // using (var scope = app.Services.CreateScope())
         // {
         //     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -35,14 +35,20 @@ public class Program
         app.UseMiddleware<ExceptionMiddleware>();
         app.UseStaticFiles();
         app.UseSession();
-        
+
         app.UseRouting();
         app.MapControllerRoute(
-            name: "default",
-            pattern: "{controller=Home}/{action=Index}/{id?}");
-        
-        app.MapControllers(); // For API controllers
-        
+            "default",
+            "{controller=Home}/{action=Index}/{id?}");
+
+        app.MapControllers();
+        app.MapFallback(async context =>
+        {
+            context.Response.StatusCode = 404;
+            context.Response.ContentType = "text/html";
+            await context.Response.SendFileAsync("wwwroot/404.html");
+        });
+
         app.Run();
     }
 }

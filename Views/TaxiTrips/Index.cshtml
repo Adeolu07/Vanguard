@@ -1,12 +1,12 @@
 @{
     Layout = "_Layout";
-    ViewData["Title"] = "Railway Trips";
+    ViewData["Title"] = "Taxi Trips";
 }
 
 <link rel="stylesheet" href="~/css/trips.css"/>
 
 <div class="trips-header">
-    <h2>🚆 Available Railway Trips</h2>
+    <h2>🚕 Available Taxi Trips</h2>
     <div class="trip-filters">
         <select class="filter-select" id="sortFilter">
             <option value="time">Sort by Time</option>
@@ -16,28 +16,28 @@
 </div>
 
 <div id="trips-container">
-    <div class="loading">Loading railway trips...</div>
+    <div class="loading">Loading taxi trips...</div>
 </div>
 
 @section Scripts {
     <script>
         let currentPage = 1;
         let totalPages = 1;
+        let currentSort = "time";
 
         async function loadTrips(page = 1) {
             try {
-                // TODO: Replace with actual railway API endpoint
-                const response = await fetch(`/api/railwaytrips?page=${page}&pageSize=10`);
+                const response = await fetch(`/api/taxitrips?page=${page}&pageSize=10&sort=${currentSort}`);
                 const result = await response.json();
 
                 if (result.success && result.data && result.data.length > 0) {
                     displayTrips(result.data);
                     displayPagination(result.pagination);
                 } else {
-                    document.getElementById('trips-container').innerHTML = '<div class="empty-state"><div class="empty-icon">🚆</div><h3>No railway trips available</h3><p>Check back later for new schedules</p></div>';
+                    document.getElementById('trips-container').innerHTML = '<div class="empty-state"><div class="empty-icon">🚕</div><h3>No taxi trips available</h3><p>Check back later for available rides</p></div>';
                 }
             } catch (error) {
-                document.getElementById('trips-container').innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><h3>Coming Soon</h3><p>Railway trips will be available shortly</p><a href="/Home/Index" class="btn-book" style="display: inline-block; width: auto; margin-top: 20px;">Go Back</a></div>';
+                document.getElementById('trips-container').innerHTML = '<div class="empty-state"><div class="empty-icon">🚕</div><h3>Coming Soon</h3><p>Taxi trips will be available shortly</p><a href="/Home/Index" class="btn-book" style="display: inline-block; width: auto; margin-top: 20px;">Go Back</a></div>';
             }
         }
 
@@ -46,13 +46,13 @@
             trips.forEach(trip => {
                 html += `
                     <div class="trip-card">
-                        <div class="trip-icon train">🚆</div>
+                        <div class="trip-icon taxi">🚕</div>
                         <div class="trip-content">
-                            <h3>${trip.from || 'Lagos'} → ${trip.destination || 'Ibadan'}</h3>
+                            <h3>${trip.pickupLocation || 'Pickup'} → ${trip.dropoffLocation || 'Dropoff'}</h3>
                             <div class="trip-details">
-                                <div class="trip-detail"><span>Departure</span><span>${new Date(trip.departureTime).toLocaleString()}</span></div>
-                                <div class="trip-detail"><span>Train</span><span>${trip.trainNumber || 'Express'}</span></div>
-                                <div class="trip-detail"><span>Seats Available</span><span>${trip.availableSeats || 0}/${trip.totalSeats || 0}</span></div>
+                                <div class="trip-detail"><span>Pickup Time</span><span>${new Date(trip.pickupTime).toLocaleString()}</span></div>
+                                <div class="trip-detail"><span>Vehicle</span><span>${trip.vehicleType || 'Standard'}</span></div>
+                                <div class="trip-detail"><span>Capacity</span><span>${trip.maxPassengers || 4} passengers</span></div>
                             </div>
                             <div class="trip-price">₦${trip.price?.toLocaleString() || '0'}</div>
                             <button class="btn-book" onclick="bookTrip(${trip.id})">Book Now →</button>
@@ -65,6 +65,10 @@
         }
 
         function displayPagination(pagination) {
+            // Remove existing pagination
+            const existingPagination = document.querySelector('.pagination');
+            if (existingPagination) existingPagination.remove();
+
             let html = '<div class="pagination">';
             if (pagination.hasPreviousPage) html += `<button onclick="loadTrips(${pagination.pageIndex - 1})">← Previous</button>`;
             html += `<span>Page ${pagination.pageIndex} of ${pagination.totalPages}</span>`;
@@ -74,8 +78,14 @@
         }
 
         function bookTrip(tripId) {
-            window.location.href = `/TaxiTrips/Book?tripId=${tripId}`;
+            window.location.href = `/RailwayTrips/Book?tripId=${tripId}`;
         }
+
+        // Sort filter handler
+        document.getElementById('sortFilter').addEventListener('change', (e) => {
+            currentSort = e.target.value;
+            loadTrips(1);
+        });
 
         loadTrips();
     </script>

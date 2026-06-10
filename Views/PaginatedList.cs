@@ -4,20 +4,21 @@ namespace _Tripfinity.Views;
 
 public class PaginatedList<T> : List<T>
 {
-    public int PageIndex { get; set; }
-    public int TotalPages { get; set; }
-    public int TotalCount { get; set; }
-
     public PaginatedList(List<T> items, int count, int pageIndex, int pagesize)
     {
         PageIndex = pageIndex;
         TotalPages = (int)Math.Ceiling((double)count / pagesize);
         TotalCount = count;
-        this.AddRange(items);
+        AddRange(items);
     }
-    
+
+    public int PageIndex { get; set; }
+    public int TotalPages { get; set; }
+    public int TotalCount { get; set; }
+
     public bool HasPreviousPage => PageIndex > 1;
     public bool HasNextPage => PageIndex < TotalPages;
+
     public static async Task<PaginatedList<T>> CreateAsync(IQueryable<T> source, int pageIndex, int pageSize)
     {
         var count = await source.CountAsync();
@@ -25,4 +26,3 @@ public class PaginatedList<T> : List<T>
         return new PaginatedList<T>(items, count, pageIndex, pageSize);
     }
 }
-

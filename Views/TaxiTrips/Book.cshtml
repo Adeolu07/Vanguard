@@ -1,0 +1,27 @@
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Book Taxi";
+}
+
+<div class="booking-container">
+    <h2>Confirm Taxi Booking</h2>
+
+    <div class="trip-details">
+        <p><strong>Pickup:</strong> @ViewBag.Trip.PickupLocation</p>
+        <p><strong>Dropoff:</strong> @ViewBag.Trip.DropoffLocation</p>
+        <p><strong>Time:</strong> @ViewBag.Trip.PickupTime</p>
+        <p><strong>Price:</strong> ₦@ViewBag.Trip.Price</p>
+        <p><strong>Max passengers:</strong> @ViewBag.Trip.MaxPassengers</p>
+    </div>
+
+    <form method="post">
+        <input type="hidden" name="tripId" value="@ViewBag.Trip.Id"/>
+
+        <div class="form-group">
+            <label for="seats">Number of Passengers:</label>
+            <input type="number" name="seats" id="seats" min="1" max="@ViewBag.Trip.MaxPassengers" required/>
+        </div>
+
+        <button type="submit" class="btn-primary">Confirm Booking</button>
+    </form>
+</div>
