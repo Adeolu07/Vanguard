@@ -68,15 +68,26 @@ dotnet run
 
 ```text
 Vanguard/
+
 ├── Controllers/
-│   ├── AuthController.cs
-│   ├── HomeController.cs
-│   └── BusTripsController.cs
+│   ├── AuthController.cs              # Login/signup/logout
+│   ├── HomeController.cs               # Dashboard & landing
+│   ├── BusTripsController.cs           # Bus trips + booking
+│   ├── TaxiTripsController.cs          # Taxi trips + booking
+│   ├── RailwayTripsController.cs       # Railway trips + booking
 ├── Models/
 │   ├── User.cs
 │   ├── BusTrip.cs
+│   ├── TaxiTrip.cs
+│   ├── RailwayTrip.cs
 │   ├── Booking.cs
 │   └── ViewModels/
+│       ├── LoginViewModel.cs
+│       └── RegisterViewModel.cs
+│── Api/
+│       ├── BusTripsApiController.cs    # Bus JSON API
+│       ├── TaxiTripsApiController.cs   # Taxi JSON API
+│       └── RailwayTripsApiController.cs # Railway JSON API
 ├── Services/
 │   ├── IAuthService.cs
 │   └── AuthService.cs
@@ -84,11 +95,35 @@ Vanguard/
 │   └── AppDbContext.cs
 ├── Views/
 │   ├── Auth/
+│   │   ├── SignIn.cshtml
+│   │   └── SignUp.cshtml
 │   ├── Home/
-│   └── BusTrips/
+│   │   ├── Landing.cshtml
+│   │   └── Dashboard.cshtml
+│   ├── BusTrips/
+│   │   ├── Index.cshtml
+│   │   ├── Book.cshtml
+│   │   └── Confirmation.cshtml
+│   ├── TaxiTrips/
+│   │   ├── Index.cshtml
+│   │   ├── Book.cshtml
+│   │   └── Confirmation.cshtml
+│   ├── RailwayTrips/
+│   │   ├── Index.cshtml
+│   │   ├── Book.cshtml
+│   │   └── Confirmation.cshtml
+│   └── Shared/
+│       ├── _Layout.cshtml
+│       └── Confirmation.cshtml
 ├── wwwroot/
-│   ├── css/
-│   └── js/
+│   └── css/
+│       ├── site.css
+│       ├── landing.css
+│       ├── dashboard.css
+│       └── trips.css
+├── Middlewares/
+│   └── ExceptionMiddleware.cs
+├── PaginatedList.cs
 └── Program.cs
 ```
 

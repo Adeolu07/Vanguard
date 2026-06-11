@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace _Tripfinity.Controllers.Api;
+namespace _Tripfinity.Api;
 
 [ApiController]
 [Route("api/railwaytrips")]

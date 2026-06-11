@@ -2,21 +2,27 @@
 
 @{
     ViewData["Title"] = "Sign In";
-    Layout = null;
+    Layout = "_Layout";
 }
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Sign In - Transport Booking</title>
-    <link rel="stylesheet" href="~/css/auth.css"/>
 </head>
 <body>
 <div class="container">
     <h1>Welcome</h1>
     <div class="subtitle">Sign in to book your ride</div>
+    
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="error-message" style="background: #fee; border: 1px solid #fcc; color: #c33; padding: 12px; border-radius: 8px; margin-bottom: 20px;">
+            ⚠️ @TempData["ErrorMessage"]
+        </div>
+    }
 
     @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
     {

@@ -20,7 +20,7 @@ public class HomeController : Controller
     {
         var userEmail = HttpContext.Session.GetString("UserEmail");
         if (string.IsNullOrEmpty(userEmail))
-            return View("Landing");
+            return View("Index");
         ViewBag.UserName = HttpContext.Session.GetString("UserName");
 
         var userId = HttpContext.Session.GetInt32("UserId").Value;

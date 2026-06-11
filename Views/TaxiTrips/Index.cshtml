@@ -3,7 +3,6 @@
     ViewData["Title"] = "Taxi Trips";
 }
 
-<link rel="stylesheet" href="~/css/trips.css"/>
 
 <div class="trips-header">
     <h2>🚕 Available Taxi Trips</h2>
@@ -78,7 +77,7 @@
         }
 
         function bookTrip(tripId) {
-            window.location.href = `/RailwayTrips/Book?tripId=${tripId}`;
+            window.location.href = `/TaxiTrips/Book?tripId=${tripId}`;
         }
 
         // Sort filter handler

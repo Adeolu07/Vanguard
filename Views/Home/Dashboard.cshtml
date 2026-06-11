@@ -5,8 +5,6 @@
     ViewData["Title"] = "Dashboard";
 }
 
-<link rel="stylesheet" href="~/css/dashboard.css"/>
-
 <div class="welcome-section">
     <h1>Welcome back, @ViewBag.UserName! 👋</h1>
     <p>Ready for your next trip?</p>
@@ -17,6 +15,11 @@
         <div class="action-icon">🚌</div>
         <h3>Book a Bus</h3>
         <p>Find and book available bus trips</p>
+    </a>
+    <a href="/Ticket/Index" class="action-card">
+        <div class="action-icon">🎫</div>
+        <h3>My Tickets</h3>
+        <p>View all your tickets</p>
     </a>
     <a href="/TaxiTrips/Index" class="action-card">
         <div class="action-icon">🚕</div>
@@ -33,7 +36,7 @@
 <div class="recent-section">
     <h2>Recent Bookings</h2>
 
-    @if (Model != null && Model.Any())
+    @if (Model.Any())
     {
         <div class="bookings-list">
             @foreach (var booking in Model)
@@ -68,7 +71,7 @@
                         <span>🎫 @booking.NumberOfSeats seat(s)</span>
                     </div>
                     <div class="booking-actions">
-                        <a href="/Tickets/View/@booking.Id" class="btn-small">View Ticket →</a>
+                        <a href="/Ticket/Details/@booking.Id" class="btn-small">View Ticket →</a>
                     </div>
                 </div>
             }

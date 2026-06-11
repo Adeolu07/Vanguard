@@ -34,7 +34,7 @@ public class TaxiTripsController : Controller
 
         ViewBag.Trip = trip;
         ViewBag.UserName = HttpContext.Session.GetString("Username");
-        return View();
+        return View("Book", trip);
     }
 
     [HttpPost]
@@ -54,6 +54,7 @@ public class TaxiTripsController : Controller
             TempData["Error"] = $"Taxi can only take {trip.MaxPassengers} passengers.";
             return RedirectToAction("Book", new { tripId });
         }
+        
 
         var booking = new Booking
         {

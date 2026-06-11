@@ -3,7 +3,7 @@ using _Tripfinity.Models.Tables;
 using _Tripfinity.Views;
 using Microsoft.AspNetCore.Mvc;
 
-namespace _Tripfinity.Controllers.Api;
+namespace _Tripfinity.Api;
 
 [Route("api/taxitrips")]
 [ApiController]
@@ -30,7 +30,6 @@ public class TaxiTripsApiController : ControllerBase
         };
 
         var paginatedList = await PaginatedList<TaxiTrip>.CreateAsync(query, page, pageSize);
-
         return Ok(new
         {
             success = true,

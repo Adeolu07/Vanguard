@@ -1,0 +1,79 @@
+@model List<Booking>
+
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "My Tickets";
+}
+
+<div class="tickets-header">
+    <h2>🎫 My Tickets</h2>
+    <p>View all your booked tickets</p>
+</div>
+
+@if (Model != null && Model.Any())
+{
+    <div class="tickets-list">
+        @foreach (var ticket in Model)
+        {
+            <div class="ticket-card">
+                <div class="ticket-header">
+                    <div class="ticket-type">
+                        @if (ticket.BusTrip != null)
+                        {
+                            <span>🚌 Bus Ticket</span>
+                        }
+                        else if (ticket.TaxiTrip != null)
+                        {
+                            <span>🚕 Taxi Ticket</span>
+                        }
+                        else if (ticket.RailwayTrip != null)
+                        {
+                            <span>🚆 Railway Ticket</span>
+                        }
+                    </div>
+                    <div class="ticket-status @ticket.Status.ToLower()">
+                        @ticket.Status
+                    </div>
+                </div>
+                
+                <div class="ticket-body">
+                    @if (ticket.BusTrip != null)
+                    {
+                        <div class="ticket-route">@ticket.BusTrip.From → @ticket.BusTrip.Destination</div>
+                        <div class="ticket-datetime">📅 @ticket.BusTrip.DepartureTime.ToString("MMM dd, yyyy - hh:mm tt")</div>
+                    }
+                    else if (ticket.TaxiTrip != null)
+                    {
+                        <div class="ticket-route">@ticket.TaxiTrip.PickupLocation → @ticket.TaxiTrip.DropoffLocation</div>
+                        <div class="ticket-datetime">📅 @ticket.TaxiTrip.PickupTime.ToString("MMM dd, yyyy - hh:mm tt")</div>
+                    }
+                    else if (ticket.RailwayTrip != null)
+                    {
+                        <div class="ticket-route">@ticket.RailwayTrip.From → @ticket.RailwayTrip.Destination</div>
+                        <div class="ticket-datetime">📅 @ticket.RailwayTrip.DepartureTime.ToString("MMM dd, yyyy - hh:mm tt")</div>
+                        <div class="ticket-class">🚂 Class: @ticket.RailwayTrip.TrainClass</div>
+                    }
+                    
+                    <div class="ticket-details-row">
+                        <span>🎫 Seats: @ticket.NumberOfSeats</span>
+                        <span>💰 ₦@ticket.TotalAmount.ToString("N0")</span>
+                        <span>📅 Booked: @ticket.BookingDate.ToString("MMM dd, yyyy")</span>
+                    </div>
+                </div>
+                
+                <div class="ticket-footer">
+                    <a href="/Ticket/Details/@ticket.Id" class="btn-view">View Ticket →</a>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="empty-state">
+        <div class="empty-icon">🎫</div>
+        <h3>No tickets yet</h3>
+        <p>You haven't booked any trips. Start your first journey!</p>
+        <a href="/BusTrips/Index" class="btn-primary">Book a Trip →</a>
+    </div>
+}

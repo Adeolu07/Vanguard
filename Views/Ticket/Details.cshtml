@@ -1,0 +1,298 @@
+@model Booking
+
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Ticket Details";
+}
+
+<div class="ticket-details-container">
+    <div class="ticket-details-card">
+        <div class="ticket-header">
+            <div class="ticket-header-left">
+                <div class="ticket-icon">
+                    @if (Model.BusTrip != null)
+                    {
+                        <span>🚌</span>
+                    }
+                    else if (Model.TaxiTrip != null)
+                    {
+                        <span>🚕</span>
+                    }
+                    else if (Model.RailwayTrip != null)
+                    {
+                        <span>🚆</span>
+                    }
+                </div>
+                <div>
+                    <h2>@Model.TransportType Ticket</h2>
+                    <p>Booking ID: #@Model.Id</p>
+                </div>
+            </div>
+            <div class="ticket-status @Model.Status.ToLower()">
+                @Model.Status
+            </div>
+        </div>
+
+        <div class="ticket-route-info">
+            @if (Model.BusTrip != null)
+            {
+                <div class="route-stations">
+                    <div class="station">
+                        <div class="station-name">@Model.BusTrip.From</div>
+                        <div class="station-label">Departure</div>
+                    </div>
+                    <div class="route-line">→</div>
+                    <div class="station">
+                        <div class="station-name">@Model.BusTrip.Destination</div>
+                        <div class="station-label">Arrival</div>
+                    </div>
+                </div>
+                <div class="ticket-info-grid">
+                    <div><strong>Departure Time</strong><br>@Model.BusTrip.DepartureTime.ToString("dddd, MMM dd yyyy - hh:mm tt")</div>
+                </div>
+            }
+            else if (Model.TaxiTrip != null)
+            {
+                <div class="route-stations">
+                    <div class="station">
+                        <div class="station-name">@Model.TaxiTrip.PickupLocation</div>
+                        <div class="station-label">Pickup</div>
+                    </div>
+                    <div class="route-line">→</div>
+                    <div class="station">
+                        <div class="station-name">@Model.TaxiTrip.DropoffLocation</div>
+                        <div class="station-label">Dropoff</div>
+                    </div>
+                </div>
+                <div class="ticket-info-grid">
+                    <div><strong>Pickup Time</strong><br>@Model.TaxiTrip.PickupTime.ToString("dddd, MMM dd yyyy - hh:mm tt")</div>
+                </div>
+            }
+            else if (Model.RailwayTrip != null)
+            {
+                <div class="route-stations">
+                    <div class="station">
+                        <div class="station-name">@Model.RailwayTrip.From</div>
+                        <div class="station-label">Departure</div>
+                    </div>
+                    <div class="route-line">→</div>
+                    <div class="station">
+                        <div class="station-name">@Model.RailwayTrip.Destination</div>
+                        <div class="station-label">Arrival</div>
+                    </div>
+                </div>
+                <div class="ticket-info-grid">
+                    <div><strong>Departure Time</strong><br>@Model.RailwayTrip.DepartureTime.ToString("dddd, MMM dd yyyy - hh:mm tt")</div>
+                    <div><strong>Train Class</strong><br>@Model.RailwayTrip.TrainClass</div>
+                </div>
+            }
+        </div>
+
+        <div class="qr-section">
+            <div class="qr-code">
+                <div class="qr-placeholder">
+                    📱 QR CODE
+                    <div class="qr-text">@ViewBag.QRCodeText</div>
+                </div>
+            </div>
+            <p class="qr-note">Show this QR code to the marshal for validation</p>
+        </div>
+
+        <div class="ticket-footer-details">
+            <div class="passenger-info">
+                <h4>Passenger Details</h4>
+                <p><strong>Name:</strong> @Model.User?.FirstName @Model.User?.LastName</p>
+                <p><strong>Email:</strong> @Model.User?.Email</p>
+            </div>
+            <div class="booking-info">
+                <h4>Booking Details</h4>
+                <p><strong>Seats:</strong> @Model.NumberOfSeats</p>
+                <p><strong>Total Paid:</strong> ₦@Model.TotalAmount.ToString("N0")</p>
+                <p><strong>Booked On:</strong> @Model.BookingDate.ToString("MMMM dd, yyyy - hh:mm tt")</p>
+            </div>
+        </div>
+
+        <div class="ticket-actions">
+            <a href="/Ticket/Index" class="btn-secondary">← Back to Tickets</a>
+            <button onclick="window.print()" class="btn-primary">Print Ticket 🖨️</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .ticket-details-container {
+        max-width: 600px;
+        margin: 40px auto;
+    }
+    
+    .ticket-details-card {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .ticket-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 24px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .ticket-header-left {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+    
+    .ticket-icon {
+        font-size: 40px;
+    }
+    
+    .ticket-header h2 {
+        margin: 0;
+        font-size: 20px;
+    }
+    
+    .ticket-header p {
+        margin: 4px 0 0;
+        opacity: 0.9;
+        font-size: 14px;
+    }
+    
+    .ticket-route-info {
+        padding: 24px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .route-stations {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .station {
+        text-align: center;
+        flex: 1;
+    }
+    
+    .station-name {
+        font-size: 18px;
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .station-label {
+        font-size: 12px;
+        color: #666;
+        margin-top: 4px;
+    }
+    
+    .route-line {
+        font-size: 24px;
+        color: #667eea;
+    }
+    
+    .ticket-info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid #eee;
+    }
+    
+    .qr-section {
+        text-align: center;
+        padding: 24px;
+        background: #f8f9fa;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .qr-placeholder {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        display: inline-block;
+        text-align: center;
+        font-family: monospace;
+        font-size: 12px;
+        border: 1px solid #ddd;
+    }
+    
+    .qr-text {
+        font-size: 10px;
+        color: #999;
+        margin-top: 8px;
+        word-break: break-all;
+    }
+    
+    .qr-note {
+        font-size: 12px;
+        color: #666;
+        margin-top: 12px;
+    }
+    
+    .ticket-footer-details {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        padding: 24px;
+        background: white;
+    }
+    
+    .passenger-info h4, .booking-info h4 {
+        color: #333;
+        margin-bottom: 12px;
+        font-size: 16px;
+    }
+    
+    .passenger-info p, .booking-info p {
+        color: #666;
+        font-size: 14px;
+        margin: 8px 0;
+    }
+    
+    .ticket-actions {
+        display: flex;
+        gap: 16px;
+        justify-content: center;
+        padding: 20px 24px;
+        background: #f8f9fa;
+        border-top: 1px solid #eee;
+    }
+    
+    
+        
+        .route-line {
+            transform: rotate(90deg);
+        }
+        
+        .ticket-footer-details {
+            grid-template-columns: 1fr;
+        }
+        
+        .ticket-header {
+            flex-direction: column;
+            text-align: center;
+            gap: 12px;
+        }
+        
+        .ticket-actions {
+            flex-direction: column;
+        }
+
+        
+        .ticket-details-container {
+            margin: 0;
+            padding: 0;
+        }
+        
+        .ticket-details-card {
+            box-shadow: none;
+        }
+</style>
