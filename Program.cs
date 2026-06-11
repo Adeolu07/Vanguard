@@ -32,7 +32,7 @@ public class Program
         //     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         //     dbContext.Database.EnsureCreated();
         // }
-        app.UseMiddleware<ExceptionMiddleware>();
+        
         app.UseStaticFiles();
         app.UseSession();
 

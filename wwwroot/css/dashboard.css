@@ -56,66 +56,7 @@
     color: #333;
 }
 
-.bookings-list {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
 
-.booking-card {
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.booking-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-}
-
-.booking-route {
-    font-weight: 600;
-    font-size: 16px;
-    color: #333;
-}
-
-.booking-status {
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 500;
-}
-
-.booking-status.confirmed {
-    background: #d4edda;
-    color: #155724;
-}
-
-.booking-status.pending {
-    background: #fff3cd;
-    color: #856404;
-}
-
-.booking-status.cancelled {
-    background: #f8d7da;
-    color: #721c24;
-}
-
-.booking-details {
-    display: flex;
-    gap: 20px;
-    font-size: 14px;
-    color: #666;
-    margin-bottom: 12px;
-    flex-wrap: wrap;
-}
-
-.booking-actions {
-    text-align: right;
-}
 
 .btn-small {
     background: #f0f0f0;

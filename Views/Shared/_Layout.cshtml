@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>@ViewData["Title"] - Tripfinity</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css"/>
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/>
+    <link rel="stylesheet" href="~/css/site.css"/>
 </head>
 <body>
 <header>
@@ -19,8 +19,8 @@
             }
             else
             {
-                <a href="/Auth/SignIn" class="btn-book">Sign In</a>
-                <a href="/Auth/SignUp" class="btn-book">Sign Up</a>
+                <a href="/Auth/SignIn" class="btn-secondary">Sign In</a>
+                <a href="/Auth/SignUp" class="btn-primary">Sign Up</a>
             }
         </div>
     </nav>
@@ -32,7 +32,7 @@
     </main>
 </div>
 
-<footer class="border-top footer text-muted">
+<footer class="footer">
     <div class="container">
         &copy; 2026 - Tripfinity - Smart Transport Booking System
     </div>

@@ -35,6 +35,7 @@ public class AuthService : IAuthService
             IsActive = true,
             Role = "Passenger"
         };
+        
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
         return new AuthResponse

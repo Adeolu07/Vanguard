@@ -3,7 +3,7 @@ using _Tripfinity.Models.Data;
 using _Tripfinity.Views;
 using Microsoft.AspNetCore.Mvc;
 
-namespace _Tripfinity.Controllers.Api;
+namespace _Tripfinity.Api;
 
 [Route("api/bustrips")]
 [ApiController]
