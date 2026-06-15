@@ -25,19 +25,22 @@ public class AuthService : IAuthService
             };
 
         var hasher = new PasswordHasher<User>();
+
         var user = new User
         {
             Email = email,
-            PasswordHash = hasher.HashPassword(null, password),
             FirstName = firstName,
             LastName = lastName,
             CreatedAt = DateTime.Now,
             IsActive = true,
             Role = "Passenger"
         };
-        
+
+        user.PasswordHash = hasher.HashPassword(user, password);
+
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
+
         return new AuthResponse
         {
             Success = true,
@@ -45,6 +48,7 @@ public class AuthService : IAuthService
             User = user
         };
     }
+
 
     public async Task<AuthResponse?> SignInAsync(string email, string password)
     {
