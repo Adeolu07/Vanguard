@@ -1,13 +1,15 @@
 using _Tripfinity.Models;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
-namespace _Tripfinity.Interfaces;
-
-public interface IBookingService
+namespace _Tripfinity.Interfaces
 {
-    Task<bool> BookBusAsync(Booking booking);
-    Task<bool> BookTrainAsync(Booking booking);
-    Task<bool> BookTaxiAsync(Booking booking);
-    
-    
+    public interface IBookingService
+    {
+        Task<Booking?> BookBusAsync(int tripId, int seats, string userEmail);
+
+        Task<Booking?> BookRailwayAsync(int tripId, int seats, string userEmail);
+
+        Task<Booking?> BookTaxiAsync(int tripId, int seats, string userEmail);
+
+        Task<Booking?> GetBookingAsync(int id, string transportType);
+    }
 }
