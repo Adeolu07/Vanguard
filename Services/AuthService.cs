@@ -3,6 +3,7 @@ using _Tripfinity.Models;
 using _Tripfinity.Models.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Migrations.Operations;
 
 namespace _Tripfinity.Services;
 
@@ -61,18 +62,21 @@ public class AuthService : IAuthService
         var result = hasher.VerifyHashedPassword(user, user.PasswordHash, password);
 
         if (result != PasswordVerificationResult.Success)
+        {
             return new AuthResponse
             {
                 Success = false,
                 Message = "Invalid credentials"
             };
-
+        }
+        
         return new AuthResponse
         {
             Success = true,
             Message = "Successful Login",
             User = user
         };
+        
     }
 
     public async Task<bool> EmailExistsAsync(string email)
@@ -82,9 +86,7 @@ public class AuthService : IAuthService
 
     public void SetUserSession(HttpContext httpContext, User user)
     {
-        httpContext.Session.SetString("UserEmail", user.Email);
-        httpContext.Session.SetString("Username", $"{user.FirstName}.{user.LastName}");
-        httpContext.Session.SetInt32("UserId", user.Id);
+        httpContext.Session.SetInt32("userId", user.Id);
     }
 
     public void ClearUserSession(HttpContext httpContext)
@@ -94,10 +96,10 @@ public class AuthService : IAuthService
 
     public User? GetCurrentUser(HttpContext httpContext)
     {
-        var userId = httpContext.Session.GetInt32("UserId");
+        var userId = httpContext.Session.GetInt32("userId");
         if (userId == null)
             return null;
 
-        return _context.Users.Find(userId.Value);
+        return _context.Users.Find(userId);
     }
 }

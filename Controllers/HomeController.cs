@@ -9,21 +9,21 @@ namespace _Tripfinity.Controllers;
 public class HomeController : Controller
 {
     private readonly AppDbContext _context;
-
+    
     public HomeController(AppDbContext context)
     {
         _context = context;
     }
 
+    [Route("/home")]
+    [Route("/")]
     [HttpGet]
     public async Task<IActionResult> Index()
     {
-        var userEmail = HttpContext.Session.GetString("UserEmail");
-        if (string.IsNullOrEmpty(userEmail))
+        var userId = HttpContext.Session.GetInt32("userId");
+        if (userId == null)
             return View("Index");
-        ViewBag.UserName = HttpContext.Session.GetString("UserName");
-
-        var userId = HttpContext.Session.GetInt32("UserId").Value;
+        
         var recentBookings = await _context.Bookings
             .Include(b => b.BusTrip)
             .Where(b => b.UserId == userId)

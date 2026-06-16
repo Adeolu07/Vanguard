@@ -16,31 +16,35 @@ public class RailwayTripsController : Controller
 
     public IActionResult Index()
     {
-        if (HttpContext.Session.GetString("UserEmail") == null)
+        if (HttpContext.Session.GetInt32("userId") == null)
+        {
             return RedirectToAction("SignIn", "Auth");
-
-        ViewBag.UserName = HttpContext.Session.GetString("Username");
+        }
         return View();
     }
 
     [HttpGet]
     public async Task<IActionResult> Book(int tripId)
     {
-        if (HttpContext.Session.GetString("UserEmail") == null)
+        if (HttpContext.Session.GetInt32("userId") == null)
+        {
             return RedirectToAction("SignIn", "Auth");
+        }
 
         var trip = await _context.RailwayTrips.FindAsync(tripId);
-        if (trip == null) return NotFound();
-
+        if (trip == null)
+        {
+            return NotFound("Trip not found.");
+        }
         ViewBag.Trip = trip;
-        ViewBag.UserName = HttpContext.Session.GetString("Username");
+        
         return View();
     }
 
     [HttpPost]
     public async Task<IActionResult> Book(int tripId, int seats)
     {
-        if (HttpContext.Session.GetString("UserEmail") == null)
+        if (HttpContext.Session.GetInt32("userId") == null)
             return RedirectToAction("SignIn", "Auth");
 
         var userEmail = HttpContext.Session.GetString("UserEmail");
@@ -78,7 +82,7 @@ public class RailwayTripsController : Controller
     [HttpGet]
     public async Task<IActionResult> Confirmation(int id)
     {
-        if (HttpContext.Session.GetString("UserEmail") == null)
+        if (HttpContext.Session.GetInt32("userId") == null)
             return RedirectToAction("SignIn", "Auth");
 
         var booking = await _context.Bookings
@@ -86,9 +90,11 @@ public class RailwayTripsController : Controller
             .Include(b => b.User)
             .FirstOrDefaultAsync(b => b.Id == id);
 
-        if (booking == null) return NotFound();
-
-        ViewBag.UserName = HttpContext.Session.GetString("Username");
+        if (booking == null)
+        {
+            return NotFound();
+        }
+        
         return View(booking);
     }
 }
