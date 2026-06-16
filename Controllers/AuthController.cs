@@ -15,22 +15,27 @@ public class AuthController : Controller
         _context = context;
         _authService = authService;
     }
+    
+    [HttpGet]
+    public IActionResult SignIn()
+    {
+        if (HttpContext.Session.GetInt32("userId") != null)
+        {
+            return RedirectToAction("Index", "Home");
+        }
+        return View();
+    }
 
     [HttpGet]
     public IActionResult SignUp()
     {
-        if (HttpContext.Session.GetString("UserEmail") != null) 
+        if (HttpContext.Session.GetInt32("userId") != null)
+        {
             return RedirectToAction("Index", "Home");
+        }
         return View();
     }
 
-    [HttpGet]
-    public IActionResult SignIn()
-    {
-        if (HttpContext.Session.GetString("UserEmail") != null) 
-            return RedirectToAction("Index", "Home");
-        return View();
-    }
 
     [HttpPost]
     public async Task<IActionResult> SignUp(RegisterViewModel model)
@@ -70,16 +75,19 @@ public class AuthController : Controller
         {
             if (!ModelState.IsValid) 
                 return View(model);
+            
             var result = await _authService.SignInAsync(model.Email, model.Password);
-            if (!result!.Success)
+            
+            if (!result.Success)
             {
                 ModelState.AddModelError("", result.Message);
                 return View(model);
             }
-
+            
             _authService.SetUserSession(HttpContext, result.User!);
             return RedirectToAction("Index", "Home");
         }
+        
         catch (Exception ex)
         {
             TempData["ErrorMessage"] = ex.Message;

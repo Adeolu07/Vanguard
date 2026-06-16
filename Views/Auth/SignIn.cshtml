@@ -43,7 +43,7 @@
 
         <div class="form-group">
             <label asp-for="Password">Password</label>
-            <input asp-for="Password" type="password" placeholder="••••••"/>
+            <input asp-for="Password" type="password" placeholder="••••••" value="@Model?.Password"/>
             <span asp-validation-for="Password" class="error"></span>
         </div>
 
