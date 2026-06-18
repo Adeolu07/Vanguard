@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using NuGet.Protocol.Plugins;
 
 namespace _Tripfinity.Models;
 
@@ -32,4 +33,10 @@ public class User
     [MaxLength(50)] public string? Role { get; set; } // "Passenger", "Marshal", "Admin"
 
     public bool IsActive { get; set; }
+    public bool IsEmailConfirmed { get; set; } = false;
+    public string? EmailConfirmationToken { get; set; }
+    
+    public DateTime? EmailConfirmationSentAt { get; set; }
+    
+    public string? UserWalletId { get; set; } = null;
 }

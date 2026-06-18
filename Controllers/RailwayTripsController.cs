@@ -1,8 +1,6 @@
 ﻿using _Tripfinity.Interfaces;
-using _Tripfinity.Models;
 using _Tripfinity.Models.Data;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace _Tripfinity.Controllers;
 
@@ -39,16 +37,18 @@ public class RailwayTripsController : Controller
             return NotFound("Trip not found.");
         }
         ViewBag.Trip = trip;
-        
-        return View();
+        ViewBag.UserId = HttpContext.Session.GetInt32("userId");
+        return View("Book", trip);
     }
 
     [HttpPost]
     public async Task<IActionResult> Book(int tripId, int seats)
     {
         var userId = HttpContext.Session.GetInt32("userId");
-        if (HttpContext.Session.GetInt32("userId") == null)
+        if (userId == null)
+        {
             return RedirectToAction("SignIn", "Auth");
+        }
 
         var booking = await _bookingService.BookRailwayAsync(tripId, seats, userId);
         if (booking == null)
@@ -66,7 +66,8 @@ public class RailwayTripsController : Controller
     [HttpGet]
     public async Task<IActionResult> Confirmation(int id)
     {
-        if (HttpContext.Session.GetInt32("userId") == null)
+        var userId = HttpContext.Session.GetInt32("userId");
+        if (userId == null)
         {
             return RedirectToAction("SignIn", "Auth");
         }
@@ -74,7 +75,7 @@ public class RailwayTripsController : Controller
         var booking = await _bookingService.GetBookingAsync(id, "Railway");
         if (booking == null)
         {
-            return NotFound();
+            return NotFound("Railway booking not found.");
         }
         
         return View(booking);

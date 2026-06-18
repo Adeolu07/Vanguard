@@ -1,6 +1,5 @@
-using _Tripfinity.Models.Data;
-using _Tripfinity.Services;
 using _Tripfinity.Interfaces;
+using _Tripfinity.Models.Data;
 using Microsoft.AspNetCore.Mvc;
 
 namespace _Tripfinity.Controllers;
@@ -18,34 +17,42 @@ public class TaxiTripsController : Controller
 
     public IActionResult Index()
     {
-        if (HttpContext.Session.GetString("UserEmail") == null)
+        if (HttpContext.Session.GetInt32("userId") == null)
+        {
             return RedirectToAction("SignIn", "Auth");
-
-        ViewBag.UserName = HttpContext.Session.GetString("Username");
+        }
         return View();
     }
 
     [HttpGet]
     public async Task<IActionResult> Book(int tripId)
     {
-        if (HttpContext.Session.GetString("UserEmail") == null)
+        if (HttpContext.Session.GetInt32("userId") == null)
+        {
             return RedirectToAction("SignIn", "Auth");
+        }
 
         var trip = await _context.TaxiTrips.FindAsync(tripId);
-        if (trip == null) return NotFound();
+        if (trip == null)
+        {
+            return NotFound("Trip not found");
+        }
 
         ViewBag.Trip = trip;
-        ViewBag.UserName = HttpContext.Session.GetString("Username");
+        ViewBag.UserId = HttpContext.Session.GetInt32("userId");
         return View("Book", trip);
     }
 
     [HttpPost]
     public async Task<IActionResult> Book(int tripId, int seats)
     {
-        var userEmail = HttpContext.Session.GetString("UserEmail");
-        if (userEmail == null) return RedirectToAction("SignIn", "Auth");
+        var userId = HttpContext.Session.GetInt32("userId");
+        if (userId == null)
+        {
+            return RedirectToAction("SignIn", "Auth");
+        }
 
-        var booking = await _bookingService.BookTaxiAsync(tripId, seats, userEmail);
+        var booking = await _bookingService.BookTaxiAsync(tripId, seats, userId);
         if (booking == null)
         {
             TempData["Error"] = "Taxi booking failed.";
@@ -59,11 +66,17 @@ public class TaxiTripsController : Controller
     [HttpGet]
     public async Task<IActionResult> Confirmation(int id)
     {
-        var userEmail = HttpContext.Session.GetString("UserEmail");
-        if (userEmail == null) return RedirectToAction("SignIn", "Auth");
+        var userId = HttpContext.Session.GetInt32("userId");
+        if (userId == null)
+        {
+            return RedirectToAction("SignIn", "Auth");
+        }
 
         var booking = await _bookingService.GetBookingAsync(id, "Taxi");
-        if (booking == null) return NotFound();
+        if (booking == null)
+        {
+            return NotFound("Taxi booking not found");
+        }
 
         ViewBag.UserName = HttpContext.Session.GetString("Username");
         return View(booking);

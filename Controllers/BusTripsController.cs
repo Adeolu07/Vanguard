@@ -1,9 +1,6 @@
 using _Tripfinity.Interfaces;
-using _Tripfinity.Models;
 using _Tripfinity.Models.Data;
 using Microsoft.AspNetCore.Mvc;
-using _Tripfinity.Services;
-using Microsoft.EntityFrameworkCore;
 
 namespace _Tripfinity.Controllers;
 
@@ -20,34 +17,42 @@ public class BusTripsController : Controller
 
     public IActionResult Index()
     {
-        if (HttpContext.Session.GetString("UserEmail") == null)
+        if (HttpContext.Session.GetInt32("userId") == null)
+        {
             return RedirectToAction("SignIn", "Auth");
-
-        ViewBag.UserName = HttpContext.Session.GetString("Username");
+        }
         return View();
     }
 
     [HttpGet]
     public async Task<IActionResult> Book(int tripId)
     {
-        if (HttpContext.Session.GetString("UserEmail") == null)
+        if (HttpContext.Session.GetInt32("userId") == null)
+        {
             return RedirectToAction("SignIn", "Auth");
+        }
 
         var trip = await _context.BusTrips.FindAsync(tripId);
-        if (trip == null) return NotFound();
+        if (trip == null)
+        {
+            return NotFound("Trip not found");
+        }
 
         ViewBag.Trip = trip;
-        ViewBag.UserName = HttpContext.Session.GetString("Username");
-        return View();
+        ViewBag.UserId = HttpContext.Session.GetInt32("userId");
+        return View("Book", trip);
     }
 
     [HttpPost]
     public async Task<IActionResult> Book(int tripId, int seats)
     {
-        var userEmail = HttpContext.Session.GetString("UserEmail");
-        if (userEmail == null) return RedirectToAction("SignIn", "Auth");
+        var userId = HttpContext.Session.GetInt32("userId");
+        if (userId == null)
+        {
+            return RedirectToAction("SignIn", "Auth");
+        }
 
-        var booking = await _bookingService.BookBusAsync(tripId, seats, userEmail);
+        var booking = await _bookingService.BookBusAsync(tripId, seats, userId.Value);
         if (booking == null)
         {
             TempData["Error"] = "Bus booking failed.";
@@ -61,13 +66,19 @@ public class BusTripsController : Controller
     [HttpGet]
     public async Task<IActionResult> Confirmation(int id)
     {
-        var userEmail = HttpContext.Session.GetString("UserEmail");
-        if (userEmail == null) return RedirectToAction("SignIn", "Auth");
+        var userId = HttpContext.Session.GetInt32("userId");
+        if (userId == null)
+        {
+            return RedirectToAction("SignIn", "Auth");
+        }
 
         var booking = await _bookingService.GetBookingAsync(id, "Bus");
-        if (booking == null) return NotFound();
+        if (booking == null)
+        {
+            return NotFound("Bus booking not found");
+        }
 
-        ViewBag.UserName = HttpContext.Session.GetString("Username");
+        ViewBag.UserId = HttpContext.Session.GetInt32("userId");
         return View(booking);
     }
 }

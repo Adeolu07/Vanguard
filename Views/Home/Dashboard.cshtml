@@ -6,20 +6,20 @@
 }
 
 <div class="welcome-section">
-    <h1>Welcome back, @ViewBag.UserName! 👋</h1>
+    <h1>Welcome back, @ViewBag.FirstName!</h1>
     <p>Ready for your next trip?</p>
 </div>
 
 <div class="quick-actions">
-    <a href="/BusTrips/Index" class="action-card">
-        <div class="action-icon">🚌</div>
-        <h3>Book a Bus</h3>
-        <p>Find and book available bus trips</p>
-    </a>
     <a href="/Ticket/Index" class="action-card">
         <div class="action-icon">🎫</div>
         <h3>My Tickets</h3>
         <p>View all your tickets</p>
+    </a>
+    <a href="/BusTrips/Index" class="action-card">
+        <div class="action-icon">🚌</div>
+        <h3>Book a Bus</h3>
+        <p>Find and book available bus trips</p>
     </a>
     <a href="/TaxiTrips/Index" class="action-card">
         <div class="action-icon">🚕</div>
@@ -34,7 +34,7 @@
 </div>
 
 <div class="recent-section">
-    <h2>Recent Bookings</h2>
+    <h2>Upcoming Trips</h2>
 
     @if (Model.Any())
     {

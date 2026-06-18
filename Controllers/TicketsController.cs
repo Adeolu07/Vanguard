@@ -16,18 +16,18 @@ public class TicketController : Controller
     // GET: /Ticket/Index
     public async Task<IActionResult> Index()
     {
-        if (HttpContext.Session.GetString("UserEmail") == null)
+        var userId = HttpContext.Session.GetInt32("userId");
+
+        if (HttpContext.Session.GetInt32("userId") == null)
         {
             return RedirectToAction("SignIn", "Auth");
         }
-
-        var userId = HttpContext.Session.GetInt32("UserId").Value;
         
         var tickets = await _context.Bookings
             .Include(b => b.BusTrip)
             .Include(b => b.TaxiTrip)
             .Include(b => b.RailwayTrip)
-            .Where(b => b.UserId == userId)
+            .Where(b => b.UserId == userId!.Value)
             .OrderByDescending(b => b.BookingDate)
             .ToListAsync();
 
@@ -39,19 +39,20 @@ public class TicketController : Controller
     [HttpGet]
     public async Task<IActionResult> Details(int id)
     {
-        if (HttpContext.Session.GetString("UserEmail") == null)
+        var userId = HttpContext.Session.GetInt32("userId");
+        
+        if (userId == null)
         {
             return RedirectToAction("SignIn", "Auth");
         }
 
-        var userId = HttpContext.Session.GetInt32("UserId").Value;
         
         var booking = await _context.Bookings
             .Include(b => b.BusTrip)
             .Include(b => b.TaxiTrip)
             .Include(b => b.RailwayTrip)
             .Include(b => b.User)
-            .FirstOrDefaultAsync(b => b.Id == id && b.UserId == userId);
+            .FirstOrDefaultAsync(b => b.Id == id && b.UserId == userId.Value);
 
         if (booking == null)
         {
