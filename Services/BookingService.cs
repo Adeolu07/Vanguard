@@ -27,9 +27,9 @@ public class BookingService : IBookingService
         return await query.FirstOrDefaultAsync(b => b.Id == id);
     }
 
-    public async Task<Booking?> BookBusAsync(int tripId, int seats, string userEmail)
+    public async Task<Booking?> BookBusAsync(int tripId, int seats, int? userId)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
         var trip = await _context.BusTrips.FindAsync(tripId);
         if (trip == null || user == null) return null;
 
@@ -77,9 +77,9 @@ public class BookingService : IBookingService
         return booking;
     }
 
-    public async Task<Booking?> BookTaxiAsync(int tripId, int seats, string userEmail)
+    public async Task<Booking?> BookTaxiAsync(int tripId, int seats, int? userId)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
         var trip = await _context.TaxiTrips.FindAsync(tripId);
         if (trip == null || user == null) return null;
 
@@ -99,5 +99,20 @@ public class BookingService : IBookingService
         _context.Bookings.Add(booking);
         await _context.SaveChangesAsync();
         return booking;
+    }
+
+    public async Task<List<Booking>> GetRecentBookings(int id, string transportType)
+    {
+        // method to return all 5 bookings made recently
+
+        var lastFiveBookings = await _context.Bookings
+            .Where(user => user.Id == id)
+            .Where(user => user.TransportType == transportType)
+            .OrderByDescending(booking => booking.BookingDate)
+            .Take(5)
+            .ToListAsync();
+
+        return lastFiveBookings;
+        
     }
 }

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using _Tripfinity.Interfaces;
 using _Tripfinity.Models;
 using _Tripfinity.Models.Data;
 using Microsoft.AspNetCore.Mvc;
@@ -9,10 +10,12 @@ namespace _Tripfinity.Controllers;
 public class HomeController : Controller
 {
     private readonly AppDbContext _context;
+    private readonly IAuthService _authService;
     
-    public HomeController(AppDbContext context)
+    public HomeController(IAuthService authService, AppDbContext context)
     {
         _context = context;
+        _authService =  authService;
     }
 
     [Route("/home")]
@@ -24,14 +27,17 @@ public class HomeController : Controller
         if (userId == null)
             return View("Index");
         
-        var recentBookings = await _context.Bookings
+        var upcomingTrips = await _context.Bookings
             .Include(b => b.BusTrip)
             .Where(b => b.UserId == userId)
             .OrderByDescending(b => b.BookingDate)
-            .Take(5)
+            .Take(3)
             .ToListAsync();
-
-        return View("Dashboard", recentBookings);
+        
+        var user = _authService.GetCurrentUser(HttpContext);
+        ViewBag.FirstName = user!.FirstName;
+        
+        return View("Dashboard", upcomingTrips);
     }
 
 
