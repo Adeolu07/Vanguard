@@ -16,4 +16,6 @@ public interface IAuthService
     void ClearUserSession(HttpContext httpContext);
 
     User? GetCurrentUser(HttpContext httpContext);
+    public Task<bool> ConfirmationEmailAsync(string userId, string token);
+
 }

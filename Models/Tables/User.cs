@@ -10,7 +10,7 @@ public class User
     [Required(ErrorMessage = "Email is required")]
     [MaxLength(100, ErrorMessage = "Email too long")]
     [EmailAddress(ErrorMessage = "Invalid Email")]
-    public string Email { get; set; } = string.Empty;
+    public required string Email { get; set; }
 
     [Required(ErrorMessage = "Password is required")]
     [MinLength(6, ErrorMessage = "Password must have at least 6 characters")]
@@ -19,12 +19,12 @@ public class User
 
     [Required(ErrorMessage = "First name is required")]
     [MaxLength(100, ErrorMessage = "First name too long")]
-    public string FirstName { get; set; } = string.Empty;
+    public required string FirstName { get; set; } 
 
 
     [Required(ErrorMessage = "Last name is required")]
     [MaxLength(100, ErrorMessage = "Last name too long")]
-    public string LastName { get; set; } = string.Empty;
+    public required string LastName { get; set; }
 
     [MaxLength(20)] [Phone] public string? PhoneNumber { get; set; }
 
@@ -35,6 +35,7 @@ public class User
     public bool IsActive { get; set; }
     public bool IsEmailConfirmed { get; set; } = false;
     public string? EmailConfirmationToken { get; set; }
+    public DateTime? ConfirmationTokenExpiry { get; set; }
     
     public DateTime? EmailConfirmationSentAt { get; set; }
     

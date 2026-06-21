@@ -24,7 +24,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Folder Include="Models\Data\Response\" />
         <Folder Include="Views\Booking\" />
     </ItemGroup>
 
