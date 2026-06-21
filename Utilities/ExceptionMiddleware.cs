@@ -23,20 +23,19 @@ public class ExceptionMiddleware
         catch (Exception ex)
         {
             _logger.LogError(ex, "An error occurred");
-            await HandleExceptionAsync(context, ex);
+            await InternalServerError(context, ex);
         }
     }
 
-    private static async Task HandleExceptionAsync(HttpContext context, Exception ex)
+    private static async Task InternalServerError(HttpContext context, Exception ex)
     {
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 
-        var response = new
+        var response = new ErrorResponse
         {
-            success = false,
-            message = "Service unavailable. Please try again later.",
-            error = ex.Message
+            Message = ex.Message,
+            ErrorCode = "500"
         };
 
         await context.Response.WriteAsync(JsonSerializer.Serialize(response));

@@ -1,7 +1,10 @@
+using System.Net.Http.Headers;
 using _Tripfinity.Interfaces;
 using _Tripfinity.Models.Data;
 using _Tripfinity.Services;
 using _Tripfinity.Utilities;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace _Tripfinity;
@@ -14,6 +17,14 @@ public class Program
         builder.Services.AddScoped<IAuthService, AuthService>();
         builder.Services.AddScoped<IBookingService, BookingService>();
         builder.Services.AddScoped<IEmailService, EmailService>();
+        builder.Services.AddScoped<IWalletService, WalletService>();
+        builder.Services.AddScoped<ISessionStore, SessionStore>();
+        builder.Services.AddHttpClient<IWalletService, WalletService>(client =>
+        {
+            client.BaseAddress = new Uri(builder.Configuration["WalletStation:baseUrl"] ?? "");
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", builder.Configuration["WalletStation:authToken"]);
+        });
+        
         builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer
             (builder.Configuration.GetConnectionString("DefaultConnection")));
         builder.Services.AddDistributedMemoryCache();
@@ -26,24 +37,24 @@ public class Program
 
         builder.Services.AddControllersWithViews();
         builder.Services.AddControllers();
+        
 
         var app = builder.Build();
-
+        app.UseMiddleware<ExceptionMiddleware>();
         // using (var scope = app.Services.CreateScope())
         // {
         //     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         //     dbContext.Database.EnsureCreated();
         // }
-        
         app.UseStaticFiles();
         app.UseSession();
 
         app.UseRouting();
+        app.MapControllers();
         app.MapControllerRoute(
             "default",
             "{controller=Home}/{action=Index}/{id?}");
 
-        app.MapControllers();
         app.MapFallback(async context =>
         {
             context.Response.StatusCode = 404;

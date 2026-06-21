@@ -8,4 +8,4 @@ Migrations/
 .env
 .DS_Store
 .vs
-appsettings.Development.json
+appsettings.json

@@ -1,5 +1,6 @@
 using _Tripfinity.Interfaces;
 using _Tripfinity.Models.Data;
+using _Tripfinity.Models.Data.Requests;
 using _Tripfinity.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,13 +13,15 @@ public class AuthController : Controller
     private readonly AppDbContext _context;
     private  readonly IEmailService _emailService;
     private readonly IWalletService _walletService;
+    private readonly ILogger _logger;
 
-    public AuthController(AppDbContext context, IAuthService authService, IEmailService emailService, IWalletService walletService)
+    public AuthController(AppDbContext context, IAuthService authService, IEmailService emailService, IWalletService walletService,  ILogger<AuthController> logger)
     {
         _context = context;
         _authService = authService;
         _emailService = emailService;
         _walletService = walletService;
+        _logger = logger;
     }
     
     [HttpGet]
@@ -45,6 +48,7 @@ public class AuthController : Controller
     [HttpPost]
     public async Task<IActionResult> SignUp(RegisterViewModel model)
     {
+        _logger.LogInformation("User creation initiated.");
         try
         {
             if (!ModelState.IsValid)
@@ -59,62 +63,46 @@ public class AuthController : Controller
 
             if (!result.Success)
             {
+                _logger.LogWarning("User creation failed.");
                 ModelState.AddModelError("", result.Message);
                 return View(model);
             }
 
-            var token = result.User.EmailConfirmationToken;
-            var confirmationLink = Url.Action("ConfirmEmail", "Auth", 
-                new { token, email = result.User.Email }, Request.Scheme);
+            _logger.LogInformation("Account creation successful.");
+            
+            var confirmationLink = $"{Request.Scheme}://{Request.Host}/account/ConfirmEmail?" +
+                                   $"userId={result.User.Id}&token={result.User.EmailConfirmationToken}";
             
             await _emailService.SendConfirmationEmailAsync(result.User.Email, confirmationLink);
             
-
             return RedirectToAction("Index", "Home");
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, ex.Message);
             TempData["ErrorMessage"] = ex.Message;
-            return View(model);
+            return RedirectToAction("SignIn");
         }
     }
 
 
     [HttpGet]
-    public async Task<IActionResult> ConfirmEmail(string token, string email)
+    public async Task<IActionResult> ConfirmEmail([FromQuery]string userId, [FromQuery] string token)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
-
-        if (user == null)
+        var result = await _authService.ConfirmationEmailAsync(userId, token);
+        if(!result)
         {
-            TempData["ErrorMessage"] = "User not found";
+            TempData["ErrorMessage"] = "Invalid or expired email confirmation token.";
             return RedirectToAction("SignIn");
         }
-
-        if (user.IsEmailConfirmed)
-        {
-            TempData["ErrorMessage"] = "Email already confirmed";
-            return RedirectToAction("SignIn");
-        }
-
-        if (user.EmailConfirmationToken != token)
-        {
-            TempData["ErrorMessage"] = "Invalid confirmation token";
-            return RedirectToAction("SignIn");
-        }
-
-        // Confirm email
-        user.IsEmailConfirmed = true;
-        user.EmailConfirmationToken = null;
-        
-        _walletService.CreateWallet(user.FirstName, user.LastName,user.Email);
-        
-        return RedirectToAction("SignIn");
+        TempData["SuccessMessage"] = "Email confirmation and wallet creation successful.";
+        return RedirectToAction("Index", "Home");
     }
 
     [HttpPost]
     public async Task<IActionResult> SignIn(LoginViewModel model)
     {
+        _logger.LogInformation("Sign in initiated.");
         try
         {
             if (!ModelState.IsValid) 
@@ -141,6 +129,7 @@ public class AuthController : Controller
 
     public IActionResult Logout()
     {
+        _logger.LogInformation("Logout initiated.");
         _authService.ClearUserSession(HttpContext);
         return RedirectToAction("Index", "Home");
     }
