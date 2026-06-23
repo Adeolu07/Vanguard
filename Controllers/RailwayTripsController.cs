@@ -1,5 +1,6 @@
 ﻿using _Tripfinity.Interfaces;
 using _Tripfinity.Models.Data;
+using _Tripfinity.Models.Data.Requests;
 using Microsoft.AspNetCore.Mvc;
 
 namespace _Tripfinity.Controllers;
@@ -8,19 +9,22 @@ public class RailwayTripsController : Controller
 {
     private readonly IBookingService _bookingService; 
     private readonly AppDbContext _context;
+    private readonly IWalletService _walletService;
 
-    public RailwayTripsController(AppDbContext context,  IBookingService bookingService)
+    public RailwayTripsController(
+        AppDbContext context,
+        IBookingService bookingService,
+        IWalletService walletService)
     {
         _context = context;
         _bookingService = bookingService;
+        _walletService = walletService;
     }
 
     public IActionResult Index()
     {
         if (HttpContext.Session.GetInt32("userId") == null)
-        {
             return RedirectToAction("SignIn", "Auth");
-        }
         return View();
     }
 
@@ -28,14 +32,10 @@ public class RailwayTripsController : Controller
     public async Task<IActionResult> Book(int tripId)
     {
         if (HttpContext.Session.GetInt32("userId") == null)
-        {
             return RedirectToAction("SignIn", "Auth");
-        }
         var trip = await _context.RailwayTrips.FindAsync(tripId);
-        if (trip == null)
-        {
-            return NotFound("Trip not found.");
-        }
+        if (trip == null) return NotFound("Trip not found.");
+
         ViewBag.Trip = trip;
         ViewBag.UserId = HttpContext.Session.GetInt32("userId");
         return View("Book", trip);
@@ -45,10 +45,7 @@ public class RailwayTripsController : Controller
     public async Task<IActionResult> Book(int tripId, int seats)
     {
         var userId = HttpContext.Session.GetInt32("userId");
-        if (userId == null)
-        {
-            return RedirectToAction("SignIn", "Auth");
-        }
+        if (userId == null) return RedirectToAction("SignIn", "Auth");
 
         var result = await _bookingService.BookRailwayAsync(tripId, seats, userId);
         if (!result.Success)
@@ -68,17 +65,21 @@ public class RailwayTripsController : Controller
     public async Task<IActionResult> Confirmation(int id)
     {
         var userId = HttpContext.Session.GetInt32("userId");
-        if (userId == null)
-        {
+        if (userId == null) 
             return RedirectToAction("SignIn", "Auth");
-        }
-       
+
         var booking = await _bookingService.GetBookingAsync(id, "Railway");
-        if (booking == null)
-        {
+        if (booking == null) 
             return NotFound("Railway booking not found.");
+
+        // ── Fetch payment transaction details ──────────────
+        if (!string.IsNullOrEmpty(booking.PaymentTransactionId))
+        {
+            var transReq = new GetTransactionRequest { TransactionId = booking.PaymentTransactionId };
+            var transRes = await _walletService.GetTransactionAsync(transReq);
+            ViewBag.PaymentTransaction = transRes?.TransactionDetails;
         }
-        
-        return View(booking);
+
+        return View("Confirmation", booking);
     }
 }

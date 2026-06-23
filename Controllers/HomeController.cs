@@ -11,11 +11,11 @@ public class HomeController : Controller
 {
     private readonly AppDbContext _context;
     private readonly IAuthService _authService;
-    
+
     public HomeController(IAuthService authService, AppDbContext context)
     {
         _context = context;
-        _authService =  authService;
+        _authService = authService;
     }
 
     [Route("/home")]
@@ -26,17 +26,17 @@ public class HomeController : Controller
         var userId = HttpContext.Session.GetInt32("userId");
         if (userId == null)
             return View("Index");
-        
+
         var upcomingTrips = await _context.Bookings
             .Include(b => b.BusTrip)
             .Where(b => b.UserId == userId)
             .OrderByDescending(b => b.BookingDate)
             .Take(3)
             .ToListAsync();
-        
+
         var user = _authService.GetCurrentUser(HttpContext);
         ViewBag.FirstName = user!.FirstName;
-        
+
         return View("Dashboard", upcomingTrips);
     }
 
@@ -45,5 +45,13 @@ public class HomeController : Controller
     public IActionResult Error()
     {
         return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+    }
+
+    [HttpGet]
+    public IActionResult Wallet()
+    {
+        if (HttpContext.Session.GetInt32("userId") == null)
+            return RedirectToAction("SignIn", "Auth");
+        return View("~/Views/Wallet/Index.cshtml");
     }
 }

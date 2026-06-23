@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Marshal Sign In";
+    ViewData["FullPage"] = true;
     Layout = "_Layout";
 }
 @section Styles {
@@ -38,7 +39,7 @@
             </div>
         }
 
-        <form asp-action="SignInMarshal" method="post" class="login-form">
+        <form asp-action="MarshalSignIn" method="post" class="login-form">
             <div class="form-group">
                 <input asp-for="Email" type="text" placeholder="Enter email or phone number" />
                 <span asp-validation-for="Email" class="error"></span>

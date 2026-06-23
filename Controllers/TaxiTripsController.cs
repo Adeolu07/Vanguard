@@ -1,5 +1,6 @@
 using _Tripfinity.Interfaces;
 using _Tripfinity.Models.Data;
+using _Tripfinity.Models.Data.Requests;
 using Microsoft.AspNetCore.Mvc;
 
 namespace _Tripfinity.Controllers;
@@ -8,11 +9,13 @@ public class TaxiTripsController : Controller
 {
     private readonly IBookingService _bookingService; 
     private readonly AppDbContext _context;
+    private readonly IWalletService _walletService;
 
-    public TaxiTripsController(AppDbContext context, IBookingService bookingService)
+    public TaxiTripsController(AppDbContext context, IBookingService bookingService, IWalletService walletService)
     {
         _context = context;
         _bookingService = bookingService;
+        _walletService = walletService;
     }
 
     public IActionResult Index()
@@ -70,18 +73,18 @@ public class TaxiTripsController : Controller
     public async Task<IActionResult> Confirmation(int id)
     {
         var userId = HttpContext.Session.GetInt32("userId");
-        if (userId == null)
-        {
-            return RedirectToAction("SignIn", "Auth");
-        }
+        if (userId == null) return RedirectToAction("SignIn", "Auth");
 
         var booking = await _bookingService.GetBookingAsync(id, "Taxi");
-        if (booking == null)
+        if (booking == null) return NotFound("Taxi booking not found.");
+
+        if (!string.IsNullOrEmpty(booking.PaymentTransactionId))
         {
-            return NotFound("Taxi booking not found");
+            var transReq = new GetTransactionRequest { TransactionId = booking.PaymentTransactionId };
+            var transRes = await _walletService.GetTransactionAsync(transReq);
+            ViewBag.PaymentTransaction = transRes?.TransactionDetails;
         }
 
-        ViewBag.UserName = HttpContext.Session.GetString("Username");
-        return View(booking);
+        return View("Confirmation",booking);
     }
 }

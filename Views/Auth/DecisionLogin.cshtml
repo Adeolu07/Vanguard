@@ -1,5 +1,6 @@
 ﻿@{
-    ViewData["Title"] = "Login Decision";
+    ViewData["Title"] = "Home Page";
+    ViewData["FullPage"] = true;
     Layout = "_Layout";
 }
 @section Styles {
@@ -21,7 +22,7 @@
 
         <div class="button-group">
             <a asp-controller="Auth" asp-action="SignIn" class="btn-selection">Passenger</a>
-            <a asp-controller="Auth" asp-action="SignInMarshal" class="btn-selection">Marshal</a>
+            <a asp-controller="Auth" asp-action="MarshalSignIn" class="btn-selection">Marshal</a>
         </div>
     </div>
 </main>

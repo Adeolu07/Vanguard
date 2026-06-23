@@ -5,6 +5,7 @@ using _Tripfinity.Models.Data;
 using _Tripfinity.Models.Data.Requests;
 using _Tripfinity.Models.Data.Response;
 using _Tripfinity.Models.Tables;
+using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
 
 namespace _Tripfinity.Services;
@@ -15,76 +16,68 @@ public class WalletService : IWalletService
     private readonly ILogger<WalletService> _logger;
     private readonly AppDbContext _context;
     private readonly IConfiguration _config;
+    private readonly IMemoryCache _cache;
+    private const string TokenCacheKey = "WalletToken";
 
     public WalletService( HttpClient client,
         ILogger<WalletService> logger,
-        AppDbContext context, IConfiguration config)
+        AppDbContext context, IConfiguration config
+        , IMemoryCache cache)
     {
         _logger = logger;
         _client = client;
         _context = context;
         _config = config;
-        AuthenticateOnStartup().GetAwaiter().GetResult();
+        _cache = cache;
     }
 
-    private async Task AuthenticateOnStartup()
+    private async Task EnsureAuthenticatedAsync()
     {
-        var existing = _context.WalletTokens.FirstOrDefault();
-        if (existing != null && existing.ExpiryDate > DateTime.Now)
+        // Check cache first
+        if (_cache.TryGetValue<string>(TokenCacheKey, out var cachedToken))
         {
-            _client.DefaultRequestHeaders.Authorization =  new AuthenticationHeaderValue("Bearer", existing.Token);
-            _logger.LogInformation("Token loaded from DB");
+            _client.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", cachedToken);
             return;
         }
-        
+
+        // Authenticate fresh
         var authRequest = new AuthenticationRequest
         {
-            Username = _config["WalletStation:username"],
-            Password = _config["WalletStation:password"]
+            Username = _config["WalletStation:username"]!,
+            Password = _config["WalletStation:password"]!,
         };
-    
-        await AuthenticationAsync(authRequest);
-    }
-    
-    public async Task<AuthenticationResponse> AuthenticationAsync(AuthenticationRequest authenticationRequest)
-    {
-        _logger.LogInformation("Authenticating user...");
-        var requestBody = JsonConvert.SerializeObject(authenticationRequest);
+
+        var requestBody = JsonConvert.SerializeObject(authRequest);
         var response = await _client.PostAsync("Auth",
             new StringContent(requestBody, Encoding.UTF8, "application/json"));
+
         if (!response.IsSuccessStatusCode)
         {
-                var error = await response.Content.ReadAsStringAsync();
-                var errorJson = JsonConvert.DeserializeObject<AuthenticationResponse>(error);
-                _logger.LogWarning("Error in Authenticate: " + errorJson);
-                return errorJson;
+            var error = await response.Content.ReadAsStringAsync();
+            _logger.LogWarning("Wallet auth failed: {Error}", error);
+            return;
         }
+
         var json = await response.Content.ReadAsStringAsync();
-        var result = JsonConvert.DeserializeObject<AuthenticationResponse>(json); ;
+        var result = JsonConvert.DeserializeObject<AuthenticationResponse>(json);
         
-        if (result.ResponseHeader.ResponseCode == "00")
+
+        if (result?.ResponseHeader.ResponseCode == "00")
         {
-            _logger.LogInformation("Created brand new wallet btw");
-           var existing = _context.WalletTokens.FirstOrDefault();
-           if (existing != null)
-           {
-               _context.WalletTokens.Remove(existing);
-           }
-           DateTime.TryParse(result.ExpiryDate, out DateTime ExpiryDate);
-           _context.WalletTokens.Add(new WalletToken
-           {
-               Token = result.Token,
-               ExpiryDate = ExpiryDate,
-           });
-           await _context.SaveChangesAsync();
-           _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", result.Token);
+            // Cache the token until its expiry (default 1 hour if not provided)
+            var expiry = DateTime.TryParse(result.ExpiryDate, out var expiryDate);
+            _client.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", result.Token);
+            _cache.Set(TokenCacheKey, result.Token, expiryDate);
+            _logger.LogInformation("Wallet token acquired and cached");
         }
-        return result;
-        
     }
+    
     
     public async Task<CreateWalletResponse> CreateWalletAsync(CreateWalletRequest createWallet)
     {
+        await EnsureAuthenticatedAsync();
         _logger.LogInformation("Creating Wallet...");
         try
         {
@@ -101,7 +94,7 @@ public class WalletService : IWalletService
                 var error = await response.Content.ReadAsStringAsync();
                 var errorJson = JsonConvert.DeserializeObject<CreateWalletResponse>(error);
                 _logger.LogWarning("Wallet creation error: " + errorJson);
-                return errorJson;
+                return errorJson!;
             }
             
             var json = await response.Content.ReadAsStringAsync();
@@ -119,6 +112,7 @@ public class WalletService : IWalletService
 
     public async Task<CreditWalletResponse> CreditWalletAsync(CreditWalletRequest creditWallet)
     {
+        await EnsureAuthenticatedAsync();
         _logger.LogInformation("Crediting Wallet...");
         try
         {
@@ -154,6 +148,7 @@ public class WalletService : IWalletService
 
     public async Task<DebitWalletResponse> DebitWalletAsync(DebitWalletRequest debitWallet)
     {
+        await EnsureAuthenticatedAsync();
         _logger.LogInformation("Debit Wallet...");
         try
         {
@@ -187,6 +182,7 @@ public class WalletService : IWalletService
 
     public async Task<GetBalanceResponse> GetBalanceAsync(GetBalanceRequest getBalance)
     {
+        await EnsureAuthenticatedAsync();
         _logger.LogInformation("Get Balance...");
         try
         {
@@ -219,6 +215,7 @@ public class WalletService : IWalletService
     
     public async Task<GetTransactionResponse> GetTransactionAsync(GetTransactionRequest getTransaction)
     {
+        await EnsureAuthenticatedAsync();
         _logger.LogInformation("Get Transaction...");
         try
         {
@@ -254,6 +251,7 @@ public class WalletService : IWalletService
 
     public async Task<RefundResponse> RefundAsync(RefundRequest refund)
     {
+        await EnsureAuthenticatedAsync();
         _logger.LogInformation("Refund initiated");
         try
         {

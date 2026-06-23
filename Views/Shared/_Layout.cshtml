@@ -17,10 +17,11 @@
             <nav class="navbar">
                 <div class="logo">🚆 Smart Transport</div>
                 <div class="user-info">
-                    @if (Context.Session.GetString("UserEmail") != null)
+                    @if (Context.Session.GetString("Username") != null)
                     {
                         <span class="user-name">👋 Hello, @Context.Session.GetString("Username")</span>
                         <a href="/Auth/Logout" class="logout-btn">Sign Out</a>
+                        <a href="/Home/Wallet" class="logout-btn" style="margin-left: 10px;">💳 Wallet</a>
                     }
                     else
                     {
@@ -32,11 +33,18 @@
         }
     </header>
 
-    <div class="container">
-        <main>
-            @RenderBody()
-        </main>
-    </div>
+    @if (ViewData["FullPage"] != null)  @* pages like SignIn, SignUp, MarshalSignIn *@
+    {
+        @RenderBody()
+    }
+    else
+    {
+        <div class="container mt-4">
+            <main>
+                @RenderBody()
+            </main>
+        </div>
+    }
 
     <footer class="footer">
         <div class="container">
