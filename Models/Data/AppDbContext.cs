@@ -15,7 +15,6 @@ public class AppDbContext : DbContext
     public DbSet<TaxiTrip> TaxiTrips { get; set; }
     public DbSet<RailwayTrip> RailwayTrips { get; set; }
     public DbSet<Booking> Bookings { get; set; }
-    public DbSet<WalletToken>  WalletTokens { get; set; }
     public DbSet<Ticket> Tickets { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)

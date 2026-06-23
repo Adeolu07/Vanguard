@@ -1,0 +1,78 @@
+@{
+    ViewBag.Title = "title";
+    Layout = "_Layout";
+}
+@section Styles
+{
+    <link rel="stylesheet" href="~/css/wallet.css"/>
+}
+
+<div class="wallet-container">
+    <h2>My Wallet</h2>
+    <div class="balance-card">
+        <h3>Current Balance</h3>
+        <span id="balanceAmount" class="balance">Loading...</span>
+    </div>
+
+    <div class="fund-wallet">
+        <h4>Add Funds</h4>
+        <div class="fund-form">
+            <input type="number" id="fundAmount" placeholder="Amount (₦)" min="1" step="100" />
+            <input type="text" id="fundDescription" placeholder="Description (optional)" />
+            <button id="fundButton" class="btn-primary">Add Funds</button>
+        </div>
+        <div id="fundMessage" class="message"></div>
+    </div>
+</div>
+<h2>title</h2>
+
+
+@section Scripts {
+    <script>
+        async function loadBalance() {
+            try {
+                const res = await fetch('/api/wallet/my-balance');
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('balanceAmount').textContent = `₦${data.balance.toLocaleString()}`;
+                } else {
+                    document.getElementById('balanceAmount').textContent = 'Error loading balance';
+                }
+            } catch (err) {
+                document.getElementById('balanceAmount').textContent = err;
+            }
+        }
+
+        document.getElementById('fundButton').addEventListener('click', async () => {
+            const amount = parseFloat(document.getElementById('fundAmount').value);
+            if (isNaN(amount) || amount <= 0) {
+                document.getElementById('fundMessage').innerHTML = '<span class="error">Enter a valid amount</span>';
+                return;
+            }
+            const desc = document.getElementById('fundDescription').value;
+            document.getElementById('fundButton').disabled = true;
+            document.getElementById('fundMessage').innerHTML = 'Funding...';
+
+            try {
+                const res = await fetch('/api/wallet/my-fund', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount: amount, description: desc })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('fundMessage').innerHTML = `<span class="success">✅ ${data.message} – New balance: ₦${data.balance.toLocaleString()}</span>`;
+                    loadBalance(); // refresh
+                } else {
+                    document.getElementById('fundMessage').innerHTML = `<span class="error">❌ ${data.message}</span>`;
+                }
+            } catch (err) {
+                document.getElementById('fundMessage').innerHTML = '<span class="error">Network error</span>';
+            } finally {
+                document.getElementById('fundButton').disabled = false;
+            }
+        });
+
+        loadBalance();
+    </script>
+}
