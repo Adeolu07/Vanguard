@@ -5,9 +5,10 @@ namespace _Tripfinity.Interfaces;
 
 public interface IAuthService
 {
-    Task<AuthResponse> SignUpAsync(string email, string password, string firstName, string lastName);
+    
+    Task<AuthResponse> SignUpAsync(string email, string password, string firstName, string lastName, string phoneNumber, string role);
 
-    Task<AuthResponse?> SignInAsync(string email, string password);
+    Task<AuthResponse?> SignInAsync(string email, string password, string role);
 
     Task<bool> EmailExistsAsync(string email);
 
@@ -16,6 +17,6 @@ public interface IAuthService
     void ClearUserSession(HttpContext httpContext);
 
     User? GetCurrentUser(HttpContext httpContext);
-    public Task<bool> ConfirmationEmailAsync(string userId, string token);
 
+    Task<bool> ConfirmationEmailAsync(string userId, string token);
 }

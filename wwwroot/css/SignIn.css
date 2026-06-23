@@ -1,0 +1,181 @@
+﻿/* ===== General Resets ===== */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+body {
+    background-color: #ffffff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ===== Header Bar (Solid Black) ===== */
+header {
+    background-color: #000000;
+    color: #fff;
+    padding: 20px 40px;
+    width: 100%;
+}
+
+.nav-container p {
+    font-size: 18px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+
+/* ===== Desktop 3-Column Splitter ===== */
+.page-container {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr 1fr; /* Centers the login block container */
+    flex: 1;
+    min-height: calc(100vh - 61px);
+    align-items: stretch; /* Allows layout children to handle their own heights */
+    gap: 60px;
+    padding: 40px 60px;
+}
+
+/* ===== Center Form Panel Styling ===== */
+.form-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    width: 100%;
+    max-width: 440px;
+    margin: 0 auto;
+}
+
+.page-title {
+    font-size: 32px;
+    font-weight: 500;
+    margin-bottom: 36px;
+    color: #000000;
+    line-height: 1.3;
+}
+
+/* Stacked Form Fields Layout */
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+}
+
+.form-group {
+    width: 100%;
+}
+
+    /* Gray Rounded Pill Inputs */
+    .form-group input {
+        width: 100%;
+        padding: 18px 24px;
+        background-color: #e0e0e0;
+        border: none;
+        border-radius: 12px;
+        font-size: 16px;
+        color: #333;
+        outline: none;
+    }
+
+        .form-group input::placeholder {
+            color: #757575;
+        }
+
+/* Error message styling */
+.error {
+    color: #d32f2f;
+    font-size: 12px;
+    margin-top: 4px;
+    display: block;
+    text-align: left;
+}
+
+/* Action Container for Button and Link */
+.action-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 16px;
+    width: 100%;
+}
+
+/* Dark Navy Button */
+.btn-continue {
+    width: 100%;
+    padding: 16px 0;
+    background-color: #050a52;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    margin-bottom: 24px;
+}
+
+    .btn-continue:hover {
+        background-color: #020536;
+    }
+
+/* Sign Up Link Styles below button */
+.signup-redirect {
+    font-size: 15px;
+    color: #000000;
+    font-weight: 500;
+}
+
+    .signup-redirect a {
+        color: #000000;
+        text-decoration: none;
+        font-weight: bold;
+        margin-left: 4px;
+    }
+
+        .signup-redirect a:hover {
+            text-decoration: underline;
+        }
+
+/* ===== ACCURATE STRAIGHT ASYMMETRICAL SIDE BLOCKS ===== */
+
+/* Left Box: Much shorter, anchored firmly to the bottom layout edge */
+.left-banner {
+    background-color: #000000;
+    height: 55vh;
+    border-radius: 4px;
+    width: 100%;
+    margin-top: auto; /* Forces it downwards */
+}
+
+/* Right Box: Taller, positioned higher up the layout workspace */
+.right-banner {
+    background-color: #000000;
+    height: 75vh;
+    border-radius: 4px;
+    width: 100%;
+    margin-bottom: auto; /* Balances it upwards */
+}
+
+/* ==========================================================================
+   Responsive View Breakpoints
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+    .page-container {
+        grid-template-columns: 1fr;
+        padding: 40px 24px;
+    }
+}
+
+.left-banner, .right-banner {
+    display: none; /* Safely drops out decorative side blocks for smaller device profiles */
+}
+
+.form-section {
+    max-width: 100%;
+}

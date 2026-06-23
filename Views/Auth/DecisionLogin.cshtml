@@ -1,0 +1,27 @@
+﻿@{
+    ViewData["Title"] = "Login Decision";
+    Layout = "_Layout";
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/login-decision.css" />
+}
+
+<header>
+    <div class="header-container">
+        <p class="brand-logo">Tripfinity</p>
+        <p class="header-action">
+            <a asp-controller="Auth" asp-action="SignUp">Create an account</a>
+        </p>
+    </div>
+</header>
+
+<main class="content-container">
+    <div class="decision-box">
+        <h1 class="decision-title">Login as a</h1>
+
+        <div class="button-group">
+            <a asp-controller="Auth" asp-action="SignIn" class="btn-selection">Passenger</a>
+            <a asp-controller="Auth" asp-action="SignInMarshal" class="btn-selection">Marshal</a>
+        </div>
+    </div>
+</main>

@@ -19,6 +19,10 @@ public class RegisterViewModel
     [DataType(DataType.Password)]
     public string Password { get; set; } = string.Empty;
 
+    [Required(ErrorMessage = "Phone number is required")]
+    [Phone(ErrorMessage = "Invalid phone number format")]
+    public string PhoneNumber { get; set; } = string.Empty;
+
     [Required(ErrorMessage = "Confirm your password")]
     [Compare("Password", ErrorMessage = "Passwords do not match")]
     [DataType(DataType.Password)]
