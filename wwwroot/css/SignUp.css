@@ -30,7 +30,7 @@ header {
 /* ===== Desktop Layout Splitter ===== */
 .page-container {
     display: grid;
-    grid-template-columns: 1.2fr 0.8fr; /* Form gets more space, Banner takes the rest */
+    grid-template-columns: 1.2fr 0.8fr; 
     flex: 1;
     min-height: calc(100vh - 61px);
 }
@@ -55,18 +55,18 @@ header {
 .signup-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 30px 24px; /* Row gap and Column gap matching Figma spacing */
+    gap: 30px 24px; 
 }
 
 .form-group {
     width: 100%;
 }
 
-    /* Gray Pill Inputs matching Figma rounded style */
+    /* Gray Pill Inputs */
     .form-group input {
         width: 100%;
         padding: 18px 24px;
-        background-color: #e0e0e0; /* Gray box fill color */
+        background-color: #e0e0e0;
         border: none;
         border-radius: 12px;
         font-size: 16px;
@@ -86,7 +86,7 @@ header {
     display: block;
 }
 
-/* Button Wrapper to control row positioning */
+
 .btn-container {
     grid-column: span 2;
     margin-top: 20px;
@@ -95,7 +95,7 @@ header {
 /* Dark Navy Button */
 .btn-submit {
     padding: 16px 60px;
-    background-color: #050a52; /* Deep Navy Blue */
+    background-color: #050a52; 
     color: #fff;
     border: none;
     border-radius: 10px;
@@ -111,19 +111,17 @@ header {
 
 /* ===== Right Black Graphic Banner Panel ===== */
 .graphic-side {
-    background-color: #000000; /* Solid black layout panel */
-    margin: 40px 40px 40px 0; /* Creates padding from edges matching visual box */
+    background-color: #000000;
+    margin: 40px 40px 40px 0; 
     border-radius: 4px;
 }
 
-/* ==========================================================================
- Responsive View Breakpoints (Media Query Engine)
- ========================================================================== */
+/* Responsiveness */
 
 /* Mobile & Tablet Screens Setup */
 @media (max-width: 900px) {
     .page-container {
-        grid-template-columns: 1fr; /* Drop multi-column layout split */
+        grid-template-columns: 1fr;  
     }
 
     .graphic-side {

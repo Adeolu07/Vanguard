@@ -48,25 +48,26 @@ public class AuthController : Controller
         return RedirectToAction("Index", "Home");
     }
 
+    // ✅ Marshal Sign In (points to Marshal-SignIn.cshtml)
     [HttpGet]
-    public IActionResult SignInMarshal()
+    public IActionResult MarshalSignIn()
     {
         if (HttpContext.Session.GetInt32("userId") != null)
             return RedirectToAction("Index", "Home");
-        return View();
+        return View("Marshal-SignIn");
     }
 
     [HttpPost]
-    public async Task<IActionResult> SignInMarshal(LoginViewModel model)
+    public async Task<IActionResult> MarshalSignIn(LoginViewModel model)
     {
-        if (!ModelState.IsValid) return View(model);
+        if (!ModelState.IsValid) return View("Marshal-SignIn", model);
 
         var result = await _authService.SignInAsync(model.Email, model.Password, "Marshal");
 
         if (!result.Success || result.User == null)
         {
             ModelState.AddModelError("", result.Message);
-            return View(model);
+            return View("Marshal-SignIn", model);
         }
 
         _authService.SetUserSession(HttpContext, result.User);
@@ -103,18 +104,19 @@ public class AuthController : Controller
         return RedirectToAction("Index", "Home");
     }
 
+    // ✅ Marshal Sign Up (points to Marshal-SignUp.cshtml)
     [HttpGet]
-    public IActionResult SignUpMarshal()
+    public IActionResult MarshalSignUp()
     {
         if (HttpContext.Session.GetInt32("userId") != null)
             return RedirectToAction("Index", "Home");
-        return View();
+        return View("Marshal-SignUp");
     }
 
     [HttpPost]
-    public async Task<IActionResult> SignUpMarshal(RegisterViewModel model)
+    public async Task<IActionResult> MarshalSignUp(RegisterViewModel model)
     {
-        if (!ModelState.IsValid) return View(model);
+        if (!ModelState.IsValid) return View("Marshal-SignUp", model);
 
         var result = await _authService.SignUpAsync(
             model.Email, model.Password, model.FirstName, model.LastName, model.PhoneNumber, "Marshal"
@@ -123,7 +125,7 @@ public class AuthController : Controller
         if (!result.Success || result.User == null)
         {
             ModelState.AddModelError("", result.Message);
-            return View(model);
+            return View("Marshal-SignUp", model);
         }
 
         var confirmationLink = $"{Request.Scheme}://{Request.Host}/account/ConfirmEmail?" +

@@ -27,7 +27,6 @@ header {
     letter-spacing: 0.5px;
 }
 
-/* ===== Desktop Layout Splitter ===== */
 .page-container {
     display: grid;
     grid-template-columns: 1.2fr 0.8fr;
@@ -62,7 +61,6 @@ header {
     width: 100%;
 }
 
-    /* Gray Pill Inputs matching Figma rounded style */
     .form-group input {
         width: 100%;
         padding: 18px 24px;
@@ -91,13 +89,13 @@ header {
     grid-column: span 2;
     display: flex;
     flex-direction: column;
-    align-items: center; /* Centers both the button and link below it */
+    align-items: center; 
     margin-top: 20px;
 }
 
 /* Dark Navy Button */
 .btn-next {
-    padding: 16px 80px; /* Slightly wider padding for the shorter word "Next" */
+    padding: 16px 80px;
     background-color: #050a52;
     color: #fff;
     border: none;
@@ -131,16 +129,14 @@ header {
             text-decoration: underline;
         }
 
-/* ===== Right Black Graphic Banner Panel ===== */
+
 .graphic-side {
     background-color: #000000;
     margin: 40px 40px 40px 0;
     border-radius: 4px;
 }
 
-/* ==========================================================================
-   Responsive View Breakpoints
-   ========================================================================== */
+/* Responsiveness */
 
 @media (max-width: 900px) {
     .page-container {
@@ -166,6 +162,6 @@ header {
     }
 
     .btn-next {
-        width: 100%; /* Spans full width on mobile screens */
+        width: 100%; 
     }
 }

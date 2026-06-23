@@ -46,7 +46,7 @@ header {
     flex: 1;
     display: flex;
     align-items: center;
-    padding-left: 10%; /* Positions the text content over to the left side like Figma */
+    padding-left: 10%; 
 }
 
 .decision-box {
@@ -67,7 +67,7 @@ header {
 .button-group {
     display: flex;
     flex-direction: column;
-    gap: 32px; /* Keeps consistent spacing between the two buttons */
+    gap: 32px; 
 }
 
 /* Pill Selection Buttons matching Dark Navy Fill */
@@ -76,7 +76,7 @@ header {
     text-align: center;
     text-decoration: none;
     padding: 18px 0;
-    background-color: #050a52; /* Deep Navy Blue */
+    background-color: #050a52; 
     color: #ffffff;
     border-radius: 14px;
     font-size: 18px;
@@ -94,9 +94,7 @@ header {
         transform: scale(0.98);
     }
 
-/* ==========================================================================
-   Responsive Mobile Adjustments
-   ========================================================================== */
+/* Responsiveness */
 
 @media (max-width: 768px) {
     header {
@@ -104,7 +102,7 @@ header {
     }
 
     .header-action {
-        font-size: 18px; /* Scales header font down on smaller frames */
+        font-size: 18px; 
     }
 
     .content-container {

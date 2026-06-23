@@ -1,7 +1,8 @@
 ﻿@{
     ViewData["Title"] = "Signup Decision";
-    Layout = "_Layout";
+    Layout = "_AuthLayout";
 }
+
 @section Styles {
     <link rel="stylesheet" href="~/css/decision.css" />
 }
@@ -18,8 +19,8 @@
         <h1 class="decision-title">Sign up as a</h1>
 
         <div class="button-group">
-            <a asp-controller="Auth" asp-action="SignUpPassenger" class="btn-selection">Passenger</a>
-            <a asp-controller="Auth" asp-action="SignUpMarshal" class="btn-selection">Marshal</a>
+            <a asp-controller="Auth" asp-action="SignUp" class="btn-selection">Passenger</a>
+            <a asp-controller="Auth" asp-action="MarshalSignUp" class="btn-selection">Marshal</a>
         </div>
     </div>
 </main>

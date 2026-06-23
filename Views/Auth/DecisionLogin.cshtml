@@ -1,7 +1,8 @@
 ﻿@{
     ViewData["Title"] = "Login Decision";
-    Layout = "_Layout";
+    Layout = "_AuthLayout";
 }
+
 @section Styles {
     <link rel="stylesheet" href="~/css/login-decision.css" />
 }
@@ -21,7 +22,7 @@
 
         <div class="button-group">
             <a asp-controller="Auth" asp-action="SignIn" class="btn-selection">Passenger</a>
-            <a asp-controller="Auth" asp-action="SignInMarshal" class="btn-selection">Marshal</a>
+            <a asp-controller="Auth" asp-action="MarshalSignIn" class="btn-selection">Marshal</a>
         </div>
     </div>
 </main>
