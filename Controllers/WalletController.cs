@@ -76,7 +76,7 @@ public class WalletController : ControllerBase
         return Ok(response);
     }
     
-    [HttpGet("my-balance")]          // → GET /api/wallet/my-balance
+    [HttpGet("my-balance")]          // -> GET /api/wallet/my-balance
     public async Task<IActionResult> GetMyBalance()
     {
         var user = _authService.GetCurrentUser(HttpContext);
@@ -95,7 +95,7 @@ public class WalletController : ControllerBase
         });
     }
     
-    [HttpPost("my-fund")]            // → POST /api/wallet/my-fund
+    [HttpPost("my-fund")]            // -> POST /api/wallet/my-fund
     public async Task<IActionResult> FundMyWallet([FromBody] CreditWalletRequest model)
     {
         var user = _authService.GetCurrentUser(HttpContext);
