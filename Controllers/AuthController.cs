@@ -1,4 +1,6 @@
 using _Tripfinity.Interfaces;
+using _Tripfinity.Models;
+using _Tripfinity.Models.Data.Requests;
 using _Tripfinity.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 
@@ -34,9 +36,10 @@ public class AuthController : Controller
     [HttpPost]
     public async Task<IActionResult> SignIn(LoginViewModel model)
     {
-        if (!ModelState.IsValid) return View(model);
+        if (!ModelState.IsValid) 
+            return View(model);
 
-        var result = await _authService.SignInAsync(model.Email, model.Password, "Passenger");
+        var result = await _authService.SignInAsync(model.Email, model.Password);
 
         if (!result.Success || result.User == null)
         {
@@ -62,7 +65,7 @@ public class AuthController : Controller
     {
         if (!ModelState.IsValid) return View("Marshal-SignIn", model);
 
-        var result = await _authService.SignInAsync(model.Email, model.Password, "Marshal");
+        var result = await _authService.SignInAsync(model.Email, model.Password);
 
         if (!result.Success || result.User == null)
         {
@@ -85,11 +88,10 @@ public class AuthController : Controller
     [HttpPost]
     public async Task<IActionResult> SignUp(RegisterViewModel model)
     {
-        if (!ModelState.IsValid) return View(model);
+        if (!ModelState.IsValid) 
+            return View(model);
 
-        var result = await _authService.SignUpAsync(
-            model.Email, model.Password, model.FirstName, model.LastName, model.PhoneNumber, "Passenger"
-        );
+        var result = await _authService.SignUpAsync(model);
 
         if (!result.Success || result.User == null)
         {
@@ -114,29 +116,30 @@ public class AuthController : Controller
     }
 
     [HttpPost]
+<<<<<<< HEAD
     public async Task<IActionResult> MarshalSignUp(RegisterViewModel model)
     {
         if (!ModelState.IsValid) return View("Marshal-SignUp", model);
+=======
+    public async Task<IActionResult> SignUpMarshal(MarshalRegisterRequest model)
+    {
+        if (!ModelState.IsValid) 
+            return View(model);
+>>>>>>> db5d27a25195d0bb2bfba4f55cb51782af141345
 
-        var result = await _authService.SignUpAsync(
-            model.Email, model.Password, model.FirstName, model.LastName, model.PhoneNumber, "Marshal"
-        );
+        var result = await _authService.RegisterMarshalAsync(model);
 
         if (!result.Success || result.User == null)
         {
             ModelState.AddModelError("", result.Message);
             return View("Marshal-SignUp", model);
         }
-
-        var confirmationLink = $"{Request.Scheme}://{Request.Host}/account/ConfirmEmail?" +
-                               $"userId={result.User.Id}&token={result.User.EmailConfirmationToken}";
-        await _emailService.SendConfirmationEmailAsync(result.User.Email, confirmationLink);
-
+        
         return RedirectToAction("Index", "Home");
     }
 
     [HttpGet]
-    public async Task<IActionResult> ConfirmEmail([FromQuery] string userId, [FromQuery] string token)
+    public async Task<IActionResult> ConfirmEmail([FromQuery] int userId, [FromQuery] string token)
     {
         var result = await _authService.ConfirmationEmailAsync(userId, token);
         if (!result)

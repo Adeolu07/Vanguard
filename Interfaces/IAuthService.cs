@@ -1,14 +1,17 @@
 using _Tripfinity.Models;
 using _Tripfinity.Models.Data;
+using _Tripfinity.Models.Data.Requests;
+using _Tripfinity.Models.ViewModels;
 
 namespace _Tripfinity.Interfaces;
 
 public interface IAuthService
 {
-    
-    Task<AuthResponse> SignUpAsync(string email, string password, string firstName, string lastName, string phoneNumber, string role);
+    Task<AuthResponse> SignUpAsync(RegisterViewModel model);
 
-    Task<AuthResponse?> SignInAsync(string email, string password, string role);
+    Task<AuthResponse> RegisterMarshalAsync(MarshalRegisterRequest request);
+
+    Task<AuthResponse?> SignInAsync(string email, string password);
 
     Task<bool> EmailExistsAsync(string email);
 
@@ -17,6 +20,8 @@ public interface IAuthService
     void ClearUserSession(HttpContext httpContext);
 
     User? GetCurrentUser(HttpContext httpContext);
+    public Task<bool> ConfirmationEmailAsync(int userId, string token);
+    public Task<AuthResponse> ForgotPasswordAsync(string email);
+    // public Task<IActionResult> ResetPasswordAsync(HttpContext httpContext);
 
-    Task<bool> ConfirmationEmailAsync(string userId, string token);
 }

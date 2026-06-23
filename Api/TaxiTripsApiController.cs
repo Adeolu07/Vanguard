@@ -1,5 +1,6 @@
 using _Tripfinity.Models.Data;
 using _Tripfinity.Models.Tables;
+using _Tripfinity.Utilities;
 using _Tripfinity.Views;
 using Microsoft.AspNetCore.Mvc;
 
@@ -51,7 +52,12 @@ public class TaxiTripsApiController : ControllerBase
         var trip = await _context.TaxiTrips.FindAsync(id);
 
         if (trip == null)
-            return NotFound(new { success = false, message = "Taxi trip not found" });
+            return NotFound(new ErrorResponse
+            {
+                Success = false,
+                Message = $"Taxi Trip with id {id} not found.",
+                ErrorCode = "404"
+            });
 
         return Ok(new { success = true, data = trip });
     }

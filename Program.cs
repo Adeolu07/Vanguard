@@ -3,8 +3,6 @@ using _Tripfinity.Interfaces;
 using _Tripfinity.Models.Data;
 using _Tripfinity.Services;
 using _Tripfinity.Utilities;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace _Tripfinity;
@@ -16,13 +14,13 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
         builder.Services.AddScoped<IAuthService, AuthService>();
         builder.Services.AddScoped<IBookingService, BookingService>();
+        builder.Services.AddScoped<ITicketService, TicketService>();
+        builder.Services.AddScoped<ITripService, TripService>();
         builder.Services.AddScoped<IEmailService, EmailService>();
         builder.Services.AddScoped<IWalletService, WalletService>();
-        builder.Services.AddScoped<ISessionStore, SessionStore>();
         builder.Services.AddHttpClient<IWalletService, WalletService>(client =>
         {
             client.BaseAddress = new Uri(builder.Configuration["WalletStation:baseUrl"] ?? "");
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", builder.Configuration["WalletStation:authToken"]);
         });
         
         builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer

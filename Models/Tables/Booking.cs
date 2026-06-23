@@ -30,6 +30,10 @@ public class Booking
 
     [MaxLength(255)] public string? CancellationReason { get; set; }
 
+    // Payment tracking (CoralPay wallet)
+    [MaxLength(100)] public string? PaymentTransactionId { get; set; }
+    [MaxLength(100)] public string? PaymentTraceId { get; set; }
+
     // Navigation properties
     public User? User { get; set; }
     public BusTrip? BusTrip { get; set; }
