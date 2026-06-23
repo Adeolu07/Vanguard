@@ -1,5 +1,3 @@
-using Microsoft.EntityFrameworkCore.Metadata.Conventions;
-
 namespace _Tripfinity.Models.Data.Response;
 
 public class AuthenticationResponse

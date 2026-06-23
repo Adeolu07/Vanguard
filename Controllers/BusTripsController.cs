@@ -52,15 +52,18 @@ public class BusTripsController : Controller
             return RedirectToAction("SignIn", "Auth");
         }
 
-        var booking = await _bookingService.BookBusAsync(tripId, seats, userId.Value);
-        if (booking == null)
+        var result = await _bookingService.BookBusAsync(tripId, seats, userId.Value);
+        if (!result.Success)
         {
-            TempData["Error"] = "Bus booking failed.";
+            if (result.Status == "InsufficientFunds")
+                TempData["Warning"] = result.Message;
+            else
+                TempData["Error"] = result.Message;
             return RedirectToAction("Book", new { tripId });
         }
 
-        TempData["Success"] = "Bus booking confirmed!";
-        return RedirectToAction("Confirmation", new { id = booking.Id });
+        TempData["Success"] = result.Message;
+        return RedirectToAction("Confirmation", new { id = result.Booking!.Id });
     }
 
     [HttpGet]
@@ -78,7 +81,7 @@ public class BusTripsController : Controller
             return NotFound("Bus booking not found");
         }
 
-        ViewBag.UserId = HttpContext.Session.GetInt32("userId");
+        ViewBag.Username = HttpContext.Session.GetString("Username");
         return View(booking);
     }
 }

@@ -70,7 +70,7 @@ public class AuthController : Controller
 
             _logger.LogInformation("Account creation successful.");
             
-            var confirmationLink = $"{Request.Scheme}://{Request.Host}/account/ConfirmEmail?" +
+            var confirmationLink = $"{Request.Scheme}://{Request.Host}/auth/ConfirmEmail?" +
                                    $"userId={result.User.Id}&token={result.User.EmailConfirmationToken}";
             
             await _emailService.SendConfirmationEmailAsync(result.User.Email, confirmationLink);
@@ -89,7 +89,7 @@ public class AuthController : Controller
     [HttpGet]
     public async Task<IActionResult> ConfirmEmail([FromQuery]string userId, [FromQuery] string token)
     {
-        var result = await _authService.ConfirmationEmailAsync(userId, token);
+        var result = await _authService.ConfirmationEmailAsync(int.Parse(userId), token);
         if(!result)
         {
             TempData["ErrorMessage"] = "Invalid or expired email confirmation token.";
@@ -112,7 +112,7 @@ public class AuthController : Controller
             
             if (!result.Success)
             {
-                ModelState.AddModelError("", result.Message);
+                ModelState.AddModelError("Error", result.Message);
                 return View(model);
             }
             

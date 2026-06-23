@@ -52,15 +52,18 @@ public class TaxiTripsController : Controller
             return RedirectToAction("SignIn", "Auth");
         }
 
-        var booking = await _bookingService.BookTaxiAsync(tripId, seats, userId);
-        if (booking == null)
+        var result = await _bookingService.BookTaxiAsync(tripId, seats, userId);
+        if (!result.Success)
         {
-            TempData["Error"] = "Taxi booking failed.";
+            if (result.Status == "InsufficientFunds")
+                TempData["Warning"] = result.Message;
+            else
+                TempData["Error"] = result.Message;
             return RedirectToAction("Book", new { tripId });
         }
 
-        TempData["Success"] = "Taxi booking confirmed!";
-        return RedirectToAction("Confirmation", new { id = booking.Id });
+        TempData["Success"] = result.Message;
+        return RedirectToAction("Confirmation", new { id = result.Booking!.Id });
     }
 
     [HttpGet]
