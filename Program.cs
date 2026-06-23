@@ -1,4 +1,3 @@
-using System.Net.Http.Headers;
 using _Tripfinity.Interfaces;
 using _Tripfinity.Models.Data;
 using _Tripfinity.Services;
@@ -12,19 +11,26 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+
         builder.Services.AddScoped<IAuthService, AuthService>();
         builder.Services.AddScoped<IBookingService, BookingService>();
         builder.Services.AddScoped<ITicketService, TicketService>();
         builder.Services.AddScoped<ITripService, TripService>();
         builder.Services.AddScoped<IEmailService, EmailService>();
         builder.Services.AddScoped<IWalletService, WalletService>();
-        builder.Services.AddHttpClient<IWalletService, WalletService>(client =>
-        {
-            client.BaseAddress = new Uri(builder.Configuration["WalletStation:baseUrl"] ?? "");
-        });
+
         builder.Services.AddMemoryCache();
-        builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer
-            (builder.Configuration.GetConnectionString("DefaultConnection")));
+
+        builder.Services.AddDbContext<AppDbContext>(options =>
+            options.UseSqlServer(
+                builder.Configuration.GetConnectionString("DefaultConnection"),
+                sqlOptions => sqlOptions.EnableRetryOnFailure(
+                    maxRetryCount: 5,
+                    maxRetryDelay: TimeSpan.FromSeconds(30),
+                    errorNumbersToAdd: null
+                )
+            ));
+
         builder.Services.AddSession(options =>
         {
             options.IdleTimeout = TimeSpan.FromMinutes(30);
@@ -34,15 +40,9 @@ public class Program
 
         builder.Services.AddControllersWithViews();
         builder.Services.AddControllers();
-        
 
         var app = builder.Build();
         app.UseMiddleware<ExceptionMiddleware>();
-        // using (var scope = app.Services.CreateScope())
-        // {
-        //     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        //     dbContext.Database.EnsureCreated();
-        // }
         app.UseStaticFiles();
         app.UseSession();
 
