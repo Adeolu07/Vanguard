@@ -2,8 +2,8 @@ using _Tripfinity.Interfaces;
 using _Tripfinity.Models;
 using _Tripfinity.Models.Data;
 using _Tripfinity.Models.Data.Requests;
+using _Tripfinity.Models.ViewModels;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace _Tripfinity.Services;
@@ -21,23 +21,23 @@ public class AuthService : IAuthService
         _emailService = emailService;
     }
 
-    public async Task<AuthResponse> SignUpAsync(string email, string password, string firstName, string lastName)
+    public async Task<AuthResponse> SignUpAsync(RegisterViewModel model)
     {
         try
         {
-            if (await _context.Users.AnyAsync(u => u.Email == email))
+            if (await _context.Users.AnyAsync(u => u.Email == model.Email))
                 return new AuthResponse
                 {
                     Success = false,
                     Message = "Email already exists"
                 };
-
+            
             var hasher = new PasswordHasher<User>();
             var user = new User
             {
-                Email = email,
-                FirstName = firstName,
-                LastName = lastName,
+                Email = model.Email,
+                FirstName = model.FirstName,
+                LastName = model.LastName,
                 CreatedAt = DateTime.Now,
                 IsActive = false,
                 Role = "Passenger",
@@ -45,7 +45,7 @@ public class AuthService : IAuthService
                 ConfirmationTokenExpiry = DateTime.Now.AddDays(1)
             };
 
-            user.PasswordHash = hasher.HashPassword(user, password);
+            user.PasswordHash = hasher.HashPassword(user, model.Password);
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
@@ -65,12 +65,11 @@ public class AuthService : IAuthService
     }
 
 
-    public async Task<AuthResponse> RegisterMarshalAsync(string email, string password, string firstName,
-        string lastName, string vehicleType, string licenseId)
+    public async Task<AuthResponse> RegisterMarshalAsync(MarshalRegisterRequest request)
     {
         try
         {
-            if (await _context.Users.AnyAsync(u => u.Email == email))
+            if (await _context.Users.AnyAsync(u => u.Email == request.Email))
                 return new AuthResponse
                 {
                     Success = false,
@@ -78,23 +77,23 @@ public class AuthService : IAuthService
                 };
 
             var hasher = new PasswordHasher<User>();
-            var prefix = (vehicleType.Length >= 3 ? vehicleType[..3] : vehicleType).ToUpperInvariant();
+            var prefix = (request.VehicleType.Length >= 3 ? request.VehicleType[..3] : request.VehicleType).ToUpper();
             var marshal = new User
             {
-                Email = email,
-                FirstName = firstName,
-                LastName = lastName,
+                Email = request.Email,
+                FirstName = request.FirstName,
+                LastName = request.LastName,
                 CreatedAt = DateTime.Now,
                 Role = "Marshal",
-                VehicleType = vehicleType,
-                LicenseId = licenseId,
-                VehicleId = $"VEH-{prefix}-{Guid.NewGuid().ToString("N")[..8].ToUpperInvariant()}",
+                VehicleType = request.VehicleType,
+                LicenseId = request.LicenseId,
+                VehicleId = $"VEH-{prefix}-{Guid.NewGuid().ToString("N")[..8].ToUpper()}",
                 // Marshals are activated immediately; no email confirmation or wallet required.
                 IsActive = true,
                 IsEmailConfirmed = true
             };
 
-            marshal.PasswordHash = hasher.HashPassword(marshal, password);
+            marshal.PasswordHash = hasher.HashPassword(marshal, request.Password);
 
             _context.Users.Add(marshal);
             await _context.SaveChangesAsync();
@@ -114,7 +113,7 @@ public class AuthService : IAuthService
     }
 
 
-    public async Task<AuthResponse?> SignInAsync(string email, string password)
+    public async Task<AuthResponse?> SignInAsync(string email,  string password)
     {
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
 

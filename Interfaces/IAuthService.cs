@@ -1,14 +1,15 @@
 using _Tripfinity.Models;
 using _Tripfinity.Models.Data;
+using _Tripfinity.Models.Data.Requests;
+using _Tripfinity.Models.ViewModels;
 
 namespace _Tripfinity.Interfaces;
 
 public interface IAuthService
 {
-    Task<AuthResponse> SignUpAsync(string email, string password, string firstName, string lastName);
+    Task<AuthResponse> SignUpAsync(RegisterViewModel model);
 
-    Task<AuthResponse> RegisterMarshalAsync(string email, string password, string firstName, string lastName,
-        string vehicleType, string licenseId);
+    Task<AuthResponse> RegisterMarshalAsync(MarshalRegisterRequest request);
 
     Task<AuthResponse?> SignInAsync(string email, string password);
 

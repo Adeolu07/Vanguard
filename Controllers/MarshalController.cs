@@ -35,9 +35,7 @@ public class MarshalController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] MarshalRegisterRequest request)
     {
-        var result = await _authService.RegisterMarshalAsync(
-            request.Email, request.Password, request.FirstName, request.LastName,
-            request.VehicleType, request.LicenseId);
+        var result = await _authService.RegisterMarshalAsync(request);
 
         if (!result.Success)
             return BadRequest(new ErrorResponse { Success = false, Message = result.Message, ErrorCode = "400" });
@@ -128,7 +126,8 @@ public class MarshalController : ControllerBase
     public async Task<IActionResult> CancelTrip([FromBody] CancelTripRequest request)
     {
         var marshal = await GetMarshalAsync();
-        if (marshal == null) return MarshalUnauthorized();
+        if (marshal == null) 
+            return MarshalUnauthorized();
 
         var ok = await _tripService.CancelTripAsync(request.TransportType, request.TripId, marshal.Id, request.Reason);
         if (!ok)
