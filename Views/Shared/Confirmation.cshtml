@@ -1,90 +1,49 @@
-@model Booking
-
+@model _Tripfinity.Models.Data.Response.GetBalanceResponse
 @{
     Layout = "_Layout";
-    ViewData["Title"] = "Booking Confirmation";
+    ViewData["Title"] = "Digital Wallet";
 }
 
-<div class="confirmation-container">
-    <div class="success-icon">✅</div>
-    <h2>Booking Confirmed!</h2>
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 70vh;">
+    <div class="card p-5 text-center shadow border-0 rounded-4" style="max-width: 500px; width: 100%; background: #ffffff;">
+        <div class="mb-4">
+            <span style="font-size: 4rem;">👛</span>
+        </div>
+        
+        <h2 class="fw-bold mb-3" style="color: #000000;">Tripfinity Wallet</h2>
 
-    <div class="booking-details">
-        <p><strong>Booking ID:</strong> #@Model.Id</p>
-        <p><strong>Transport:</strong> @Model.TransportType</p>
+        @if (ViewBag.HasWallet == false)
+        {
+            <p class="text-muted mb-4">You don't have an active digital wallet initialized for this profile account yet.</p>
+            <form asp-action="InitializeWalletView" asp-controller="Wallet" method="post">
+                <button type="submit" class="btn btn-dark w-100 rounded-pill py-3 fw-bold">Setup Wallet Station Now</button>
+            </form>
+        }
+        else if (Model != null && Model.ResponseHeader?.ResponseCode == "00")
+        {
+            <p class="text-secondary mb-1 text-uppercase small tracking-wide">Available Balance</p>
+            <h1 class="display-4 fw-bold mb-4" style="color: #212529;">₦@Model.Balance.ToString("N2")</h1>
+            
+            <div class="bg-light p-3 rounded-3 mb-4 text-start">
+                <small class="text-muted d-block">Account Status message</small>
+                <strong class="text-dark font-monospace">@Model.ResponseHeader?.ResponseMessage</strong>
+            </div>
 
-        @if (Model.TransportType == "Bus" && Model.BusTrip != null)
-        {
-            <p><strong>From:</strong> @Model.BusTrip.From</p>
-            <p><strong>To:</strong> @Model.BusTrip.Destination</p>
-            <p><strong>Departure:</strong> @Model.BusTrip.DepartureTime</p>
+            <div class="row g-2">
+                <div class="col-6">
+                    <button class="btn btn-dark w-100 rounded-pill py-2 fw-semibold">➕ Fund</button>
+                </div>
+                <div class="col-6">
+                    <button class="btn btn-outline-secondary w-100 rounded-pill py-2 fw-semibold">📜 History</button>
+                </div>
+            </div>
         }
-        else if (Model.TransportType == "Taxi" && Model.TaxiTrip != null)
+        else
         {
-            <p><strong>Pickup:</strong> @Model.TaxiTrip.PickupLocation</p>
-            <p><strong>Dropoff:</strong> @Model.TaxiTrip.DropoffLocation</p>
-            <p><strong>Time:</strong> @Model.TaxiTrip.PickupTime</p>
+            <div class="alert alert-danger" role="alert">
+                Wallet Station communication link failed. Please check your service connections.
+            </div>
+            <a href="/" class="btn btn-secondary w-100 rounded-pill mt-2">Return Home</a>
         }
-        else if (Model.TransportType == "Railway" && Model.RailwayTrip != null)
-        {
-            <p><strong>From:</strong> @Model.RailwayTrip.From</p>
-            <p><strong>To:</strong> @Model.RailwayTrip.Destination</p>
-            <p><strong>Departure:</strong> @Model.RailwayTrip.DepartureTime</p>
-            <p><strong>Class:</strong> @Model.RailwayTrip.TrainClass</p>
-        }
-
-        <p><strong>Seats:</strong> @Model.NumberOfSeats</p>
-        <p><strong>Total Amount:</strong> ₦@Model.TotalAmount.ToString("N0")</p>
-        <p><strong>Status:</strong> @Model.Status</p>
     </div>
-
-    <a href="/Home/Index" class="btn-primary">Go to Dashboard</a>
-    <a href="/@Model.TransportType/Index" class="btn-secondary">Book Another @Model.TransportType</a>
 </div>
-
-<style>
-    .confirmation-container {
-        max-width: 500px;
-        margin: 50px auto;
-        padding: 30px;
-        background: white;
-        border-radius: 16px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        text-align: center;
-    }
-
-    .success-icon {
-        font-size: 64px;
-        margin-bottom: 20px;
-    }
-
-    .booking-details {
-        text-align: left;
-        margin: 30px 0;
-        padding: 20px;
-        background: #f5f5f5;
-        border-radius: 12px;
-    }
-
-    .booking-details p {
-        margin: 10px 0;
-    }
-
-    .btn-primary, .btn-secondary {
-        display: inline-block;
-        padding: 10px 20px;
-        margin: 5px;
-        border-radius: 8px;
-        text-decoration: none;
-    }
-
-    .btn-primary {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-    }
-
-    .btn-secondary {
-        background: #f0f0f0;
-        color: #333;
-    }
-</style>

@@ -1,107 +1,321 @@
-using System.Net.Http.Headers;
-using System.Text;
 using _Tripfinity.Interfaces;
 using _Tripfinity.Models.Data;
 using _Tripfinity.Models.Data.Requests;
 using _Tripfinity.Models.Data.Response;
 using _Tripfinity.Models.Tables;
-using Microsoft.Extensions.Caching.Memory;
-using Newtonsoft.Json;
+using Microsoft.EntityFrameworkCore;
 
 namespace _Tripfinity.Services;
 
 public class WalletService : IWalletService
 {
-    private readonly HttpClient _client;
-    private readonly ILogger<WalletService> _logger;
     private readonly AppDbContext _context;
-    private readonly IConfiguration _config;
-    private readonly IMemoryCache _cache;
-    private const string TokenCacheKey = "WalletToken";
+    private readonly ILogger<WalletService> _logger;
 
-    public WalletService( HttpClient client,
-        ILogger<WalletService> logger,
-        AppDbContext context, IConfiguration config
-        , IMemoryCache cache)
+    public WalletService(AppDbContext context, ILogger<WalletService> logger)
     {
-        _logger = logger;
-        _client = client;
         _context = context;
-        _config = config;
-        _cache = cache;
+        _logger = logger;
     }
 
-    private async Task EnsureAuthenticatedAsync()
+    public Task<AuthenticationResponse> AuthenticationAsync(AuthenticationRequest request)
     {
-        // Check cache first
-        if (_cache.TryGetValue<string>(TokenCacheKey, out var cachedToken))
+        return Task.FromResult(new AuthenticationResponse
         {
-            _client.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", cachedToken);
-            return;
-        }
+            ResponseHeader = new ResponseHeader { ResponseCode = "00", ResponseMessage = "Success" },
+            Token = "internal",
+            ExpiryDate = DateTime.Now.AddDays(1).ToString()
+        });
+    }
 
-        // Authenticate fresh
-        var authRequest = new AuthenticationRequest
+    public async Task<CreateWalletResponse> CreateWalletAsync(CreateWalletRequest request)
+    {
+        _logger.LogInformation("Creating wallet for {FirstName} {LastName}", request.FirstName, request.LastName);
+        try
         {
-            Username = _config["WalletStation:username"]!,
-            Password = _config["WalletStation:password"]!,
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.FirstName == request.FirstName && u.LastName == request.LastName);
+
+            if (user == null)
+                return new CreateWalletResponse
+                {
+                    ResponseHeader = new ResponseHeader { ResponseCode = "99", ResponseMessage = "User not found" },
+                    AccountDetails = new AccountDetails
+                    {
+                        AccountNumber = "",
+                        CustomerId = "",
+                        CustomerAlias = "",
+                        BankName = "",
+                        BankCode = "",
+                        FirstName = "",
+                        LastName = "",
+                        Bvn = ""
+                    }
+                };
+
+            var existing = await _context.Wallets.FirstOrDefaultAsync(w => w.UserId == user.Id);
+            if (existing != null)
+                return new CreateWalletResponse
+                {
+                    ResponseHeader = new ResponseHeader { ResponseCode = "00", ResponseMessage = "Wallet already exists" },
+                    AccountDetails = new AccountDetails
+                    {
+                        AccountNumber = existing.CustomerId,
+                        CustomerId = existing.CustomerId,
+                        CustomerAlias = $"{user.FirstName} {user.LastName}",
+                        BankName = "Tripfinity Wallet",
+                        BankCode = "TRP",
+                        FirstName = user.FirstName,
+                        LastName = user.LastName,
+                        Bvn = ""
+                    }
+                };
+
+            var wallet = new Wallet
+            {
+                CustomerId = Guid.NewGuid().ToString(),
+                UserId = user.Id,
+                Balance = 0,
+                IsActive = true
+            };
+
+            _context.Wallets.Add(wallet);
+            await _context.SaveChangesAsync();
+
+            return new CreateWalletResponse
+            {
+                ResponseHeader = new ResponseHeader { ResponseCode = "00", ResponseMessage = "Wallet created" },
+                AccountDetails = new AccountDetails
+                {
+                    AccountNumber = wallet.CustomerId,
+                    CustomerId = wallet.CustomerId,
+                    CustomerAlias = $"{user.FirstName} {user.LastName}",
+                    BankName = "Tripfinity Wallet",
+                    BankCode = "TRP",
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    Bvn = ""
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex.Message);
+            throw;
+        }
+    }
+
+    public async Task<CreditWalletResponse> CreditWalletAsync(CreditWalletRequest request)
+    {
+        _logger.LogInformation("Crediting wallet for {CustomerId}", request.CustomerId);
+        try
+        {
+            var wallet = await _context.Wallets.FirstOrDefaultAsync(w => w.CustomerId == request.CustomerId);
+            if (wallet == null)
+                return new CreditWalletResponse
+                {
+                    ResponseHeader = new ResponseHeader { ResponseCode = "99", ResponseMessage = "Wallet not found" },
+                    Amount = 0,
+                    Balance = 0,
+                    Description = "",
+                    TransactionId = "",
+                    TraceId = ""
+                };
+
+            wallet.Balance += request.Amount;
+
+            var transaction = new WalletTransaction
+            {
+                TransactionId = Guid.NewGuid().ToString(),
+                CustomerId = request.CustomerId,
+                Amount = request.Amount,
+                BalanceAfter = wallet.Balance,
+                Type = "Credit",
+                Description = request.Description,
+                TraceId = request.TraceId,
+                CreatedAt = DateTime.Now
+            };
+
+            _context.WalletTransactions.Add(transaction);
+            await _context.SaveChangesAsync();
+
+            return new CreditWalletResponse
+            {
+                ResponseHeader = new ResponseHeader { ResponseCode = "00", ResponseMessage = "Credit successful" },
+                Amount = request.Amount,
+                Balance = wallet.Balance,
+                Description = request.Description,
+                TransactionId = transaction.TransactionId,
+                TraceId = request.TraceId
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex.Message);
+            throw;
+        }
+    }
+
+    public async Task<DebitWalletResponse> DebitWalletAsync(DebitWalletRequest request)
+    {
+        _logger.LogInformation("Debiting wallet for {CustomerId}", request.CustomerId);
+        try
+        {
+            var wallet = await _context.Wallets.FirstOrDefaultAsync(w => w.CustomerId == request.CustomerId);
+            if (wallet == null)
+                return new DebitWalletResponse
+                {
+                    ResponseHeader = new ResponseHeader { ResponseCode = "99", ResponseMessage = "Wallet not found" },
+                    Amount = 0,
+                    Balance = 0,
+                    Description = "",
+                    TransactionId = "",
+                    TraceId = ""
+                };
+
+            if (wallet.Balance < request.Amount)
+                return new DebitWalletResponse
+                {
+                    ResponseHeader = new ResponseHeader { ResponseCode = "99", ResponseMessage = "Insufficient balance" },
+                    Amount = 0,
+                    Balance = wallet.Balance,
+                    Description = "",
+                    TransactionId = "",
+                    TraceId = ""
+                };
+
+            wallet.Balance -= request.Amount;
+
+            var transaction = new WalletTransaction
+            {
+                TransactionId = Guid.NewGuid().ToString(),
+                CustomerId = request.CustomerId,
+                Amount = request.Amount,
+                BalanceAfter = wallet.Balance,
+                Type = "Debit",
+                Description = request.Description,
+                TraceId = request.TraceId,
+                CreatedAt = DateTime.Now
+            };
+
+            _context.WalletTransactions.Add(transaction);
+            await _context.SaveChangesAsync();
+
+            return new DebitWalletResponse
+            {
+                ResponseHeader = new ResponseHeader { ResponseCode = "00", ResponseMessage = "Debit successful" },
+                Amount = request.Amount,
+                Balance = wallet.Balance,
+                Description = request.Description,
+                TransactionId = transaction.TransactionId,
+                TraceId = request.TraceId
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex.Message);
+            throw;
+        }
+    }
+
+    public async Task<GetBalanceResponse> GetBalanceAsync(GetBalanceRequest request)
+    {
+        var wallet = await _context.Wallets.FirstOrDefaultAsync(w => w.CustomerId == request.CustomerId);
+        if (wallet == null)
+            return new GetBalanceResponse
+            {
+                ResponseHeader = new ResponseHeader { ResponseCode = "99", ResponseMessage = "Wallet not found" },
+                Balance = 0
+            };
+
+        return new GetBalanceResponse
+        {
+            ResponseHeader = new ResponseHeader { ResponseCode = "00", ResponseMessage = "Success" },
+            Balance = wallet.Balance
         };
-
-        var requestBody = JsonConvert.SerializeObject(authRequest);
-        var response = await _client.PostAsync("Auth",
-            new StringContent(requestBody, Encoding.UTF8, "application/json"));
-
-        if (!response.IsSuccessStatusCode)
-        {
-            var error = await response.Content.ReadAsStringAsync();
-            _logger.LogWarning("Wallet auth failed: {Error}", error);
-            return;
-        }
-
-        var json = await response.Content.ReadAsStringAsync();
-        var result = JsonConvert.DeserializeObject<AuthenticationResponse>(json);
-        
-
-        if (result?.ResponseHeader.ResponseCode == "00")
-        {
-            // Cache the token until its expiry (default 1 hour if not provided)
-            var expiry = DateTime.TryParse(result.ExpiryDate, out var expiryDate);
-            _client.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", result.Token);
-            _cache.Set(TokenCacheKey, result.Token, expiryDate);
-            _logger.LogInformation("Wallet token acquired and cached");
-        }
     }
-    
-    
-    public async Task<CreateWalletResponse> CreateWalletAsync(CreateWalletRequest createWallet)
+
+    public async Task<GetTransactionResponse> GetTransactionAsync(GetTransactionRequest request)
     {
-        await EnsureAuthenticatedAsync();
-        _logger.LogInformation("Creating Wallet...");
+        var transaction = await _context.WalletTransactions
+            .FirstOrDefaultAsync(t => t.TransactionId == request.TransactionId);
+
+        if (transaction == null)
+            return new GetTransactionResponse
+            {
+                ResponseHeader = new ResponseHeader { ResponseCode = "99", ResponseMessage = "Transaction not found" },
+                TransactionDetails = null
+            };
+
+        return new GetTransactionResponse
+        {
+            ResponseHeader = new ResponseHeader { ResponseCode = "00", ResponseMessage = "Success" },
+            TransactionDetails = new TransactionDetails
+            {
+                TranType = transaction.Type,
+                Amount = transaction.Amount,
+                Description = transaction.Description,
+                TransactionId = transaction.TransactionId,
+                SessionId = transaction.TraceId,
+                BankCode = "TRP",
+                BankName = "Tripfinity Wallet"
+            }
+        };
+    }
+
+    public async Task<List<WalletTransaction>> GetTransactionHistoryAsync(string customerId)
+    {
+        return await _context.WalletTransactions
+            .Where(t => t.CustomerId == customerId)
+            .OrderByDescending(t => t.CreatedAt)
+            .Take(20)
+            .ToListAsync();
+    }
+
+    public async Task<RefundResponse> RefundAsync(RefundRequest request)
+    {
+        _logger.LogInformation("Processing refund for {TransactionId}", request.TransactionId);
         try
         {
-            var requestBody = JsonConvert.SerializeObject(createWallet);
-            var response = await _client.PostAsync(
-                "CreateAccount", 
-                new StringContent(
-                    requestBody,
-                    Encoding.UTF8,
-                    "application/json"));
+            var original = await _context.WalletTransactions
+                .FirstOrDefaultAsync(t => t.TransactionId == request.TransactionId);
 
-            if (!response.IsSuccessStatusCode)
+            if (original == null)
+                return new RefundResponse
+                {
+                    ResponseHeader = new ResponseHeader { ResponseCode = "99", ResponseMessage = "Transaction not found" }
+                };
+
+            var wallet = await _context.Wallets
+                .FirstOrDefaultAsync(w => w.CustomerId == original.CustomerId);
+
+            if (wallet == null)
+                return new RefundResponse
+                {
+                    ResponseHeader = new ResponseHeader { ResponseCode = "99", ResponseMessage = "Wallet not found" }
+                };
+
+            wallet.Balance += original.Amount;
+
+            var refundTransaction = new WalletTransaction
             {
-                var error = await response.Content.ReadAsStringAsync();
-                var errorJson = JsonConvert.DeserializeObject<CreateWalletResponse>(error);
-                _logger.LogWarning("Wallet creation error: " + errorJson);
-                return errorJson!;
-            }
-            
-            var json = await response.Content.ReadAsStringAsync();
-            var result = JsonConvert.DeserializeObject<CreateWalletResponse>(json);
-            _logger.LogInformation("Wallet endpoint hit successfully");
-            _logger.LogInformation(result.ResponseHeader.ResponseMessage);
-            return result;
+                TransactionId = Guid.NewGuid().ToString(),
+                CustomerId = original.CustomerId,
+                Amount = original.Amount,
+                BalanceAfter = wallet.Balance,
+                Type = "Refund",
+                Description = $"Refund for {original.TransactionId}",
+                TraceId = Guid.NewGuid().ToString(),
+                CreatedAt = DateTime.Now
+            };
+
+            _context.WalletTransactions.Add(refundTransaction);
+            await _context.SaveChangesAsync();
+
+            return new RefundResponse
+            {
+                ResponseHeader = new ResponseHeader { ResponseCode = "00", ResponseMessage = "Refund successful" }
+            };
         }
         catch (Exception ex)
         {
@@ -110,177 +324,31 @@ public class WalletService : IWalletService
         }
     }
 
-    public async Task<CreditWalletResponse> CreditWalletAsync(CreditWalletRequest creditWallet)
+    public async Task SaveUserWalletIdAsync(int userId, string walletId)
     {
-        await EnsureAuthenticatedAsync();
-        _logger.LogInformation("Crediting Wallet...");
-        try
+        var user = await _context.Users.FindAsync(userId);
+        if (user != null)
         {
-            var requestBody = JsonConvert.SerializeObject(creditWallet);
-            
-            var response = await _client.PostAsync(
-                "Credit", 
-                new StringContent(requestBody, Encoding.UTF8, "application/json"));
+            user.UserWalletId = walletId;
+            _context.Users.Update(user);
+        }
 
-            if (!response.IsSuccessStatusCode)
+        var wallet = await _context.Wallets.FirstOrDefaultAsync(w => w.UserId == userId);
+        if (wallet == null)
+        {
+            _context.Wallets.Add(new Wallet
             {
-                var error = await response.Content.ReadAsStringAsync();
-                var errorJson = JsonConvert.DeserializeObject<CreditWalletResponse>(error);
-                _logger.LogWarning("Wallet credit error: " + errorJson);
-                return errorJson;
-            }
-            
-            var json = await response.Content.ReadAsStringAsync();
-            var result = JsonConvert.DeserializeObject<CreditWalletResponse>(json);
-            
-            if(result.ResponseHeader.ResponseCode == "00")
-                _logger.LogInformation("Successfully credited wallet");
-            
-            return result;
+                UserId = userId,
+                CustomerId = walletId,
+                Balance = 0,
+                IsActive = true
+            });
         }
-        catch (Exception ex)
+        else
         {
-            _logger.LogError(ex.Message);
-            throw;
+            wallet.CustomerId = walletId;
         }
-        
-    }
 
-    public async Task<DebitWalletResponse> DebitWalletAsync(DebitWalletRequest debitWallet)
-    {
-        await EnsureAuthenticatedAsync();
-        _logger.LogInformation("Debit Wallet...");
-        try
-        {
-            var requestBody = JsonConvert.SerializeObject(debitWallet);
-            var response = await _client.PostAsync(
-                "Debit",
-                new StringContent(requestBody, Encoding.UTF8, "application/json"));
-
-            if (!response.IsSuccessStatusCode)
-            {
-                var error = await response.Content.ReadAsStringAsync();
-                var errorJson = JsonConvert.DeserializeObject<DebitWalletResponse>(error);
-                _logger.LogWarning("Wallet debit error: " + errorJson);
-                return errorJson;
-            }
-            var json = await response.Content.ReadAsStringAsync();
-            var result = JsonConvert.DeserializeObject<DebitWalletResponse>(json);
-            
-            if(result.ResponseHeader.ResponseCode == "00")
-                _logger.LogInformation("Successfully debited wallet");
-            
-            return result;
-
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex.Message);
-            throw;
-        }
-    }
-
-    public async Task<GetBalanceResponse> GetBalanceAsync(GetBalanceRequest getBalance)
-    {
-        await EnsureAuthenticatedAsync();
-        _logger.LogInformation("Get Balance...");
-        try
-        {
-            var requestBody = JsonConvert.SerializeObject(getBalance);
-            
-            var response = await _client.PostAsync("GetBalance",
-                new StringContent(requestBody, Encoding.UTF8, "application/json"));
-
-            if (!response.IsSuccessStatusCode)
-            {
-                var error = await response.Content.ReadAsStringAsync();
-                var errorJson = JsonConvert.DeserializeObject<GetBalanceResponse>(error);
-                _logger.LogWarning("Error in Fetching Balance: " + errorJson);
-                return errorJson;
-            }
-            var json = await response.Content.ReadAsStringAsync();
-            var result = JsonConvert.DeserializeObject<GetBalanceResponse>(json);
-            
-            if(result.ResponseHeader.ResponseCode == "00")
-                _logger.LogInformation("Successfully fetched balance");
-
-            return result;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex.Message);
-            throw;
-        }
-    }
-    
-    public async Task<GetTransactionResponse> GetTransactionAsync(GetTransactionRequest getTransaction)
-    {
-        await EnsureAuthenticatedAsync();
-        _logger.LogInformation("Get Transaction...");
-        try
-        {
-            var requestBody = JsonConvert.SerializeObject(getTransaction);
-
-            var response = await _client.PostAsync("GetTransaction",
-                new StringContent(requestBody, Encoding.UTF8, "application/json"));
-
-            if (!response.IsSuccessStatusCode)
-            {
-                var error = await response.Content.ReadAsStringAsync();
-                var errorJson = JsonConvert.DeserializeObject<GetTransactionResponse>(error);
-                _logger.LogWarning("Error in Fetching Transaction: " + errorJson);
-                return errorJson;
-            }
-            var json = await response.Content.ReadAsStringAsync();
-            var result = JsonConvert.DeserializeObject<GetTransactionResponse>(json);
-            
-            if(result.ResponseHeader.ResponseCode == "00")
-            {
-                _logger.LogInformation("Successfully fetched transaction with ID {TransactionID}", result.TransactionDetails.TransactionId);
-            }
-            
-            return result;
-
-        }
-        catch (Exception ex)
-        { 
-            _logger.LogError(ex.Message);
-            throw;
-        }
-    }
-
-    public async Task<RefundResponse> RefundAsync(RefundRequest refund)
-    {
-        await EnsureAuthenticatedAsync();
-        _logger.LogInformation("Refund initiated");
-        try
-        {
-            var requestBody = JsonConvert.SerializeObject(refund);
-
-            var response = await _client.PostAsync("DebitReversal",
-                new StringContent(requestBody, Encoding.UTF8, "application/json"));
-
-            if (!response.IsSuccessStatusCode)
-            {
-                var error = await response.Content.ReadAsStringAsync();
-                var errorJson = JsonConvert.DeserializeObject<RefundResponse>(error);
-                _logger.LogWarning("Error in Refund: " + errorJson);
-                return errorJson;
-            }
-            var json = await response.Content.ReadAsStringAsync();
-            var result = JsonConvert.DeserializeObject<RefundResponse>(json);
-            
-            if(result.ResponseHeader.ResponseCode == "00")
-            {
-                _logger.LogInformation("Successfull refund");
-            }
-            return result;
-
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex.Message);
-            throw;
-        }
+        await _context.SaveChangesAsync();
     }
 }
