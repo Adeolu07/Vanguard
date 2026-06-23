@@ -38,6 +38,11 @@ public class User
     public DateTime? ConfirmationTokenExpiry { get; set; }
     
     public DateTime? EmailConfirmationSentAt { get; set; }
-    
+
     public string? UserWalletId { get; set; } = null;
+
+    // Marshal-specific fields (only populated when Role == "Marshal")
+    [MaxLength(50)] public string? VehicleType { get; set; } // Bus, Railway, Taxi
+    [MaxLength(50)] public string? LicenseId { get; set; }
+    [MaxLength(50)] public string? VehicleId { get; set; } // generated, e.g. VEH-BUS-XXXXXXXX
 }

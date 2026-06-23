@@ -1,0 +1,107 @@
+using _Tripfinity.Interfaces;
+using _Tripfinity.Models;
+using _Tripfinity.Models.Data;
+using _Tripfinity.Models.Data.Response;
+using _Tripfinity.Models.Tables;
+using Microsoft.EntityFrameworkCore;
+using QRCoder;
+
+namespace _Tripfinity.Services;
+
+public class TicketService : ITicketService
+{
+    private readonly AppDbContext _context;
+    private readonly ILogger<TicketService> _logger;
+
+    public TicketService(AppDbContext context, ILogger<TicketService> logger)
+    {
+        _context = context;
+        _logger = logger;
+    }
+
+    public async Task<Ticket> IssueTicketAsync(Booking booking, string? vehicleId = null)
+    {
+        _logger.LogInformation("Issuing ticket for booking {BookingId}", booking.Id);
+
+        var tripTime = ResolveTripTime(booking);
+
+        var ticket = new Ticket
+        {
+            TicketReference = $"TKT-{Guid.NewGuid().ToString("N")[..8].ToUpperInvariant()}",
+            BookingId = booking.Id,
+            PassengerId = booking.UserId,
+            VehicleId = vehicleId,
+            TransportType = booking.TransportType,
+            TripTime = tripTime,
+            Fare = booking.TotalAmount,
+            QrToken = Guid.NewGuid().ToString("N"),
+            Status = "Issued",
+            IssuedAt = DateTime.Now
+        };
+
+        _context.Tickets.Add(ticket);
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Ticket {Reference} issued for booking {BookingId}", ticket.TicketReference, booking.Id);
+        return ticket;
+    }
+
+    public async Task<TicketValidationResult> ValidateTicketAsync(string qrToken, int marshalId)
+    {
+        var ticket = await _context.Tickets.FirstOrDefaultAsync(t => t.QrToken == qrToken);
+
+        if (ticket == null)
+            return new TicketValidationResult { Success = false, Message = "Ticket not found" };
+
+        if (ticket.Status == "Cancelled")
+            return new TicketValidationResult { Success = false, Message = "Ticket has been cancelled", Ticket = ticket };
+
+        if (ticket.Status == "Validated")
+            return new TicketValidationResult
+            {
+                Success = false,
+                Message = $"Ticket already validated at {ticket.ValidatedAt:g}",
+                Ticket = ticket
+            };
+
+        ticket.Status = "Validated";
+        ticket.ValidatedAt = DateTime.Now;
+        ticket.ValidatedByMarshalId = marshalId;
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Ticket {Reference} validated by marshal {MarshalId}", ticket.TicketReference, marshalId);
+        return new TicketValidationResult { Success = true, Message = "Ticket validated", Ticket = ticket };
+    }
+
+    public async Task<Ticket?> GetTicketAsync(int ticketId)
+    {
+        return await _context.Tickets.Include(t => t.Booking).FirstOrDefaultAsync(t => t.Id == ticketId);
+    }
+
+    public async Task<Ticket?> GetTicketByReferenceAsync(string ticketReference)
+    {
+        return await _context.Tickets.Include(t => t.Booking)
+            .FirstOrDefaultAsync(t => t.TicketReference == ticketReference);
+    }
+
+    public async Task<Ticket?> GetTicketByBookingAsync(int bookingId)
+    {
+        return await _context.Tickets.FirstOrDefaultAsync(t => t.BookingId == bookingId);
+    }
+
+    public byte[] GenerateQrCode(string qrToken)
+    {
+        using var generator = new QRCodeGenerator();
+        using var data = generator.CreateQrCode(qrToken, QRCodeGenerator.ECCLevel.Q);
+        var png = new PngByteQRCode(data);
+        return png.GetGraphic(20);
+    }
+
+    private static DateTime ResolveTripTime(Booking booking)
+    {
+        if (booking.BusTrip != null) return booking.BusTrip.DepartureTime;
+        if (booking.RailwayTrip != null) return booking.RailwayTrip.DepartureTime;
+        if (booking.TaxiTrip != null) return booking.TaxiTrip.PickupTime;
+        return DateTime.Now;
+    }
+}

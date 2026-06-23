@@ -3,6 +3,7 @@ using _Tripfinity.Models;
 using _Tripfinity.Models.Data;
 using _Tripfinity.Models.Data.Requests;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace _Tripfinity.Services;
@@ -11,11 +12,13 @@ public class AuthService : IAuthService
 {
     private readonly AppDbContext _context;
     private readonly IWalletService _walletService;
+    private readonly IEmailService _emailService;
 
-    public AuthService(AppDbContext context,  IWalletService walletService)
+    public AuthService(AppDbContext context,  IWalletService walletService,  IEmailService emailService)
     {
         _context = context;
         _walletService = walletService;
+        _emailService = emailService;
     }
 
     public async Task<AuthResponse> SignUpAsync(string email, string password, string firstName, string lastName)
@@ -52,6 +55,55 @@ public class AuthService : IAuthService
                 Success = true,
                 Message = "Account created. Please confirm your email",
                 User = user
+            };
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            throw;
+        }
+    }
+
+
+    public async Task<AuthResponse> RegisterMarshalAsync(string email, string password, string firstName,
+        string lastName, string vehicleType, string licenseId)
+    {
+        try
+        {
+            if (await _context.Users.AnyAsync(u => u.Email == email))
+                return new AuthResponse
+                {
+                    Success = false,
+                    Message = "Email already exists"
+                };
+
+            var hasher = new PasswordHasher<User>();
+            var prefix = (vehicleType.Length >= 3 ? vehicleType[..3] : vehicleType).ToUpperInvariant();
+            var marshal = new User
+            {
+                Email = email,
+                FirstName = firstName,
+                LastName = lastName,
+                CreatedAt = DateTime.Now,
+                Role = "Marshal",
+                VehicleType = vehicleType,
+                LicenseId = licenseId,
+                VehicleId = $"VEH-{prefix}-{Guid.NewGuid().ToString("N")[..8].ToUpperInvariant()}",
+                // Marshals are activated immediately; no email confirmation or wallet required.
+                IsActive = true,
+                IsEmailConfirmed = true
+            };
+
+            marshal.PasswordHash = hasher.HashPassword(marshal, password);
+
+            _context.Users.Add(marshal);
+            await _context.SaveChangesAsync();
+
+            return new AuthResponse
+            {
+                Success = true,
+                Message = "Marshal account created",
+                User = marshal
             };
         }
         catch (Exception ex)
@@ -111,6 +163,7 @@ public class AuthService : IAuthService
     public void SetUserSession(HttpContext httpContext, User user)
     {
         httpContext.Session.SetInt32("userId", user.Id);
+        httpContext.Session.SetString("Username", user.FirstName);
     }
 
     public void ClearUserSession(HttpContext httpContext)
@@ -127,12 +180,11 @@ public class AuthService : IAuthService
         return _context.Users.Find(userId);
     }
 
-    public async Task<bool> ConfirmationEmailAsync(string userId, string token)
+    public async Task<bool> ConfirmationEmailAsync(int userId, string token)
     {
         try
         {
-            var user = await _context.Users.FindAsync(int.Parse(userId));
-
+            var user = await _context.Users.FindAsync(userId);
             if (user == null)
                 return false;
             if (user.EmailConfirmationToken != token)
@@ -165,4 +217,26 @@ public class AuthService : IAuthService
             throw;
         }
     }
+
+    public async Task<AuthResponse> ForgotPasswordAsync(string email)
+    {
+        var check = await EmailExistsAsync(email);
+        if (!check)
+        {
+            return new AuthResponse
+            {
+                Success = false,
+                Message = "Email not found"
+            };
+        }
+        
+        await _emailService.SendEmailAsync(email, "Password Reset", "");
+        return new AuthResponse
+        {
+            Success = true,
+            Message = "Password Reset"
+        };
+
+    }
+    
 }

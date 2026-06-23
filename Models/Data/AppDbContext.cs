@@ -15,6 +15,8 @@ public class AppDbContext : DbContext
     public DbSet<TaxiTrip> TaxiTrips { get; set; }
     public DbSet<RailwayTrip> RailwayTrips { get; set; }
     public DbSet<Booking> Bookings { get; set; }
+    public DbSet<WalletToken>  WalletTokens { get; set; }
+    public DbSet<Ticket> Tickets { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -57,6 +59,20 @@ public class AppDbContext : DbContext
             .WithMany()
             .HasForeignKey(b => b.RailwayTripId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<Ticket>()
+            .Property(t => t.Fare)
+            .HasPrecision(18, 2);
+
+        builder.Entity<Ticket>()
+            .HasIndex(t => t.QrToken)
+            .IsUnique();
+
+        builder.Entity<Ticket>()
+            .HasOne(t => t.Booking)
+            .WithMany()
+            .HasForeignKey(t => t.BookingId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         DataSeeding.Seed(builder);
     }

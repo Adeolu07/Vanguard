@@ -1,62 +1,86 @@
+using System.Net.Http.Headers;
 using System.Text;
 using _Tripfinity.Interfaces;
+using _Tripfinity.Models.Data;
 using _Tripfinity.Models.Data.Requests;
 using _Tripfinity.Models.Data.Response;
+using _Tripfinity.Models.Tables;
 using Newtonsoft.Json;
 
 namespace _Tripfinity.Services;
 
 public class WalletService : IWalletService
 {
-    private readonly IConfiguration _config;
     private readonly HttpClient _client;
-    private readonly ISessionStore _session;
     private readonly ILogger<WalletService> _logger;
+    private readonly AppDbContext _context;
+    private readonly IConfiguration _config;
 
-    public WalletService(IConfiguration config, HttpClient client,
-        ISessionStore session, ILogger<WalletService> logger)
+    public WalletService( HttpClient client,
+        ILogger<WalletService> logger,
+        AppDbContext context, IConfiguration config)
     {
-        _session = session;
         _logger = logger;
         _client = client;
+        _context = context;
         _config = config;
+        AuthenticateOnStartup().GetAwaiter().GetResult();
     }
 
-
-    public async Task<AuthenticationResponse> AuthenticationAsync(AuthenticationRequest request)
+    private async Task AuthenticateOnStartup()
     {
-        _logger.LogInformation("Authenticating...");
-        try
+        var existing = _context.WalletTokens.FirstOrDefault();
+        if (existing != null && existing.ExpiryDate > DateTime.Now)
         {
-            var requestBody = JsonConvert.SerializeObject(request);
-
-            var response = await _client.PostAsync(
-                "Auth",
-                new StringContent(requestBody, Encoding.UTF8, "application/json"));
-            if (!response.IsSuccessStatusCode)
-            {
+            _client.DefaultRequestHeaders.Authorization =  new AuthenticationHeaderValue("Bearer", existing.Token);
+            _logger.LogInformation("Token loaded from DB");
+            return;
+        }
+        
+        var authRequest = new AuthenticationRequest
+        {
+            Username = _config["WalletStation:username"],
+            Password = _config["WalletStation:password"]
+        };
+    
+        await AuthenticationAsync(authRequest);
+    }
+    
+    public async Task<AuthenticationResponse> AuthenticationAsync(AuthenticationRequest authenticationRequest)
+    {
+        _logger.LogInformation("Authenticating user...");
+        var requestBody = JsonConvert.SerializeObject(authenticationRequest);
+        var response = await _client.PostAsync("Auth",
+            new StringContent(requestBody, Encoding.UTF8, "application/json"));
+        if (!response.IsSuccessStatusCode)
+        {
                 var error = await response.Content.ReadAsStringAsync();
                 var errorJson = JsonConvert.DeserializeObject<AuthenticationResponse>(error);
-                _logger.LogWarning("Error in Wallet AuthService: " + errorJson);
+                _logger.LogWarning("Error in Authenticate: " + errorJson);
                 return errorJson;
-            }
-            
-            var json = await response.Content.ReadAsStringAsync();
-            var result = JsonConvert.DeserializeObject<AuthenticationResponse>(json);
-            if (result.ResponseHeader.ResponseCode == "00")
-            {
-                _session.Set(result.Token);
-                _logger.LogInformation("Token set");
-            }
-            
-            _logger.LogInformation("Wallet service functional");
-            return result;
         }
-        catch (Exception ex)
+        var json = await response.Content.ReadAsStringAsync();
+        var result = JsonConvert.DeserializeObject<AuthenticationResponse>(json); ;
+        
+        if (result.ResponseHeader.ResponseCode == "00")
         {
-            _logger.LogError(ex.Message);
-            throw;
+            _logger.LogInformation("Created brand new wallet btw");
+           var existing = _context.WalletTokens.FirstOrDefault();
+           if (existing != null)
+           {
+               _context.WalletTokens.Remove(existing);
+           }
+           DateTime.TryParse(result.ExpiryDate, out DateTime ExpiryDate);
+           _context.WalletTokens.Add(new WalletToken
+           {
+               Token = result.Token,
+               ExpiryDate = ExpiryDate,
+           });
+           await _context.SaveChangesAsync();
+           _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", result.Token);
         }
+        return result;
+        
     }
     
     public async Task<CreateWalletResponse> CreateWalletAsync(CreateWalletRequest createWallet)
@@ -82,7 +106,8 @@ public class WalletService : IWalletService
             
             var json = await response.Content.ReadAsStringAsync();
             var result = JsonConvert.DeserializeObject<CreateWalletResponse>(json);
-            _logger.LogInformation("Wallet creation successful");
+            _logger.LogInformation("Wallet endpoint hit successfully");
+            _logger.LogInformation(result.ResponseHeader.ResponseMessage);
             return result;
         }
         catch (Exception ex)
@@ -97,7 +122,6 @@ public class WalletService : IWalletService
         _logger.LogInformation("Crediting Wallet...");
         try
         {
-            var session = _session.Get();
             var requestBody = JsonConvert.SerializeObject(creditWallet);
             
             var response = await _client.PostAsync(
@@ -133,7 +157,6 @@ public class WalletService : IWalletService
         _logger.LogInformation("Debit Wallet...");
         try
         {
-            var session = _session.Get();
             var requestBody = JsonConvert.SerializeObject(debitWallet);
             var response = await _client.PostAsync(
                 "Debit",
@@ -167,7 +190,6 @@ public class WalletService : IWalletService
         _logger.LogInformation("Get Balance...");
         try
         {
-            var session = _session.Get();
             var requestBody = JsonConvert.SerializeObject(getBalance);
             
             var response = await _client.PostAsync("GetBalance",
@@ -200,7 +222,6 @@ public class WalletService : IWalletService
         _logger.LogInformation("Get Transaction...");
         try
         {
-            var session = _session.Get();
             var requestBody = JsonConvert.SerializeObject(getTransaction);
 
             var response = await _client.PostAsync("GetTransaction",
@@ -236,7 +257,6 @@ public class WalletService : IWalletService
         _logger.LogInformation("Refund initiated");
         try
         {
-            var session = _session.Get();
             var requestBody = JsonConvert.SerializeObject(refund);
 
             var response = await _client.PostAsync("DebitReversal",

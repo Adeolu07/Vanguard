@@ -20,6 +20,7 @@
         <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="10.0.2" />
         <PackageReference Include="NuGet.Packaging" Version="6.12.5" />
         <PackageReference Include="NuGet.Protocol" Version="6.12.5" />
+        <PackageReference Include="QRCoder" Version="1.8.0" />
         <PackageReference Include="Resend" Version="0.5.1" />
     </ItemGroup>
 
