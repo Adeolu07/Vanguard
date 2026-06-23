@@ -13,7 +13,7 @@ body {
     flex-direction: column;
 }
 
-/* ===== Header Bar (Solid Black Split Layout) ===== */
+/* ===== Header Bar (Solid Black Layout) ===== */
 header {
     background-color: #000000;
     color: #ffffff;
@@ -46,7 +46,7 @@ header {
     flex: 1;
     display: flex;
     align-items: center;
-    padding-left: 10%; /* Positions text nicely to the left like your Figma design */
+    padding-left: 10%; 
 }
 
 .decision-box {
@@ -76,7 +76,7 @@ header {
     text-align: center;
     text-decoration: none;
     padding: 18px 0;
-    background-color: #050a52; /* Deep Navy Blue */
+    background-color: #050a52;
     color: #ffffff;
     border-radius: 14px;
     font-size: 18px;
@@ -94,9 +94,7 @@ header {
         transform: scale(0.98);
     }
 
-/* ==========================================================================
-   Responsive Mobile Adjustments
-   ========================================================================== */
+/* Responsiveness */
 
 @media (max-width: 768px) {
     header {
@@ -110,7 +108,7 @@ header {
     .content-container {
         padding: 0 24px;
         align-items: center;
-        justify-content: center; /* Centers alignment for mobile devices */
+        justify-content: center;
     }
 
     .decision-box {

@@ -1,6 +1,4 @@
 using _Tripfinity.Interfaces;
-using _Tripfinity.Models;
-using _Tripfinity.Models.Data.Requests;
 using _Tripfinity.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 
@@ -36,10 +34,9 @@ public class AuthController : Controller
     [HttpPost]
     public async Task<IActionResult> SignIn(LoginViewModel model)
     {
-        if (!ModelState.IsValid) 
-            return View(model);
+        if (!ModelState.IsValid) return View(model);
 
-        var result = await _authService.SignInAsync(model.Email, model.Password);
+        var result = await _authService.SignInAsync(model.Email, model.Password, "Passenger");
 
         if (!result.Success || result.User == null)
         {
@@ -51,31 +48,30 @@ public class AuthController : Controller
         return RedirectToAction("Index", "Home");
     }
 
+    // ✅ Marshal Sign In (points to Marshal-SignIn.cshtml)
     [HttpGet]
     public IActionResult MarshalSignIn()
     {
         if (HttpContext.Session.GetInt32("userId") != null)
             return RedirectToAction("Index", "Home");
-        return View();
+        return View("Marshal-SignIn");
     }
 
     [HttpPost]
     public async Task<IActionResult> MarshalSignIn(LoginViewModel model)
     {
-        if (!ModelState.IsValid) 
-            return View(model);
+        if (!ModelState.IsValid) return View("Marshal-SignIn", model);
 
-        var result = await _authService.SignInAsync(model.Email, model.Password);
+        var result = await _authService.SignInAsync(model.Email, model.Password, "Marshal");
 
         if (!result.Success || result.User == null)
         {
             ModelState.AddModelError("", result.Message);
-            return View(model);
+            return View("Marshal-SignIn", model);
         }
 
         _authService.SetUserSession(HttpContext, result.User);
-        return RedirectToAction("Index", "Marshal");
-        // change to marshal dashboard
+        return RedirectToAction("Index", "Home");
     }
 
     [HttpGet]
@@ -89,10 +85,11 @@ public class AuthController : Controller
     [HttpPost]
     public async Task<IActionResult> SignUp(RegisterViewModel model)
     {
-        if (!ModelState.IsValid) 
-            return View(model);
+        if (!ModelState.IsValid) return View(model);
 
-        var result = await _authService.SignUpAsync(model);
+        var result = await _authService.SignUpAsync(
+            model.Email, model.Password, model.FirstName, model.LastName, model.PhoneNumber, "Passenger"
+        );
 
         if (!result.Success || result.User == null)
         {
@@ -107,33 +104,39 @@ public class AuthController : Controller
         return RedirectToAction("Index", "Home");
     }
 
+    // ✅ Marshal Sign Up (points to Marshal-SignUp.cshtml)
     [HttpGet]
     public IActionResult MarshalSignUp()
     {
         if (HttpContext.Session.GetInt32("userId") != null)
             return RedirectToAction("Index", "Home");
-        return View();
+        return View("Marshal-SignUp");
     }
 
     [HttpPost]
-    public async Task<IActionResult> MarshalSignUp(MarshalRegisterRequest model)
+    public async Task<IActionResult> MarshalSignUp(RegisterViewModel model)
     {
-        if (!ModelState.IsValid) 
-            return View(model);
+        if (!ModelState.IsValid) return View("Marshal-SignUp", model);
 
-        var result = await _authService.RegisterMarshalAsync(model);
+        var result = await _authService.SignUpAsync(
+            model.Email, model.Password, model.FirstName, model.LastName, model.PhoneNumber, "Marshal"
+        );
 
         if (!result.Success || result.User == null)
         {
             ModelState.AddModelError("", result.Message);
-            return View(model);
+            return View("Marshal-SignUp", model);
         }
-        
+
+        var confirmationLink = $"{Request.Scheme}://{Request.Host}/account/ConfirmEmail?" +
+                               $"userId={result.User.Id}&token={result.User.EmailConfirmationToken}";
+        await _emailService.SendConfirmationEmailAsync(result.User.Email, confirmationLink);
+
         return RedirectToAction("Index", "Home");
     }
 
     [HttpGet]
-    public async Task<IActionResult> ConfirmEmail([FromQuery] int userId, [FromQuery] string token)
+    public async Task<IActionResult> ConfirmEmail([FromQuery] string userId, [FromQuery] string token)
     {
         var result = await _authService.ConfirmationEmailAsync(userId, token);
         if (!result)
