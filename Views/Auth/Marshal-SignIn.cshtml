@@ -1,18 +1,15 @@
-@model _Tripfinity.Models.ViewModels.LoginViewModel
+﻿@model _Tripfinity.Models.ViewModels.LoginViewModel
 
 @{
-    ViewData["Title"] = "Passenger Sign In";
+    ViewData["Title"] = "Marshal Sign In";
     Layout = "_Layout";
 }
-
 @section Styles {
-    <link rel="stylesheet" href="~/css/SignIn.css" />
+    <link rel="stylesheet" href="~/css/MarshalSignIn.css" />
 }
-
 @{
     ViewData["HideNavbar"] = true;
 }
-
 
 <header>
     <div class="nav-container">
@@ -24,7 +21,7 @@
     <section class="graphic-side left-banner"></section>
 
     <section class="form-section">
-        <h1 class="page-title">Sign in and start commuting</h1>
+        <h1 class="page-title">Log in</h1>
 
         @if (TempData["ErrorMessage"] != null)
         {
@@ -41,7 +38,7 @@
             </div>
         }
 
-        <form asp-action="SignIn" method="post" class="login-form">
+        <form asp-action="SignInMarshal" method="post" class="login-form">
             <div class="form-group">
                 <input asp-for="Email" type="text" placeholder="Enter email or phone number" />
                 <span asp-validation-for="Email" class="error"></span>

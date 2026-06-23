@@ -1,46 +1,52 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Tripfinity</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css"/>
-    <link rel="stylesheet" href="~/css/site.css"/>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/tripfinity.css" />
+    @RenderSection("Styles", required: false)
+
 </head>
 <body>
-<header>
-    <nav class="navbar">
-        <div class="logo">🚆 Smart Transport</div>
-        <div class="user-info">
-            @if (Context.Session.GetString("UserEmail") != null)
-            {
-                <span class="user-name">👋 Hello, @Context.Session.GetString("Username")</span>
-                <a href="/Auth/Logout" class="logout-btn">Sign Out</a>
-            }
-            else
-            {
-                <a href="/auth/signIn" class="btn-secondary">Sign In</a>
-                <a href="/auth/signUp" class="btn-primary">Sign Up</a>
-            }
-        </div>
-    </nav>
-</header>
+    <header>
+        @if (ViewData["HideNavbar"] == null)
+        {
+            <nav class="navbar">
+                <div class="logo">🚆 Smart Transport</div>
+                <div class="user-info">
+                    @if (Context.Session.GetString("UserEmail") != null)
+                    {
+                        <span class="user-name">👋 Hello, @Context.Session.GetString("Username")</span>
+                        <a href="/Auth/Logout" class="logout-btn">Sign Out</a>
+                    }
+                    else
+                    {
+                        <a href="/Auth/DecisionLogin" class="btn-secondary">Sign In</a>
+                        <a href="/Auth/DecisionSignUp" class="btn-primary">Sign Up</a>
+                    }
+                </div>
+            </nav>
+        }
+    </header>
 
-<div class="container">
-    <main>
-        @RenderBody()
-    </main>
-</div>
-
-<footer class="footer">
     <div class="container">
-        &copy; 2026 - Tripfinity - Smart Transport Booking System
+        <main>
+            @RenderBody()
+        </main>
     </div>
-</footer>
 
-<script src="~/lib/jquery/dist/jquery.min.js"></script>
-<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-<script src="~/js/site.js" asp-append-version="true"></script>
-@await RenderSectionAsync("Scripts", false)
+    <footer class="footer">
+        <div class="container">
+            &copy; 2026 - Tripfinity - Smart Transport Booking System
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", false)
 </body>
 </html>

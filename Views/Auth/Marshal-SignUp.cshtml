@@ -1,17 +1,16 @@
-@model _Tripfinity.Models.ViewModels.RegisterViewModel
+﻿@model _Tripfinity.Models.ViewModels.RegisterViewModel
 
 @{
-    ViewData["Title"] = "Passenger Sign Up";
+    ViewData["Title"] = "Marshal Sign Up";
     Layout = "_Layout";
 }
-
 @section Styles {
-    <link rel="stylesheet" href="~/css/SignUp.css" />
+    <link rel="stylesheet" href="~/css/MarshalSignUp.css" />
 }
-
 @{
     ViewData["HideNavbar"] = true;
 }
+
 
 <header>
     <div class="nav-container">
@@ -38,7 +37,7 @@
             </div>
         }
 
-        <form asp-action="SignUp" method="post" class="signup-grid">
+        <form asp-action="MarshalSignUp" method="post" class="signup-grid">
             <div class="form-group">
                 <input asp-for="FirstName" placeholder="First Name" />
                 <span asp-validation-for="FirstName" class="error"></span>
@@ -69,8 +68,11 @@
                 <span asp-validation-for="ConfirmPassword" class="error"></span>
             </div>
 
-            <div class="btn-container">
-                <button type="submit" class="btn-submit">Continue</button>
+            <div class="action-container">
+                <button type="submit" class="btn-next">Next</button>
+                <div class="login-redirect">
+                    <span>Existing user? <a href="/Auth/DecisionLogin">→ Log in</a></span>
+                </div>
             </div>
         </form>
     </section>

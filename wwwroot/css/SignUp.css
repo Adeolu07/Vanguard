@@ -1,0 +1,149 @@
+﻿/* ===== General Resets ===== */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+body {
+    background-color: #ffffff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ===== Header Bar (Solid Black) ===== */
+header {
+    background-color: #000000;
+    color: #fff;
+    padding: 20px 40px;
+    width: 100%;
+}
+
+.nav-container p {
+    font-size: 18px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+
+/* ===== Desktop Layout Splitter ===== */
+.page-container {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr; /* Form gets more space, Banner takes the rest */
+    flex: 1;
+    min-height: calc(100vh - 61px);
+}
+
+/* ===== Left Form Panel Styling ===== */
+.form-section {
+    padding: 60px 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    max-width: 800px;
+}
+
+.page-title {
+    font-size: 56px;
+    font-weight: 500;
+    margin-bottom: 40px;
+    color: #000000;
+}
+
+/* 2-Column Form Fields Grid Layout */
+.signup-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px 24px; /* Row gap and Column gap matching Figma spacing */
+}
+
+.form-group {
+    width: 100%;
+}
+
+    /* Gray Pill Inputs matching Figma rounded style */
+    .form-group input {
+        width: 100%;
+        padding: 18px 24px;
+        background-color: #e0e0e0; /* Gray box fill color */
+        border: none;
+        border-radius: 12px;
+        font-size: 16px;
+        color: #333;
+        outline: none;
+    }
+
+        .form-group input::placeholder {
+            color: #757575;
+        }
+
+/* Error message styling */
+.error {
+    color: #d32f2f;
+    font-size: 12px;
+    margin-top: 4px;
+    display: block;
+}
+
+/* Button Wrapper to control row positioning */
+.btn-container {
+    grid-column: span 2;
+    margin-top: 20px;
+}
+
+/* Dark Navy Button */
+.btn-submit {
+    padding: 16px 60px;
+    background-color: #050a52; /* Deep Navy Blue */
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+    .btn-submit:hover {
+        background-color: #020536;
+    }
+
+/* ===== Right Black Graphic Banner Panel ===== */
+.graphic-side {
+    background-color: #000000; /* Solid black layout panel */
+    margin: 40px 40px 40px 0; /* Creates padding from edges matching visual box */
+    border-radius: 4px;
+}
+
+/* ==========================================================================
+ Responsive View Breakpoints (Media Query Engine)
+ ========================================================================== */
+
+/* Mobile & Tablet Screens Setup */
+@media (max-width: 900px) {
+    .page-container {
+        grid-template-columns: 1fr; /* Drop multi-column layout split */
+    }
+
+    .graphic-side {
+        display: none; /* Disappears on smaller displays */
+    }
+
+    .form-section {
+        padding: 40px 24px;
+    }
+
+    .signup-grid {
+        grid-template-columns: 1fr; /* Collapse form into 1 simple column */
+        gap: 20px;
+    }
+
+    .btn-container {
+        grid-column: span 1;
+    }
+
+    .btn-submit {
+        width: 100%; /* Make button full width on smaller phones */
+    }
+}
