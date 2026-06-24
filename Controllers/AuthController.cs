@@ -97,7 +97,7 @@ public class AuthController : Controller
             return View(model);
         }
 
-        var confirmationLink = $"{Request.Scheme}://{Request.Host}/account/ConfirmEmail?" +
+        var confirmationLink = $"{Request.Scheme}://{Request.Host}/auth/ConfirmEmail?" +
                                $"userId={result.User.Id}&token={result.User.EmailConfirmationToken}";
         await _emailService.SendConfirmationEmailAsync(result.User.Email, confirmationLink);
 

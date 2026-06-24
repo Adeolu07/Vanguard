@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using _Tripfinity.Interfaces;
-using _Tripfinity.Models;
+using _Tripfinity.Models.ViewModels;
 using _Tripfinity.Models.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -41,17 +41,20 @@ public class HomeController : Controller
     }
 
 
-    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+    // [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {
-        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        return View(new ErrorViewModel
+        {
+            RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
+        });
     }
 
-    [HttpGet]
-    public IActionResult Wallet()
-    {
-        if (HttpContext.Session.GetInt32("userId") == null)
-            return RedirectToAction("SignIn", "Auth");
-        return View("~/Views/Wallet/Index.cshtml");
-    }
+    // [HttpGet]
+    // public IActionResult Wallet()
+    // {
+    //     if (HttpContext.Session.GetInt32("userId") == null)
+    //         return RedirectToAction("SignIn", "Auth");
+    //     return View("~/Views/Wallet/Index.cshtml");
+    // }
 }
