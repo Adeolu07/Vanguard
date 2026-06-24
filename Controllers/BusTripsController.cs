@@ -25,7 +25,7 @@ public class BusTripsController : ParentController
     {
         // return !isAuthenticated ? RedirectToLogin() : View();
         _logger.LogInformation("GET: /");
-        if (!isAuthenticated)
+        if (!IsAuthenticated)
         {
             _logger.LogWarning("User not authenticated.");
             return RedirectToLogin();
@@ -37,7 +37,7 @@ public class BusTripsController : ParentController
     [HttpGet]
     public async Task<IActionResult> Book(int tripId)
     {
-        if (!isAuthenticated)
+        if (!IsAuthenticated)
         {
             _logger.LogWarning("Not authenticated.");
             return RedirectToLogin();
@@ -58,7 +58,7 @@ public class BusTripsController : ParentController
     public async Task<IActionResult> Book(int tripId, int seats)
     {
         _logger.LogInformation("POST: /Book bus");
-        if (!isAuthenticated)
+        if (!IsAuthenticated)
         {
             _logger.LogWarning("Not authenticated.");
            return RedirectToLogin();
@@ -78,7 +78,7 @@ public class BusTripsController : ParentController
     public async Task<IActionResult> Confirmation(int id)
     {
         _logger.LogInformation("GET: /Confirmation bus");
-        if (!isAuthenticated)
+        if (!IsAuthenticated)
         {
             _logger.LogWarning("Not authenticated.");
             return RedirectToLogin();

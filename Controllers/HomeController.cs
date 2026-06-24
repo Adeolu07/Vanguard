@@ -30,7 +30,7 @@ public class HomeController : ParentController
     public IActionResult Wallet()
     {
         _logger.LogInformation("GET /Wallet");
-        if (!isAuthenticated)
+        if (!IsAuthenticated)
         {
             _logger.LogInformation("Not Authenticated");
             return RedirectToAction("Index", "Home");
@@ -42,7 +42,7 @@ public class HomeController : ParentController
     public async Task<IActionResult> Dashboard()
     {
         _logger.LogInformation("GET /Dashboard");
-        if (!isAuthenticated)
+        if (!IsAuthenticated)
         {
             _logger.LogInformation("Not Authenticated");
             return RedirectToLogin();

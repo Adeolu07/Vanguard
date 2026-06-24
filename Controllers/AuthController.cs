@@ -1,5 +1,4 @@
 using _Tripfinity.Interfaces;
-using _Tripfinity.Models;
 using _Tripfinity.Models.Data.Requests;
 using _Tripfinity.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
@@ -29,7 +28,7 @@ public class AuthController : Controller
     public IActionResult SignIn()
     {
         if (HttpContext.Session.GetInt32("userId") != null)
-            return RedirectToAction("Index", "Home");
+            return RedirectToAction("Dashboard", "Home");
         return View();
     }
 
@@ -48,7 +47,8 @@ public class AuthController : Controller
         }
 
         _authService.SetUserSession(HttpContext, result.User);
-        return RedirectToAction("Index", "Home");
+        await HttpContext.Session.CommitAsync();
+        return RedirectToAction("Dashboard", "Home");
     }
 
     [HttpGet]
@@ -144,6 +144,50 @@ public class AuthController : Controller
 
         TempData["SuccessMessage"] = "Email confirmation and wallet creation successful.";
         return RedirectToAction("Index", "Home");
+    }
+
+    [HttpGet]
+    public IActionResult ForgotPassword() => View();
+
+    [HttpPost]
+    public async Task<IActionResult> ForgotPassword(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            ModelState.AddModelError("", "Email is required.");
+            return View();
+        }
+
+        var result = await _authService.ForgotPasswordAsync(email);
+        TempData["SuccessMessage"] = result.Message;
+        return RedirectToAction("ForgotPassword");
+    }
+
+    [HttpGet]
+    public IActionResult ResetPassword(string email, string token)
+    {
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(token))
+            return BadRequest("Invalid request.");
+
+        var model = new ResetPasswordViewModel { Email = email, Token = token };
+        return View(model);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+    {
+        if (!ModelState.IsValid)
+            return View(model);
+
+        var result = await _authService.ResetPasswordAsync(model.Email, model.Token, model.NewPassword);
+        if (result.Success)
+        {
+            TempData["SuccessMessage"] = result.Message;
+            return RedirectToAction("SignIn");
+        }
+
+        ModelState.AddModelError("", result.Message);
+        return View(model);
     }
 
     public IActionResult Logout()

@@ -14,23 +14,23 @@
     <header>
         @if (ViewData["HideNavbar"] == null)
         {
-            <nav class="navbar">
-                <div class="logo">🚆 Smart Transport</div>
-                <div class="user-info">
-                    @if (Context.Session.GetString("Username") != null)
-                    {
-                        <span class="user-name">👋 Hello, @Context.Session.GetString("Username")</span>
-                        <a href="/Auth/Logout" class="logout-btn">Sign Out</a>
-                        <a href="/Home/Wallet" class="logout-btn" style="margin-left: 10px;">💳 Wallet</a>
-                    }
-                    else
-                    {
-                        <!-- Updated links to decision pages -->
-                        <a href="/Auth/DecisionLogin" class="btn-secondary">Sign In</a>
-                        <a href="/Auth/DecisionSignUp" class="btn-primary">Sign Up</a>
-                    }
-                </div>
-            </nav>
+<nav class="navbar">
+    <div class="logo">🚆 Smart Transport</div>
+    <div class="user-info">
+        @if (Context.Session.GetString("Username") != null)
+        {
+            <span class="user-name">👋 Hello, @Context.Session.GetString("Username")</span>
+            <a href="/Home/Dashboard" class="btn-secondary" style="margin-left: 10px;">📋 Dashboard</a>
+            <a href="/Home/Wallet" class="logout-btn" style="margin-left: 10px;">💳 Wallet</a>
+            <a href="/Auth/Logout" class="logout-btn" style="margin-left: 10px;">Sign Out</a>
+        }
+        else
+        {
+            <a href="/Auth/DecisionLogin" class="btn-secondary">Sign In</a>
+            <a href="/Auth/DecisionSignUp" class="btn-primary">Sign Up</a>
+        }
+    </div>
+</nav>
         }
     </header>
 

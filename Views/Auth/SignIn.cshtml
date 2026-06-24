@@ -49,8 +49,10 @@
             <div class="form-group">
                 <input asp-for="Password" type="password" placeholder="Enter password" />
                 <span asp-validation-for="Password" class="error"></span>
+                <a asp-action="ForgotPassword">Forgot password?</a>
             </div>
 
+            
             <div class="action-container">
                 <button type="submit" class="btn-continue">Continue</button>
                 <div class="signup-redirect">
