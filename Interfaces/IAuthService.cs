@@ -16,7 +16,7 @@ public interface IAuthService
 
     Task<bool> EmailExistsAsync(string email);
 
-    void SetUserSession(HttpContext httpContext, User user);
+    Task SetUserSession(HttpContext httpContext, User user);
 
     void ClearUserSession(HttpContext httpContext);
 

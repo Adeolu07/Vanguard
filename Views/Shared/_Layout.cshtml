@@ -21,30 +21,31 @@
 			.logout-btn:hover { background: #c82333; color: white; }
 			.footer { background: #ffffff; padding: 15px 0; border-top: 1px solid #dee2e6; text-align: center; margin-top: auto; color: #6c757d; }
 		</style>
-		@RenderSection("Styles", required: false)
-	</head>
-	<body>
-		<header>
-			@if (ViewData["HideNavbar"] == null)
-			{
-			<nav class="navbar">
-				<a href="/" class="logo">🚆 Smart Transport</a>
-				<div class="user-info">
-					@if (Context.Session.GetString("Username") != null)
-					{
-					<span class="user-name">👋 Hello, @Context.Session.GetString("Username")</span>
-					<a href="/Auth/Logout" class="logout-btn">Sign Out</a>
-					<a href="/Wallet" class="logout-btn" style="background: #28a745;">💳 Wallet</a>
-					}
-					else
-					{
-					<a href="/Auth/DecisionLogin" class="btn-secondary">Sign In</a>
-					<a href="/Auth/DecisionSignUp" class="btn-primary">Sign Up</a>
-					}
-				</div>
-			</nav>
-			}
-		</header>
+    @RenderSection("Styles", required: false)
+</head>
+<body>
+    <header>
+        @if (ViewData["HideNavbar"] == null)
+        {
+<nav class="navbar">
+    <a href="/" class="logo">🚆 Smart Transport</a>
+    <div class="user-info">
+        @if (Context.Session.GetString("Username") != null)
+        {
+            <span class="user-name">👋 Hello, @Context.Session.GetString("Username")</span>
+            <a href="/Home/Dashboard" class="btn-secondary" style="margin-left: 10px;">📋 Dashboard</a>
+            <a href="/Wallet" class="logout-btn" style="background: #28a745;">💳 Wallet</a>
+            <a href="/Auth/Logout" class="logout-btn" style="margin-left: 10px;">Sign Out</a>
+        }
+        else
+        {
+            <a href="/Auth/DecisionLogin" class="btn-secondary">Sign In</a>
+            <a href="/Auth/DecisionSignUp" class="btn-primary">Sign Up</a>
+        }
+    </div>
+</nav>
+        }
+    </header>
 
 		@if (ViewData["FullPage"] != null)
 		{

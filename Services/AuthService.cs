@@ -207,10 +207,13 @@ public class AuthService : IAuthService
         }
     }
 
-    public void SetUserSession(HttpContext httpContext, User user)
+    
+
+    public async Task SetUserSession(HttpContext httpContext, User user)
     {
         httpContext.Session.SetInt32("userId", user.Id);
         httpContext.Session.SetString("Username", user.FirstName);
+        await httpContext.Session.CommitAsync();
     }
 
     public void ClearUserSession(HttpContext httpContext)
@@ -319,33 +322,78 @@ public class AuthService : IAuthService
         _logger.LogInformation("Forgot password for {Email}", email);
         try
         {
-            var exists = await EmailExistsAsync(email);
-            if (!exists)
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (user == null)
             {
-                return new AuthResponse
-                {
-                    Success = false,
-                    Message = "Email not found"
-                };
+                // For security, don't reveal that the email doesn't exist
+                _logger.LogWarning("Forgot password for non-existent email: {Email}", email);
+                return new AuthResponse { Success = true, Message = "If your email exists, a reset link has been sent." };
             }
-            
-            await _emailService.SendEmailAsync(email, "Reset password","Password reset link mehnnnnn");
-            return new AuthResponse
-            {
-                Success = true,
-                Message = "If your email exists, a reset link has been sent"
-            };
+
+            // Generate a reset token
+            user.PasswordResetToken = Guid.NewGuid().ToString();
+            user.PasswordResetTokenExpiry = DateTime.Now.AddHours(1); // valid for 1 hour
+            await _context.SaveChangesAsync();
+
+            // Build reset link
+            var resetLink = $"https://localhost:5001/Auth/ResetPassword?email={Uri.EscapeDataString(email)}&token={user.PasswordResetToken}";
+
+            // Send email
+            await _emailService.SendEmailAsync(
+                email,
+                "Reset Your Password",
+                $"Click the link below to reset your password:\n{resetLink}\n\nThis link expires in 1 hour.");
+
+            _logger.LogInformation("Password reset email sent to {Email}", email);
+            return new AuthResponse { Success = true, Message = "If your email exists, a reset link has been sent." };
         }
         catch (Exception ex)
         {
-          _logger.LogError(ex,"Error during forgot password for {Email}", email);
-          return new AuthResponse
-          {
-              Success = false,
-              Message = ex.Message
-          };
+            _logger.LogError(ex, "Error during forgot password for {Email}", email);
+            return new AuthResponse { Success = false, Message = "Something went wrong. Please try again." };
         }
-        
+    }
+
+    public async Task<bool> ValidatePasswordResetTokenAsync(string email, string token)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+        if (user == null) return false;
+
+        return user.PasswordResetToken == token &&
+               user.PasswordResetTokenExpiry.HasValue &&
+               user.PasswordResetTokenExpiry > DateTime.Now;
+    }
+
+    public async Task<AuthResponse> ResetPasswordAsync(string email, string token, string newPassword)
+    {
+        try
+        {
+            var valid = await ValidatePasswordResetTokenAsync(email, token);
+            if (!valid)
+                return new AuthResponse { Success = false, Message = "Invalid or expired reset token." };
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (user == null)
+                return new AuthResponse { Success = false, Message = "User not found." };
+
+            // Hash the new password
+            var hasher = new PasswordHasher<User>();
+            user.PasswordHash = hasher.HashPassword(user, newPassword);
+
+            // Clear the reset token
+            user.PasswordResetToken = null;
+            user.PasswordResetTokenExpiry = null;
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Password reset successful for {Email}", email);
+            return new AuthResponse { Success = true, Message = "Password has been reset successfully." };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error resetting password for {Email}", email);
+            return new AuthResponse { Success = false, Message = "An error occurred. Please try again." };
+        }
     }
     
 }
