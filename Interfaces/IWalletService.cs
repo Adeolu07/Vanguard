@@ -1,6 +1,6 @@
 using _Tripfinity.Models.Data.Requests;
 using _Tripfinity.Models.Data.Response;
-using Microsoft.AspNetCore.Mvc;
+using _Tripfinity.Models.Tables;
 
 namespace _Tripfinity.Interfaces;
 
