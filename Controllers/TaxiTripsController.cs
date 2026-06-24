@@ -1,90 +1,94 @@
 using _Tripfinity.Interfaces;
 using _Tripfinity.Models.Data;
-using _Tripfinity.Models.Data.Requests;
 using Microsoft.AspNetCore.Mvc;
 
 namespace _Tripfinity.Controllers;
-
-public class TaxiTripsController : Controller
+public class TaxiTripsController : ParentController
 {
-    private readonly IBookingService _bookingService; 
+    private readonly IBookingService _bookingService;
     private readonly AppDbContext _context;
     private readonly IWalletService _walletService;
+    private readonly ILogger<BusTripsController> _logger;
+    
 
-    public TaxiTripsController(AppDbContext context, IBookingService bookingService, IWalletService walletService)
+    public TaxiTripsController(AppDbContext context, IBookingService bookingService, IWalletService walletService,  ILogger<BusTripsController> logger)
     {
         _context = context;
         _bookingService = bookingService;
         _walletService = walletService;
+        _logger = logger;
     }
 
     public IActionResult Index()
     {
-        if (HttpContext.Session.GetInt32("userId") == null)
+        // return !isAuthenticated ? RedirectToLogin() : View();
+        _logger.LogInformation("GET: /");
+        if (!isAuthenticated)
         {
-            return RedirectToAction("SignIn", "Auth");
+            _logger.LogWarning("User not authenticated.");
+            return RedirectToLogin();
         }
+        _logger.LogInformation("User is authenticated.");
         return View();
     }
 
     [HttpGet]
     public async Task<IActionResult> Book(int tripId)
     {
-        if (HttpContext.Session.GetInt32("userId") == null)
+        if (!isAuthenticated)
         {
-            return RedirectToAction("SignIn", "Auth");
+            _logger.LogWarning("Not authenticated.");
+            return RedirectToLogin();
         }
-
+        _logger.LogInformation("GET: /Book taxi");
+        
         var trip = await _context.TaxiTrips.FindAsync(tripId);
         if (trip == null)
         {
-            return NotFound("Trip not found");
+            _logger.LogWarning("Taxi trip not found.");
+            return NotFound();
         }
-
-        ViewBag.Trip = trip;
-        ViewBag.UserId = HttpContext.Session.GetInt32("userId");
-        return View("Book", trip);
+        ViewBag.UserId = UserId;
+        return View("Book",trip);
     }
 
     [HttpPost]
     public async Task<IActionResult> Book(int tripId, int seats)
     {
-        var userId = HttpContext.Session.GetInt32("userId");
-        if (userId == null)
+        _logger.LogInformation("POST: /Book taxi");
+        if (!isAuthenticated)
         {
-            return RedirectToAction("SignIn", "Auth");
-        }
-
-        var result = await _bookingService.BookTaxiAsync(tripId, seats, userId);
+            _logger.LogWarning("Not authenticated.");
+           return RedirectToLogin();
+        } 
+        var result = await _bookingService.BookTaxiAsync(tripId, seats, UserId!.Value);
         if (!result.Success)
         {
-            if (result.Status == "InsufficientFunds")
-                TempData["Warning"] = result.Message;
-            else
-                TempData["Error"] = result.Message;
-            return RedirectToAction("Book", new { tripId });
+            _logger.LogWarning("Taxi booking error.");
+            TempData["Error"] = result.Message;
+            return RedirectToAction("Book", new{tripId});
         }
-
-        TempData["Success"] = result.Message;
-        return RedirectToAction("Confirmation", new { id = result.Booking!.Id });
+        TempData["Success"] = "Booking confirmed";
+        return RedirectToAction("Confirmation", new{id = result.Booking!.Id});
     }
 
     [HttpGet]
     public async Task<IActionResult> Confirmation(int id)
     {
-        var userId = HttpContext.Session.GetInt32("userId");
-        if (userId == null) return RedirectToAction("SignIn", "Auth");
-
-        var booking = await _bookingService.GetBookingAsync(id, "Taxi");
-        if (booking == null) return NotFound("Taxi booking not found.");
-
-        if (!string.IsNullOrEmpty(booking.PaymentTransactionId))
+        _logger.LogInformation("GET: /Confirmation taxi");
+        if (!isAuthenticated)
         {
-            var transReq = new GetTransactionRequest { TransactionId = booking.PaymentTransactionId };
-            var transRes = await _walletService.GetTransactionAsync(transReq);
-            ViewBag.PaymentTransaction = transRes?.TransactionDetails;
+            _logger.LogWarning("Not authenticated.");
+            return RedirectToLogin();
         }
 
+        var booking = await _bookingService.GetBookingAsync(id, "Taxi");
+        if (booking == null)
+        {
+            _logger.LogWarning("Taxi trip not found.");
+            return NotFound();
+        }
+        ViewBag.PaymentTransaction = await FetchTransaction(_walletService, booking);
         return View("Confirmation",booking);
     }
 }

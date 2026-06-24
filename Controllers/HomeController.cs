@@ -7,37 +7,58 @@ using Microsoft.EntityFrameworkCore;
 
 namespace _Tripfinity.Controllers;
 
-public class HomeController : Controller
+public class HomeController : ParentController
 {
     private readonly AppDbContext _context;
-    private readonly IAuthService _authService;
+    private readonly IBookingService _bookingService;
+    private readonly ILogger<HomeController> _logger;
 
-    public HomeController(IAuthService authService, AppDbContext context)
+    public HomeController(AppDbContext context, IBookingService bookingService,  ILogger<HomeController> logger)
     {
         _context = context;
-        _authService = authService;
+        _bookingService = bookingService;
+        _logger = logger;
     }
+    
+    public IActionResult Index() => View();
+    public IActionResult Privacy() => View();
 
-    [Route("/home")]
-    [Route("/")]
+    // [Route("/home")]
+    // [Route("/")]
+
     [HttpGet]
-    public async Task<IActionResult> Index()
+    public IActionResult Wallet()
     {
-        var userId = HttpContext.Session.GetInt32("userId");
-        if (userId == null)
-            return View("Index");
-
-        var upcomingTrips = await _context.Bookings
+        _logger.LogInformation("GET /Wallet");
+        if (!isAuthenticated)
+        {
+            _logger.LogInformation("Not Authenticated");
+            return RedirectToAction("Index", "Home");
+        }
+        return View("~/Views/Wallet/Index.cshtml");
+    }
+    
+    [HttpGet]
+    public async Task<IActionResult> Dashboard()
+    {
+        _logger.LogInformation("GET /Dashboard");
+        if (!isAuthenticated)
+        {
+            _logger.LogInformation("Not Authenticated");
+            return RedirectToLogin();
+        }
+        
+        var user = await _context.Users.FindAsync(UserId!.Value);
+        ViewBag.FirstName = user?.FirstName ?? "Passenger";
+        var madeBookings = await _context.Bookings
             .Include(b => b.BusTrip)
-            .Where(b => b.UserId == userId)
+            .Include(b => b.TaxiTrip)
+            .Include(b => b.RailwayTrip)
+            .Where(b => b.UserId == UserId.Value)
             .OrderByDescending(b => b.BookingDate)
-            .Take(3)
+            .Take(10)
             .ToListAsync();
-
-        var user = _authService.GetCurrentUser(HttpContext);
-        ViewBag.FirstName = user!.FirstName;
-
-        return View("Dashboard", upcomingTrips);
+        return View(madeBookings);
     }
 
 
@@ -50,11 +71,5 @@ public class HomeController : Controller
         });
     }
 
-    // [HttpGet]
-    // public IActionResult Wallet()
-    // {
-    //     if (HttpContext.Session.GetInt32("userId") == null)
-    //         return RedirectToAction("SignIn", "Auth");
-    //     return View("~/Views/Wallet/Index.cshtml");
-    // }
+    
 }

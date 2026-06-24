@@ -13,24 +13,32 @@ public class AuthService : IAuthService
     private readonly AppDbContext _context;
     private readonly IWalletService _walletService;
     private readonly IEmailService _emailService;
+    private readonly ILogger<AuthService> _logger;
 
-    public AuthService(AppDbContext context,  IWalletService walletService,  IEmailService emailService)
+    public AuthService(AppDbContext context,  IWalletService walletService,  IEmailService emailService,
+        ILogger<AuthService> logger)
     {
         _context = context;
         _walletService = walletService;
         _emailService = emailService;
+        _logger = logger;
     }
 
     public async Task<AuthResponse> SignUpAsync(RegisterViewModel model)
     {
+        _logger.LogInformation("Passenger Signup for {Email}", model.Email);
         try
         {
-            if (await _context.Users.AnyAsync(u => u.Email == model.Email))
+            var existingUser = await _context.Users.AnyAsync(u => u.Email == model.Email);
+            if (existingUser)
+            {
+                _logger.LogWarning("Email already exists");
                 return new AuthResponse
                 {
                     Success = false,
                     Message = "Email already exists"
                 };
+            }
             
             var hasher = new PasswordHasher<User>();
             var user = new User
@@ -44,12 +52,12 @@ public class AuthService : IAuthService
                 EmailConfirmationToken = Guid.NewGuid().ToString(),
                 ConfirmationTokenExpiry = DateTime.Now.AddDays(1)
             };
-
             user.PasswordHash = hasher.HashPassword(user, model.Password);
-
+            
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
-
+            
+            _logger.LogInformation("Passenger account created: {Email}", user.Email);
             return new AuthResponse
             {
                 Success = true,
@@ -59,25 +67,36 @@ public class AuthService : IAuthService
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
-            throw;
+            _logger.LogError(ex, "Unexpected error during passenger sign-up");
+            return  new AuthResponse
+            {
+                Success = false,
+                Message = ex.Message
+            };
         }
     }
 
-
     public async Task<AuthResponse> RegisterMarshalAsync(MarshalRegisterRequest request)
     {
+        _logger.LogInformation("Registering new marshal");
         try
         {
-            if (await _context.Users.AnyAsync(u => u.Email == request.Email))
+            var existingUser = await _context.Users.AnyAsync(u => u.Email == request.Email);
+            if (existingUser)
+            {
+                _logger.LogWarning("Marshal registration failed: email {Email} already exists", request.Email);
                 return new AuthResponse
                 {
                     Success = false,
                     Message = "Email already exists"
                 };
-
+            }
+            
             var hasher = new PasswordHasher<User>();
-            var prefix = (request.VehicleType.Length >= 3 ? request.VehicleType[..3] : request.VehicleType).ToUpper();
+            var prefix = (request.VehicleType.Length >= 3 
+                ? request.VehicleType[..3] :
+                request.VehicleType).ToUpper();
+            
             var marshal = new User
             {
                 Email = request.Email,
@@ -88,7 +107,7 @@ public class AuthService : IAuthService
                 VehicleType = request.VehicleType,
                 LicenseId = request.LicenseId,
                 VehicleId = $"VEH-{prefix}-{Guid.NewGuid().ToString("N")[..8].ToUpper()}",
-                // Marshals are activated immediately; no email confirmation or wallet required.
+                // Marshals are activated immediately; no email confirmation or wallet required. for now sha
                 IsActive = true,
                 IsEmailConfirmed = true
             };
@@ -98,6 +117,7 @@ public class AuthService : IAuthService
             _context.Users.Add(marshal);
             await _context.SaveChangesAsync();
 
+            _logger.LogInformation("Marshal Account created: {Email}", marshal.Email);
             return new AuthResponse
             {
                 Success = true,
@@ -107,56 +127,84 @@ public class AuthService : IAuthService
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
-            throw;
+            _logger.LogError(ex, "Unexpected error during marshal registration");
+            return new AuthResponse
+            {
+                Success = false,
+                Message = ex.Message
+            };
         }
     }
-
-
+    
     public async Task<AuthResponse?> SignInAsync(string email,  string password)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
-
-        if (user == null)
-            return new AuthResponse
-            {
-                Success = false,
-                Message = "User not found"
-            };
-
-        if (!user.IsEmailConfirmed)
+        _logger.LogInformation("User sign in");
+        
+        try
         {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (user == null)
+            {
+                _logger.LogWarning("Sign in failed: user {Email} not found",  email);
+                return new AuthResponse
+                {
+                    Success = false,
+                    Message = "User not found"
+                };
+            }
+
+            if (!user.IsEmailConfirmed)
+            {
+                _logger.LogWarning("Sign-in failed: email {Email} not confirmed", email);
+                return new AuthResponse
+                {
+                    Success = false,
+                    Message = "Please confirm your Email"
+                };
+            }
+
+            var hasher = new PasswordHasher<User>();
+            var result = hasher.VerifyHashedPassword(user, user.PasswordHash, password);
+            if (result != PasswordVerificationResult.Success)
+            {
+                _logger.LogInformation("Sign -in failed: invalid credentials for: {Email}", email);
+                return new AuthResponse
+                {
+                    Success = false,
+                    Message = "Invalid credentials"
+                };
+            }
+
+            _logger.LogInformation("User {Email} signed in successfully", email);
             return new AuthResponse
             {
-                Success = false,
-                Message = "Please confirm your Email"
+                Success = true,
+                Message = "Sign in successful",
+                User = user
             };
         }
-
-        var hasher = new PasswordHasher<User>();
-        var result = hasher.VerifyHashedPassword(user, user.PasswordHash, password);
-
-        if (result != PasswordVerificationResult.Success)
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Unexpected error during sign-in for {Email}", email);
             return new AuthResponse
             {
                 Success = false,
-                Message = "Invalid credentials"
+                Message = ex.Message
             };
         }
-        
-        return new AuthResponse
-        {
-            Success = true,
-            Message = "Successful Login",
-            User = user
-        };
-        
     }
 
     public async Task<bool> EmailExistsAsync(string email)
     {
-        return await _context.Users.AnyAsync(u => u.Email == email);
+        try
+        {
+            return await _context.Users.AnyAsync(u => u.Email == email);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Unexpected error during email exists check");
+            return false;
+        }
     }
 
     public void SetUserSession(HttpContext httpContext, User user)
@@ -175,67 +223,129 @@ public class AuthService : IAuthService
         var userId = httpContext.Session.GetInt32("userId");
         if (userId == null)
             return null;
-
-        return _context.Users.Find(userId);
+        try
+        {
+            return _context.Users.Find(userId);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Unexpected error during get current user from DB");
+            return null;
+        }
     }
 
     public async Task<bool> ConfirmationEmailAsync(int userId, string token)
     {
+        _logger.LogInformation("Email confirmation for user {UserId}", userId);
         try
         {
             var user = await _context.Users.FindAsync(userId);
             if (user == null)
+            {
+                _logger.LogWarning("Email confirmation for user {UserId} failed, not found", userId);
                 return false;
-            if (user.EmailConfirmationToken != token)
-                return false;
-            if (user.ConfirmationTokenExpiry < DateTime.Now)
-                return false;
+            }
 
+            if (user.IsEmailConfirmed)
+            {
+                _logger.LogInformation("Email confirmation for user {UserId} is already confirmed", userId);
+                return true;
+            }
+
+            if (user.EmailConfirmationToken != token)
+            {
+                _logger.LogInformation("Confirmation failed: token mismatch for user {UserId}", userId);
+                return false;
+            }
+            
+            if (user.ConfirmationTokenExpiry < DateTime.Now)
+            {
+                _logger.LogWarning("Confirmation failed: token expired for user {UserId}", userId);
+                return false;
+            }
             user.IsEmailConfirmed = true;
             user.IsActive = true;
             user.EmailConfirmationToken = null;
             user.ConfirmationTokenExpiry = null;
 
-            var createWalletRequest = new CreateWalletRequest
+            if (string.IsNullOrEmpty(user.UserWalletId))
             {
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-            };
+                try
+                {
+                    _logger.LogInformation("Wallet Creation");
+                    var createWalletRequest = new CreateWalletRequest
+                    {
+                        FirstName = user.FirstName,
+                        LastName = user.LastName,
+                    };
+                    
+                    var createWalletResponse = await _walletService.CreateWalletAsync(createWalletRequest);
 
-            var response = await _walletService.CreateWalletAsync(createWalletRequest);
-            
-            user.UserWalletId = response.AccountDetails.CustomerId;
+                    if (createWalletResponse?.ResponseHeader?.ResponseCode == "00" )
+                    {
+                        user.UserWalletId = createWalletResponse.AccountDetails.CustomerId;
+                        _logger.LogInformation("Wallet Creation Successful for user with id {UserId}", userId);
+                    }
 
+                    else
+                    {
+                        _logger.LogWarning(
+                            "Wallet creation returned non-success for user {UserId}: {Code} - {Message}",
+                            userId,
+                            createWalletResponse?.ResponseHeader?.ResponseCode,
+                            createWalletResponse?.ResponseHeader?.ResponseMessage);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Wallet creation threw an exception for user {UserId}", userId);
+                }
+            }
             _context.Users.Update(user);
             await _context.SaveChangesAsync();
+            
+            _logger.LogInformation("Email confirmation for user {UserId}", userId);
             return true;
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
-            throw;
+            _logger.LogError(ex, "Unexpected error during email confirmation");
+            return false;
         }
     }
 
     public async Task<AuthResponse> ForgotPasswordAsync(string email)
     {
-        var check = await EmailExistsAsync(email);
-        if (!check)
+        _logger.LogInformation("Forgot password for {Email}", email);
+        try
         {
+            var exists = await EmailExistsAsync(email);
+            if (!exists)
+            {
+                return new AuthResponse
+                {
+                    Success = false,
+                    Message = "Email not found"
+                };
+            }
+            
+            await _emailService.SendEmailAsync(email, "Reset password","Password reset link mehnnnnn");
             return new AuthResponse
             {
-                Success = false,
-                Message = "Email not found"
+                Success = true,
+                Message = "If your email exists, a reset link has been sent"
             };
         }
-        
-        await _emailService.SendEmailAsync(email, "Password Reset", "");
-        return new AuthResponse
+        catch (Exception ex)
         {
-            Success = true,
-            Message = "Password Reset"
-        };
-
+          _logger.LogError(ex,"Error during forgot password for {Email}", email);
+          return new AuthResponse
+          {
+              Success = false,
+              Message = ex.Message
+          };
+        }
+        
     }
     
 }

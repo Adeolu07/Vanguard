@@ -5,81 +5,94 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace _Tripfinity.Controllers;
 
-public class RailwayTripsController : Controller
+public class RailwayTripsController : ParentController
 {
     private readonly IBookingService _bookingService; 
     private readonly AppDbContext _context;
     private readonly IWalletService _walletService;
+    private readonly ILogger<RailwayTripsController> _logger;
 
     public RailwayTripsController(
         AppDbContext context,
         IBookingService bookingService,
-        IWalletService walletService)
+        IWalletService walletService, ILogger<RailwayTripsController> logger)
     {
         _context = context;
         _bookingService = bookingService;
         _walletService = walletService;
+        _logger = logger;
     }
 
     public IActionResult Index()
     {
-        if (HttpContext.Session.GetInt32("userId") == null)
-            return RedirectToAction("SignIn", "Auth");
+        // return !isAuthenticated ? RedirectToLogin() : View();
+        _logger.LogInformation("GET: /");
+        if (!isAuthenticated)
+        {
+            _logger.LogWarning("User not authenticated.");
+            return RedirectToLogin();
+        }
+        _logger.LogInformation("User is authenticated.");
         return View();
     }
 
     [HttpGet]
     public async Task<IActionResult> Book(int tripId)
     {
-        if (HttpContext.Session.GetInt32("userId") == null)
-            return RedirectToAction("SignIn", "Auth");
-        var trip = await _context.RailwayTrips.FindAsync(tripId);
-        if (trip == null) return NotFound("Trip not found.");
-
-        ViewBag.Trip = trip;
-        ViewBag.UserId = HttpContext.Session.GetInt32("userId");
-        return View("Book", trip);
+        if (!isAuthenticated)
+        {
+            _logger.LogWarning("Not authenticated.");
+            return RedirectToLogin();
+        }
+        _logger.LogInformation("GET: /Book train");
+        
+        var trip = await _context.BusTrips.FindAsync(tripId);
+        if (trip == null)
+        {
+            _logger.LogWarning("Train trip not found.");
+            return NotFound();
+        }
+        ViewBag.UserId = UserId;
+        return View("Book",trip);
     }
 
     [HttpPost]
     public async Task<IActionResult> Book(int tripId, int seats)
     {
-        var userId = HttpContext.Session.GetInt32("userId");
-        if (userId == null) return RedirectToAction("SignIn", "Auth");
-
-        var result = await _bookingService.BookRailwayAsync(tripId, seats, userId);
+        _logger.LogInformation("POST: /Book train");
+        if (!isAuthenticated)
+        {
+            _logger.LogWarning("Not authenticated.");
+            return RedirectToLogin();
+        } 
+        var result = await _bookingService.BookRailwayAsync(tripId, seats, UserId!.Value);
         if (!result.Success)
         {
-            if (result.Status == "InsufficientFunds")
-                TempData["Warning"] = result.Message;
-            else
-                TempData["Error"] = result.Message;
-            return RedirectToAction("Book", new { tripId });
+            _logger.LogWarning("Train booking error.");
+            TempData["Error"] = result.Message;
+            return RedirectToAction("Book", new{tripId});
         }
-
-        TempData["Success"] = result.Message;
-        return RedirectToAction("Confirmation", new { id = result.Booking!.Id });
+        TempData["Success"] = "Booking confirmed";
+        return RedirectToAction("Confirmation", new{id = result.Booking!.Id});
     }
 
     [HttpGet]
     public async Task<IActionResult> Confirmation(int id)
     {
-        var userId = HttpContext.Session.GetInt32("userId");
-        if (userId == null) 
-            return RedirectToAction("SignIn", "Auth");
-
-        var booking = await _bookingService.GetBookingAsync(id, "Railway");
-        if (booking == null) 
-            return NotFound("Railway booking not found.");
-
-        // ── Fetch payment transaction details ──────────────
-        if (!string.IsNullOrEmpty(booking.PaymentTransactionId))
+        _logger.LogInformation("GET: /Confirmation train");
+        if (!isAuthenticated)
         {
-            var transReq = new GetTransactionRequest { TransactionId = booking.PaymentTransactionId };
-            var transRes = await _walletService.GetTransactionAsync(transReq);
-            ViewBag.PaymentTransaction = transRes?.TransactionDetails;
+            _logger.LogWarning("Not authenticated.");
+            return RedirectToLogin();
         }
 
-        return View("Confirmation", booking);
+        var booking = await _bookingService.GetBookingAsync(id, "Train");
+        if (booking == null)
+        {
+            _logger.LogWarning("Train trip not found.");
+            return NotFound();
+        }
+        ViewBag.PaymentTransaction = await FetchTransaction(_walletService, booking);
+        return View("Confirmation",booking);
     }
 }

@@ -40,6 +40,8 @@ public class User
     public DateTime? EmailConfirmationSentAt { get; set; }
 
     public string? UserWalletId { get; set; } = null;
+    public string? PasswordResetToken { get; set; } 
+    public DateTime? PasswordResetTokenExpiry { get; set; }
 
     // Marshal-specific fields (only populated when Role == "Marshal")
     [MaxLength(50)] public string? VehicleType { get; set; } // Bus, Railway, Taxi
