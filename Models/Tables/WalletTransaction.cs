@@ -1,33 +1,15 @@
-﻿using System.ComponentModel.DataAnnotations;
-
 namespace _Tripfinity.Models.Tables;
 
 public class WalletTransaction
 {
     public int Id { get; set; }
-
-    [Required]
-    public string TransactionId { get; set; } = Guid.NewGuid().ToString();
-
-    [Required]
-    public string CustomerId { get; set; } = string.Empty;
-
-    [Required]
+    public string TransactionId { get; set; } = Guid.NewGuid().ToString("N");
+    public int WalletId { get; set; }
     public decimal Amount { get; set; }
-
     public decimal BalanceAfter { get; set; }
+    public string Description { get; set; } = string.Empty;
+    public string Type { get; set; } = string.Empty; // "CREDIT", "DEBIT", "REFUND"
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    [Required]
-    [MaxLength(20)]
-    public string Type { get; set; } = string.Empty; // Credit | Debit | Refund
-
-    [MaxLength(255)]
-    public string? Description { get; set; }
-
-    [MaxLength(100)]
-    public string? TraceId { get; set; }
-
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
-
-    public bool IsReversed { get; set; } = false;
+    public Wallet Wallet { get; set; } = null!;
 }

@@ -75,32 +75,17 @@ public class AppDbContext : DbContext
             .HasForeignKey(t => t.BookingId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // Wallet
         builder.Entity<Wallet>()
             .Property(w => w.Balance)
             .HasPrecision(18, 2);
 
-        builder.Entity<Wallet>()
-            .HasIndex(w => w.CustomerId)
-            .IsUnique();
-
-        builder.Entity<Wallet>()
-            .HasOne(w => w.User)
-            .WithMany()
-            .HasForeignKey(w => w.UserId)
-            .OnDelete(DeleteBehavior.Restrict);
-
         builder.Entity<WalletTransaction>()
-            .Property(t => t.Amount)
+            .Property(w => w.Amount)
             .HasPrecision(18, 2);
 
         builder.Entity<WalletTransaction>()
-            .Property(t => t.BalanceAfter)
+            .Property(w => w.BalanceAfter)
             .HasPrecision(18, 2);
-
-        builder.Entity<WalletTransaction>()
-            .HasIndex(t => t.TransactionId)
-            .IsUnique();
 
         DataSeeding.Seed(builder);
     }

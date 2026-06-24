@@ -1,3 +1,5 @@
+using System.Net.Http.Headers;
+using System.Text;
 using _Tripfinity.Interfaces;
 using _Tripfinity.Models.Data;
 using _Tripfinity.Models.Data.Requests;
@@ -9,23 +11,13 @@ namespace _Tripfinity.Services;
 
 public class WalletService : IWalletService
 {
-    private readonly AppDbContext _context;
     private readonly ILogger<WalletService> _logger;
+    private readonly AppDbContext _context;
 
-    public WalletService(AppDbContext context, ILogger<WalletService> logger)
+    public WalletService(ILogger<WalletService> logger, AppDbContext context)
     {
-        _context = context;
         _logger = logger;
-    }
-
-    public Task<AuthenticationResponse> AuthenticationAsync(AuthenticationRequest request)
-    {
-        return Task.FromResult(new AuthenticationResponse
-        {
-            ResponseHeader = new ResponseHeader { ResponseCode = "00", ResponseMessage = "Success" },
-            Token = "internal",
-            ExpiryDate = DateTime.Now.AddDays(1).ToString()
-        });
+        _context = context;
     }
 
     public async Task<CreateWalletResponse> CreateWalletAsync(CreateWalletRequest request)
@@ -33,75 +25,46 @@ public class WalletService : IWalletService
         _logger.LogInformation("Creating wallet for {FirstName} {LastName}", request.FirstName, request.LastName);
         try
         {
-            var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.FirstName == request.FirstName && u.LastName == request.LastName);
-
-            if (user == null)
-                return new CreateWalletResponse
-                {
-                    ResponseHeader = new ResponseHeader { ResponseCode = "99", ResponseMessage = "User not found" },
-                    AccountDetails = new AccountDetails
-                    {
-                        AccountNumber = "",
-                        CustomerId = "",
-                        CustomerAlias = "",
-                        BankName = "",
-                        BankCode = "",
-                        FirstName = "",
-                        LastName = "",
-                        Bvn = ""
-                    }
-                };
-
-            var existing = await _context.Wallets.FirstOrDefaultAsync(w => w.UserId == user.Id);
-            if (existing != null)
-                return new CreateWalletResponse
-                {
-                    ResponseHeader = new ResponseHeader { ResponseCode = "00", ResponseMessage = "Wallet already exists" },
-                    AccountDetails = new AccountDetails
-                    {
-                        AccountNumber = existing.CustomerId,
-                        CustomerId = existing.CustomerId,
-                        CustomerAlias = $"{user.FirstName} {user.LastName}",
-                        BankName = "Tripfinity Wallet",
-                        BankCode = "TRP",
-                        FirstName = user.FirstName,
-                        LastName = user.LastName,
-                        Bvn = ""
-                    }
-                };
+            var customerId = Guid.NewGuid().ToString("N");
 
             var wallet = new Wallet
             {
-                CustomerId = Guid.NewGuid().ToString(),
-                UserId = user.Id,
+                CustomerId = customerId,
                 Balance = 0,
-                IsActive = true
+                CreatedAt = DateTime.UtcNow
             };
 
             _context.Wallets.Add(wallet);
             await _context.SaveChangesAsync();
 
+            _logger.LogInformation("Wallet created with CustomerId {CustomerId}", customerId);
+
             return new CreateWalletResponse
             {
-                ResponseHeader = new ResponseHeader { ResponseCode = "00", ResponseMessage = "Wallet created" },
+                ResponseHeader = new ResponseHeader
+                {
+                    ResponseCode = "00",
+                    ResponseMessage = "Wallet created successfully"
+                },
                 AccountDetails = new AccountDetails
                 {
-                    AccountNumber = wallet.CustomerId,
-                    CustomerId = wallet.CustomerId,
-                    CustomerAlias = $"{user.FirstName} {user.LastName}",
-                    BankName = "Tripfinity Wallet",
-                    BankCode = "TRP",
-                    FirstName = user.FirstName,
-                    LastName = user.LastName,
-                    Bvn = ""
+                    CustomerId = customerId,
+                    FirstName = request.FirstName,
+                    LastName = request.LastName,
                 }
             };
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex.Message);
-            throw;
+            _logger.LogError(ex, "Error creating wallet");
+            return new CreateWalletResponse
+            {
+                ResponseHeader = new ResponseHeader
+                {
+                    ResponseCode = "99",
+                    ResponseMessage = ex.Message
+                }
+            };
         }
     }
 
@@ -110,49 +73,62 @@ public class WalletService : IWalletService
         _logger.LogInformation("Crediting wallet for {CustomerId}", request.CustomerId);
         try
         {
-            var wallet = await _context.Wallets.FirstOrDefaultAsync(w => w.CustomerId == request.CustomerId);
+            var wallet = await _context.Wallets
+                .FirstOrDefaultAsync(w => w.CustomerId == request.CustomerId);
+
             if (wallet == null)
+            {
                 return new CreditWalletResponse
                 {
-                    ResponseHeader = new ResponseHeader { ResponseCode = "99", ResponseMessage = "Wallet not found" },
-                    Amount = 0,
-                    Balance = 0,
-                    Description = "",
-                    TransactionId = "",
-                    TraceId = ""
+                    ResponseHeader = new ResponseHeader
+                    {
+                        ResponseCode = "01",
+                        ResponseMessage = "Wallet not found"
+                    }
                 };
+            }
 
             wallet.Balance += request.Amount;
 
             var transaction = new WalletTransaction
             {
-                TransactionId = Guid.NewGuid().ToString(),
-                CustomerId = request.CustomerId,
+                TransactionId = Guid.NewGuid().ToString("N"),
+                WalletId = wallet.Id,
                 Amount = request.Amount,
                 BalanceAfter = wallet.Balance,
-                Type = "Credit",
-                Description = request.Description,
-                TraceId = request.TraceId,
-                CreatedAt = DateTime.Now
+                Description = request.Description ?? "Credit",
+                Type = "CREDIT",
+                CreatedAt = DateTime.UtcNow
             };
 
             _context.WalletTransactions.Add(transaction);
             await _context.SaveChangesAsync();
 
+            _logger.LogInformation("Wallet credited successfully for {CustomerId}", request.CustomerId);
+
             return new CreditWalletResponse
             {
-                ResponseHeader = new ResponseHeader { ResponseCode = "00", ResponseMessage = "Credit successful" },
-                Amount = request.Amount,
-                Balance = wallet.Balance,
-                Description = request.Description,
+                ResponseHeader = new ResponseHeader
+                {
+                    ResponseCode = "00",
+                    ResponseMessage = "Wallet credited successfully"
+                },
                 TransactionId = transaction.TransactionId,
-                TraceId = request.TraceId
+                Amount = request.Amount,
+                Balance = wallet.Balance
             };
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex.Message);
-            throw;
+            _logger.LogError(ex, "Error crediting wallet");
+            return new CreditWalletResponse
+            {
+                ResponseHeader = new ResponseHeader
+                {
+                    ResponseCode = "99",
+                    ResponseMessage = ex.Message
+                }
+            };
         }
     }
 
@@ -161,198 +137,243 @@ public class WalletService : IWalletService
         _logger.LogInformation("Debiting wallet for {CustomerId}", request.CustomerId);
         try
         {
-            var wallet = await _context.Wallets.FirstOrDefaultAsync(w => w.CustomerId == request.CustomerId);
+            var wallet = await _context.Wallets
+                .FirstOrDefaultAsync(w => w.CustomerId == request.CustomerId);
+
             if (wallet == null)
+            {
                 return new DebitWalletResponse
                 {
-                    ResponseHeader = new ResponseHeader { ResponseCode = "99", ResponseMessage = "Wallet not found" },
-                    Amount = 0,
-                    Balance = 0,
-                    Description = "",
-                    TransactionId = "",
-                    TraceId = ""
+                    ResponseHeader = new ResponseHeader
+                    {
+                        ResponseCode = "01",
+                        ResponseMessage = "Wallet not found"
+                    }
                 };
+            }
 
             if (wallet.Balance < request.Amount)
+            {
                 return new DebitWalletResponse
                 {
-                    ResponseHeader = new ResponseHeader { ResponseCode = "99", ResponseMessage = "Insufficient balance" },
-                    Amount = 0,
-                    Balance = wallet.Balance,
-                    Description = "",
-                    TransactionId = "",
-                    TraceId = ""
+                    ResponseHeader = new ResponseHeader
+                    {
+                        ResponseCode = "02",
+                        ResponseMessage = "Insufficient balance"
+                    }
                 };
+            }
 
             wallet.Balance -= request.Amount;
 
             var transaction = new WalletTransaction
             {
-                TransactionId = Guid.NewGuid().ToString(),
-                CustomerId = request.CustomerId,
+                TransactionId = Guid.NewGuid().ToString("N"),
+                WalletId = wallet.Id,
                 Amount = request.Amount,
                 BalanceAfter = wallet.Balance,
-                Type = "Debit",
-                Description = request.Description,
-                TraceId = request.TraceId,
-                CreatedAt = DateTime.Now
+                Description = request.Description ?? "Debit",
+                Type = "DEBIT",
+                CreatedAt = DateTime.UtcNow
             };
 
             _context.WalletTransactions.Add(transaction);
             await _context.SaveChangesAsync();
 
+            _logger.LogInformation("Wallet debited successfully for {CustomerId}", request.CustomerId);
+
             return new DebitWalletResponse
             {
-                ResponseHeader = new ResponseHeader { ResponseCode = "00", ResponseMessage = "Debit successful" },
-                Amount = request.Amount,
-                Balance = wallet.Balance,
-                Description = request.Description,
+                ResponseHeader = new ResponseHeader
+                {
+                    ResponseCode = "00",
+                    ResponseMessage = "Wallet debited successfully"
+                },
                 TransactionId = transaction.TransactionId,
-                TraceId = request.TraceId
+                Amount = request.Amount,
+                Balance = wallet.Balance
             };
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex.Message);
-            throw;
+            _logger.LogError(ex, "Error debiting wallet");
+            return new DebitWalletResponse
+            {
+                ResponseHeader = new ResponseHeader
+                {
+                    ResponseCode = "99",
+                    ResponseMessage = ex.Message
+                }
+            };
         }
     }
 
     public async Task<GetBalanceResponse> GetBalanceAsync(GetBalanceRequest request)
     {
-        var wallet = await _context.Wallets
-            .AsNoTracking()
-            .FirstOrDefaultAsync(w => w.CustomerId == request.CustomerId);
+        _logger.LogInformation("Getting balance for {CustomerId}", request.CustomerId);
+        try
+        {
+            var wallet = await _context.Wallets
+                .FirstOrDefaultAsync(w => w.CustomerId == request.CustomerId);
 
-        if (wallet == null)
+            if (wallet == null)
+            {
+                return new GetBalanceResponse
+                {
+                    ResponseHeader = new ResponseHeader
+                    {
+                        ResponseCode = "01",
+                        ResponseMessage = "Wallet not found"
+                    }
+                };
+            }
+
             return new GetBalanceResponse
             {
-                ResponseHeader = new ResponseHeader { ResponseCode = "99", ResponseMessage = "Wallet not found" },
-                Balance = 0
+                ResponseHeader = new ResponseHeader
+                {
+                    ResponseCode = "00",
+                    ResponseMessage = "Balance retrieved successfully"
+                },
+                Balance = wallet.Balance
             };
-
-        return new GetBalanceResponse
+        }
+        catch (Exception ex)
         {
-            ResponseHeader = new ResponseHeader { ResponseCode = "00", ResponseMessage = "Success" },
-            Balance = wallet.Balance
-        };
+            _logger.LogError(ex, "Error getting balance");
+            return new GetBalanceResponse
+            {
+                ResponseHeader = new ResponseHeader
+                {
+                    ResponseCode = "99",
+                    ResponseMessage = ex.Message
+                }
+            };
+        }
     }
 
     public async Task<GetTransactionResponse> GetTransactionAsync(GetTransactionRequest request)
     {
-        var transaction = await _context.WalletTransactions
-            .FirstOrDefaultAsync(t => t.TransactionId == request.TransactionId);
+        _logger.LogInformation("Getting transaction {TransactionId}", request.TransactionId);
+        try
+        {
+            var transaction = await _context.WalletTransactions
+                .FirstOrDefaultAsync(t => t.TransactionId == request.TransactionId);
 
-        if (transaction == null)
+            if (transaction == null)
+            {
+                return new GetTransactionResponse
+                {
+                    ResponseHeader = new ResponseHeader
+                    {
+                        ResponseCode = "01",
+                        ResponseMessage = "Transaction not found"
+                    }
+                };
+            }
+
             return new GetTransactionResponse
             {
-                ResponseHeader = new ResponseHeader { ResponseCode = "99", ResponseMessage = "Transaction not found" },
-                TransactionDetails = null
+                ResponseHeader = new ResponseHeader
+                {
+                    ResponseCode = "00",
+                    ResponseMessage = "Transaction retrieved successfully"
+                },
+                TransactionDetails = new TransactionDetails
+                {
+                    TransactionId = transaction.TransactionId,
+                    Amount = transaction.Amount,
+                    Description = transaction.Description,
+                    TranType = transaction.Type,
+                }
             };
-
-        return new GetTransactionResponse
+        }
+        catch (Exception ex)
         {
-            ResponseHeader = new ResponseHeader { ResponseCode = "00", ResponseMessage = "Success" },
-            TransactionDetails = new TransactionDetails
+            _logger.LogError(ex, "Error getting transaction");
+            return new GetTransactionResponse
             {
-                TranType = transaction.Type,
-                Amount = transaction.Amount,
-                Description = transaction.Description,
-                TransactionId = transaction.TransactionId,
-                SessionId = transaction.TraceId,
-                BankCode = "TRP",
-                BankName = "Tripfinity Wallet"
-            }
-        };
-    }
-
-    public async Task<List<WalletTransaction>> GetTransactionHistoryAsync(string customerId)
-    {
-        return await _context.WalletTransactions
-            .AsNoTracking()
-            .Where(t => t.CustomerId == customerId)
-            .OrderByDescending(t => t.CreatedAt)
-            .Take(20)
-            .ToListAsync();
+                ResponseHeader = new ResponseHeader
+                {
+                    ResponseCode = "99",
+                    ResponseMessage = ex.Message
+                }
+            };
+        }
     }
 
     public async Task<RefundResponse> RefundAsync(RefundRequest request)
     {
-        _logger.LogInformation("Processing refund for {TransactionId}", request.TransactionId);
+        _logger.LogInformation("Refund for transaction {TransactionId}", request.TransactionId);
         try
         {
-            var original = await _context.WalletTransactions
+            var transaction = await _context.WalletTransactions
+                .Include(t => t.Wallet)
                 .FirstOrDefaultAsync(t => t.TransactionId == request.TransactionId);
 
-            if (original == null)
+            if (transaction == null)
+            {
                 return new RefundResponse
                 {
-                    ResponseHeader = new ResponseHeader { ResponseCode = "99", ResponseMessage = "Transaction not found" }
+                    ResponseHeader = new ResponseHeader
+                    {
+                        ResponseCode = "01",
+                        ResponseMessage = "Transaction not found"
+                    }
                 };
+            }
 
-            var wallet = await _context.Wallets
-                .FirstOrDefaultAsync(w => w.CustomerId == original.CustomerId);
-
-            if (wallet == null)
+            if (transaction.Type != "DEBIT")
+            {
                 return new RefundResponse
                 {
-                    ResponseHeader = new ResponseHeader { ResponseCode = "99", ResponseMessage = "Wallet not found" }
+                    ResponseHeader = new ResponseHeader
+                    {
+                        ResponseCode = "03",
+                        ResponseMessage = "Only debit transactions can be refunded"
+                    }
                 };
+            }
 
-            wallet.Balance += original.Amount;
+            transaction.Wallet.Balance += transaction.Amount;
 
             var refundTransaction = new WalletTransaction
             {
-                TransactionId = Guid.NewGuid().ToString(),
-                CustomerId = original.CustomerId,
-                Amount = original.Amount,
-                BalanceAfter = wallet.Balance,
-                Type = "Refund",
-                Description = $"Refund for {original.TransactionId}",
-                TraceId = Guid.NewGuid().ToString(),
-                CreatedAt = DateTime.Now
+                TransactionId = Guid.NewGuid().ToString("N"),
+                WalletId = transaction.WalletId,
+                Amount = transaction.Amount,
+                BalanceAfter = transaction.Wallet.Balance,
+                Description = $"Refund for {transaction.TransactionId}",
+                Type = "REFUND",
+                CreatedAt = DateTime.UtcNow
             };
 
             _context.WalletTransactions.Add(refundTransaction);
             await _context.SaveChangesAsync();
 
+            _logger.LogInformation("Refund successful for transaction {TransactionId}", request.TransactionId);
+
             return new RefundResponse
             {
-                ResponseHeader = new ResponseHeader { ResponseCode = "00", ResponseMessage = "Refund successful" }
+                ResponseHeader = new ResponseHeader
+                {
+                    ResponseCode = "00",
+                    ResponseMessage = "Refund successful"
+                },
+                Amount = transaction.Amount
             };
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex.Message);
-            throw;
-        }
-    }
-
-    public async Task SaveUserWalletIdAsync(int userId, string walletId)
-    {
-        var user = await _context.Users.FindAsync(userId);
-        if (user != null)
-        {
-            user.UserWalletId = walletId;
-            _context.Users.Update(user);
-        }
-
-        var wallet = await _context.Wallets.FirstOrDefaultAsync(w => w.UserId == userId);
-        if (wallet == null)
-        {
-            _context.Wallets.Add(new Wallet
+            _logger.LogError(ex, "Error processing refund");
+            return new RefundResponse
             {
-                UserId = userId,
-                CustomerId = walletId,
-                Balance = 0,
-                IsActive = true
-            });
+                ResponseHeader = new ResponseHeader
+                {
+                    ResponseCode = "99",
+                    ResponseMessage = ex.Message
+                }
+            };
         }
-        else
-        {
-            wallet.CustomerId = walletId;
-        }
-
-        await _context.SaveChangesAsync();
     }
 }

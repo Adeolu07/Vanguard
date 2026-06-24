@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using _Tripfinity.Interfaces;
 using _Tripfinity.Models.Data;
 using _Tripfinity.Services;
@@ -19,17 +20,9 @@ public class Program
         builder.Services.AddScoped<IEmailService, EmailService>();
         builder.Services.AddScoped<IWalletService, WalletService>();
 
-        builder.Services.AddMemoryCache();
-
         builder.Services.AddDbContext<AppDbContext>(options =>
             options.UseSqlServer(
-                builder.Configuration.GetConnectionString("DefaultConnection"),
-                sqlOptions => sqlOptions.EnableRetryOnFailure(
-                    maxRetryCount: 5,
-                    maxRetryDelay: TimeSpan.FromSeconds(30),
-                    errorNumbersToAdd: null
-                )
-            ));
+                builder.Configuration.GetConnectionString("DefaultConnection")));
 
         builder.Services.AddSession(options =>
         {
@@ -42,11 +35,12 @@ public class Program
         builder.Services.AddControllers();
 
         var app = builder.Build();
+
         app.UseMiddleware<ExceptionMiddleware>();
         app.UseStaticFiles();
         app.UseSession();
-
         app.UseRouting();
+
         app.MapControllers();
         app.MapControllerRoute(
             "default",
