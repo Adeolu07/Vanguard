@@ -1,10 +1,78 @@
 @{
-    ViewBag.Title = "title";
+    ViewBag.Title = "Digital Wallet - Tripfinity";
     Layout = "_Layout";
 }
-@section Styles
-{
+@section Styles {
     <link rel="stylesheet" href="~/css/wallet.css"/>
+    <style>
+        /* ── Payment Result Modal ── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .modal-box {
+            background: #fff;
+            border-radius: 16px;
+            padding: 40px 36px;
+            max-width: 420px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+            animation: popIn .3s ease;
+        }
+        @@keyframes popIn {
+            from { transform: scale(0.85); opacity: 0; }
+            to   { transform: scale(1);    opacity: 1; }
+        }
+
+        .modal-icon { font-size: 64px; margin-bottom: 12px; }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .modal-title.success { color: #16a34a; }
+        .modal-title.pending { color: #d97706; }
+        .modal-title.failed  { color: #dc2626; }
+
+        .modal-detail {
+            font-size: 0.9rem;
+            color: #555;
+            margin: 4px 0;
+        }
+        .modal-detail span { font-weight: 600; color: #111; }
+
+        .modal-actions { margin-top: 24px; display: flex; gap: 12px; justify-content: center; }
+
+        .btn-modal-primary {
+            padding: 10px 24px;
+            border-radius: 8px;
+            border: none;
+            background: #1d4ed8;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-modal-secondary {
+            padding: 10px 24px;
+            border-radius: 8px;
+            border: 2px solid #d1d5db;
+            background: #fff;
+            color: #374151;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-modal-primary:hover  { background: #1e40af; }
+        .btn-modal-secondary:hover { border-color: #9ca3af; }
+    </style>
 }
 
 <div class="wallet-container">
@@ -18,56 +86,140 @@
         <h4>Add Funds</h4>
         <div class="fund-form">
             <input type="number" id="fundAmount" placeholder="Amount (₦)" min="1" step="100" />
-            <input type="text" id="fundDescription" placeholder="Description (optional)" />
+            <input type="text"   id="fundDescription" placeholder="Description (optional)" />
             <button id="fundButton" class="btn-primary">Add Funds</button>
         </div>
         <div id="fundMessage" class="message"></div>
     </div>
 </div>
-<h2>title</h2>
 
+<!-- ── Payment Result Modal ── -->
+<div class="modal-overlay" id="paymentModal">
+    <div class="modal-box">
+        <div class="modal-icon"  id="modalIcon"></div>
+        <div class="modal-title" id="modalTitle"></div>
+        <p  class="modal-detail" id="modalMessage"></p>
+        <div id="modalDetails"></div>
+        <div class="modal-actions">
+            <button class="btn-modal-primary"   onclick="closeModal()">Done</button>
+            <button class="btn-modal-secondary" onclick="closeModal()" id="modalSecondaryBtn" style="display:none">Try Again</button>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
     <script>
+        // ── Modal helpers ──
+        function showModal(type, data) {
+            const overlay  = document.getElementById('paymentModal');
+            const icon     = document.getElementById('modalIcon');
+            const title    = document.getElementById('modalTitle');
+            const message  = document.getElementById('modalMessage');
+            const details  = document.getElementById('modalDetails');
+            const tryAgain = document.getElementById('modalSecondaryBtn');
+
+            const cfg = {
+                success: { icon: '✅', label: 'Payment Successful', cls: 'success' },
+                pending: { icon: '⏳', label: 'Payment Pending',    cls: 'pending' },
+                failed:  { icon: '❌', label: 'Payment Failed',     cls: 'failed'  }
+            }[type];
+
+            icon.textContent    = cfg.icon;
+            title.textContent   = cfg.label;
+            title.className     = `modal-title ${cfg.cls}`;
+            message.textContent = data.message || '';
+            tryAgain.style.display = type === 'failed' ? 'inline-block' : 'none';
+
+            // Build detail rows
+            details.innerHTML = '';
+            if (data.amount)         addDetail(details, 'Amount',         `₦${Number(data.amount).toLocaleString()}`);
+            if (data.transactionId)  addDetail(details, 'Transaction ID', data.transactionId);
+            if (data.balance != null) addDetail(details, 'New Balance',   `₦${Number(data.balance).toLocaleString()}`);
+            if (data.date)           addDetail(details, 'Date',           data.date);
+            if (data.description)    addDetail(details, 'Description',    data.description);
+
+            overlay.classList.add('active');
+        }
+
+        function addDetail(container, label, value) {
+            container.innerHTML +=
+                `<p class="modal-detail">${label}: <span>${value}</span></p>`;
+        }
+
+        function closeModal() {
+            document.getElementById('paymentModal').classList.remove('active');
+        }
+
+        // Close on backdrop click
+        document.getElementById('paymentModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        // ── Load Balance ──
         async function loadBalance() {
             try {
-                const res = await fetch('/api/wallet/my-balance');
+                const res  = await fetch('/api/wallet/my-balance', { credentials: 'include' });
                 const data = await res.json();
-                if (data.success) {
-                    document.getElementById('balanceAmount').textContent = `₦${data.balance.toLocaleString()}`;
-                } else {
-                    document.getElementById('balanceAmount').textContent = 'Error loading balance';
-                }
+                document.getElementById('balanceAmount').textContent =
+                    data.success ? `₦${data.balance.toLocaleString()}` : (data.message || 'Error loading balance');
             } catch (err) {
-                document.getElementById('balanceAmount').textContent = err;
+                document.getElementById('balanceAmount').textContent = 'Failed to load balance';
             }
         }
 
+        // ── Add Funds ──
         document.getElementById('fundButton').addEventListener('click', async () => {
             const amount = parseFloat(document.getElementById('fundAmount').value);
+            const desc   = document.getElementById('fundDescription').value;
+
             if (isNaN(amount) || amount <= 0) {
-                document.getElementById('fundMessage').innerHTML = '<span class="error">Enter a valid amount</span>';
+                document.getElementById('fundMessage').innerHTML =
+                    '<span class="error">Enter a valid amount</span>';
                 return;
             }
-            const desc = document.getElementById('fundDescription').value;
-            document.getElementById('fundButton').disabled = true;
-            document.getElementById('fundMessage').innerHTML = 'Funding...';
+
+            document.getElementById('fundButton').disabled   = true;
+            document.getElementById('fundMessage').innerHTML = 'Processing...';
 
             try {
-                const res = await fetch('/api/wallet/my-fund', {
+                const res  = await fetch('/api/wallet/my-fund', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ amount: amount, description: desc })
+                    credentials: 'include',
+                    body: JSON.stringify({ amount, description: desc })
                 });
                 const data = await res.json();
+
+                document.getElementById('fundMessage').innerHTML = '';
+                document.getElementById('fundAmount').value      = '';
+                document.getElementById('fundDescription').value = '';
+
                 if (data.success) {
-                    document.getElementById('fundMessage').innerHTML = `<span class="success">✅ ${data.message} – New balance: ₦${data.balance.toLocaleString()}</span>`;
-                    loadBalance(); // refresh
+                    showModal('success', {
+                        message:       data.message,
+                        amount:        amount,
+                        transactionId: data.transactionId,
+                        balance:       data.balance,
+                        date:          new Date().toLocaleString(),
+                        description:   desc || 'Wallet funding'
+                    });
+                    loadBalance();
                 } else {
-                    document.getElementById('fundMessage').innerHTML = `<span class="error">❌ ${data.message || 'Unknown error'}</span>`;
+                    // Check if pending or failed
+                    const isPending = (data.message || '').toLowerCase().includes('pending');
+                    showModal(isPending ? 'pending' : 'failed', {
+                        message:     data.message || 'Transaction failed',
+                        amount:      amount,
+                        date:        new Date().toLocaleString(),
+                        description: desc || 'Wallet funding'
+                    });
                 }
             } catch (err) {
-                document.getElementById('fundMessage').innerHTML = '<span class="error">Network error</span>';
+                showModal('failed', {
+                    message: 'Network error. Please check your connection and try again.',
+                    amount:  amount,
+                    date:    new Date().toLocaleString()
+                });
             } finally {
                 document.getElementById('fundButton').disabled = false;
             }
