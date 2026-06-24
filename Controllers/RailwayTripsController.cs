@@ -52,6 +52,7 @@ public class RailwayTripsController : ParentController
             _logger.LogWarning("Train trip not found.");
             return NotFound();
         }
+        ViewBag.Trip = trip;
         ViewBag.UserId = UserId;
         return View("Book",trip);
     }

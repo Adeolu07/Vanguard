@@ -3,6 +3,10 @@
     ViewData["Title"] = "Book Train Trip";
 }
 
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
 <div class="booking-container">
     <h2>Confirm Train Booking</h2>
 

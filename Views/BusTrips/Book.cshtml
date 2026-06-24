@@ -6,6 +6,11 @@
 <div class="booking-container">
     <h2>Confirm Bus Booking</h2>
 
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
     <div class="trip-details">
         <p><strong>From:</strong> @ViewBag.Trip.From</p>
         <p><strong>To:</strong> @ViewBag.Trip.Destination</p>
