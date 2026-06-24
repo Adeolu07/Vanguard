@@ -8,11 +8,11 @@ namespace _Tripfinity.Api;
 
 [Route("api/bustrips")]
 [ApiController]
-public class BusTripsApiController : ControllerBase
+public class BusTripsApi : ControllerBase
 {
     private readonly AppDbContext _context;
 
-    public BusTripsApiController(AppDbContext context)
+    public BusTripsApi(AppDbContext context)
     {
         _context = context;
     }
