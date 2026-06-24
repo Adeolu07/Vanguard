@@ -6,11 +6,11 @@ namespace _Tripfinity.Api;
 
 [ApiController]
 [Route("api/railwaytrips")]
-public class RailwayTripsApiController : ControllerBase
+public class RailwayTripsApi : ControllerBase
 {
     private readonly AppDbContext _context;
 
-    public RailwayTripsApiController(AppDbContext context)
+    public RailwayTripsApi(AppDbContext context)
     {
         _context = context;
     }

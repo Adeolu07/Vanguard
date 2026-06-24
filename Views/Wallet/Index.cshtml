@@ -64,7 +64,7 @@
                     document.getElementById('fundMessage').innerHTML = `<span class="success">✅ ${data.message} – New balance: ₦${data.balance.toLocaleString()}</span>`;
                     loadBalance(); // refresh
                 } else {
-                    document.getElementById('fundMessage').innerHTML = `<span class="error">❌ ${data.message}</span>`;
+                    document.getElementById('fundMessage').innerHTML = `<span class="error">❌ ${data.message || 'Unknown error'}</span>`;
                 }
             } catch (err) {
                 document.getElementById('fundMessage').innerHTML = '<span class="error">Network error</span>';
