@@ -1,138 +1,78 @@
-@model _Tripfinity.Models.Data.Response.GetBalanceResponse
 @{
+    ViewBag.Title = "title";
     Layout = "_Layout";
-    ViewData["Title"] = "Digital Wallet";
-    var responseCode = Model?.ResponseHeader?.ResponseCode;
-    bool walletOk = responseCode == "00";
+}
+@section Styles
+{
+    <link rel="stylesheet" href="~/css/wallet.css"/>
 }
 
-<div class="container my-5">
-    <div class="d-flex justify-content-center">
-        <div class="card p-5 text-center shadow-sm border rounded-4" style="max-width: 500px; width: 100%; background: #ffffff;">
-            <div class="mb-4">
-                <span style="font-size: 4rem;">👛</span>
-            </div>
+<div class="wallet-container">
+    <h2>My Wallet</h2>
+    <div class="balance-card">
+        <h3>Current Balance</h3>
+        <span id="balanceAmount" class="balance">Loading...</span>
+    </div>
 
-            <h2 class="fw-bold text-dark mb-3">Tripfinity Wallet</h2>
-
-            @if (ViewBag.HasWallet == false)
-            {
-                <p class="text-muted mb-4">You don't have an active digital wallet initialized for this profile account yet.</p>
-                <form action="/Wallet/Initialize" method="post">
-                    <button type="submit" class="btn btn-dark w-100 rounded-pill py-3 fw-bold">Setup Wallet Station Now</button>
-                </form>
-            }
-            else if (walletOk)
-            {
-                <p class="text-secondary mb-1 text-uppercase small tracking-wide">Available Balance</p>
-                <h1 class="display-4 fw-bold mb-4" style="color: #212529;">₦@Model.Balance.ToString("N2")</h1>
-
-                <div class="bg-light p-3 rounded-3 mb-4 text-start">
-                    <small class="text-muted d-block">Account Status</small>
-                    <strong class="text-dark font-monospace">@Model.ResponseHeader.ResponseMessage</strong>
-                </div>
-
-                <div class="row g-2">
-                    <div class="col-6">
-                        <button class="btn btn-dark w-100 rounded-pill py-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#fundModal">➕ Fund</button>
-                    </div>
-                    <div class="col-6">
-                        <button class="btn btn-outline-secondary w-100 rounded-pill py-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#historyModal">📜 History</button>
-                    </div>
-                </div>
-            }
-            else
-            {
-                <div class="alert alert-danger" role="alert">
-                    Wallet Station communication link failed. Please check your service connections.
-                </div>
-                <a href="/" class="btn btn-secondary w-100 rounded-pill mt-2">Return Home</a>
-            }
+    <div class="fund-wallet">
+        <h4>Add Funds</h4>
+        <div class="fund-form">
+            <input type="number" id="fundAmount" placeholder="Amount (₦)" min="1" step="100" />
+            <input type="text" id="fundDescription" placeholder="Description (optional)" />
+            <button id="fundButton" class="btn-primary">Add Funds</button>
         </div>
+        <div id="fundMessage" class="message"></div>
     </div>
 </div>
+<h2>title</h2>
 
-<!-- Fund Modal -->
-<div class="modal fade" id="fundModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-4 border-0 shadow-lg">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold">Fund Wallet</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form action="/Wallet/FundForm" method="post">
-                <div class="modal-body py-4">
-                    <div class="mb-3">
-                        <label class="form-label text-muted small fw-semibold">Enter Amount (NGN)</label>
-                        <input type="number" name="amount" class="form-control form-control-lg rounded-3 font-monospace" placeholder="0.00" min="100" step="100" required />
-                    </div>
-                </div>
-                <div class="modal-footer border-0 pt-0">
-                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-dark rounded-pill px-4 fw-semibold">Confirm Payment</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- History Modal -->
-<div class="modal fade" id="historyModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content rounded-4 border-0 shadow-lg">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold">📜 Transaction History</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body py-4" id="historyContent">
-                <div class="text-center text-muted py-4">Loading transactions...</div>
-            </div>
-        </div>
-    </div>
-</div>
 
 @section Scripts {
     <script>
-        document.getElementById('historyModal').addEventListener('show.bs.modal', function () {
-            const content = document.getElementById('historyContent');
-            content.innerHTML = '<div class="text-center text-muted py-4">Loading transactions...</div>';
+        async function loadBalance() {
+            try {
+                const res = await fetch('/api/wallet/my-balance');
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('balanceAmount').textContent = `₦${data.balance.toLocaleString()}`;
+                } else {
+                    document.getElementById('balanceAmount').textContent = 'Error loading balance';
+                }
+            } catch (err) {
+                document.getElementById('balanceAmount').textContent = err;
+            }
+        }
 
-            fetch('/Wallet/History')
-                .then(r => r.json())
-                .then(data => {
-                    if (!data || data.length === 0) {
-                        content.innerHTML = '<div class="text-center text-muted py-4">No transactions yet.</div>';
-                        return;
-                    }
+        document.getElementById('fundButton').addEventListener('click', async () => {
+            const amount = parseFloat(document.getElementById('fundAmount').value);
+            if (isNaN(amount) || amount <= 0) {
+                document.getElementById('fundMessage').innerHTML = '<span class="error">Enter a valid amount</span>';
+                return;
+            }
+            const desc = document.getElementById('fundDescription').value;
+            document.getElementById('fundButton').disabled = true;
+            document.getElementById('fundMessage').innerHTML = 'Funding...';
 
-                    let html = '<div class="list-group list-group-flush">';
-                    data.forEach(t => {
-                        const isCredit = t.type === 'Credit' || t.type === 'Refund';
-                        const color = isCredit ? 'text-success' : 'text-danger';
-                        const sign = isCredit ? '+' : '-';
-                        const icon = isCredit ? '⬆️' : '⬇️';
-                        const date = t.createdAt ? new Date(t.createdAt).toLocaleString() : '';
-
-                        html += `
-                            <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-3 border-bottom">
-                                <div class="text-start">
-                                    <div class="fw-semibold">${icon} ${t.type}</div>
-                                    <small class="text-muted">${t.description || ''}</small>
-                                    <div><small class="text-muted">${date}</small></div>
-                                </div>
-                                <div class="text-end">
-                                    <div class="fw-bold ${color}">${sign}₦${t.amount.toLocaleString()}</div>
-                                    <small class="text-muted">Bal: ₦${t.balanceAfter.toLocaleString()}</small>
-                                </div>
-                            </div>
-                        `;
-                    });
-                    html += '</div>';
-                    content.innerHTML = html;
-                })
-                .catch(() => {
-                    content.innerHTML = '<div class="text-center text-danger py-4">Failed to load transactions.</div>';
+            try {
+                const res = await fetch('/api/wallet/my-fund', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount: amount, description: desc })
                 });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('fundMessage').innerHTML = `<span class="success">✅ ${data.message} – New balance: ₦${data.balance.toLocaleString()}</span>`;
+                    loadBalance(); // refresh
+                } else {
+                    document.getElementById('fundMessage').innerHTML = `<span class="error">❌ ${data.message}</span>`;
+                }
+            } catch (err) {
+                document.getElementById('fundMessage').innerHTML = '<span class="error">Network error</span>';
+            } finally {
+                document.getElementById('fundButton').disabled = false;
+            }
         });
+
+        loadBalance();
     </script>
 }

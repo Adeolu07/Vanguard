@@ -16,8 +16,6 @@ public class AppDbContext : DbContext
     public DbSet<RailwayTrip> RailwayTrips { get; set; }
     public DbSet<Booking> Bookings { get; set; }
     public DbSet<Ticket> Tickets { get; set; }
-    public DbSet<Wallet> Wallets { get; set; }
-    public DbSet<WalletTransaction> WalletTransactions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -74,33 +72,6 @@ public class AppDbContext : DbContext
             .WithMany()
             .HasForeignKey(t => t.BookingId)
             .OnDelete(DeleteBehavior.Cascade);
-
-        // Wallet
-        builder.Entity<Wallet>()
-            .Property(w => w.Balance)
-            .HasPrecision(18, 2);
-
-        builder.Entity<Wallet>()
-            .HasIndex(w => w.CustomerId)
-            .IsUnique();
-
-        builder.Entity<Wallet>()
-            .HasOne(w => w.User)
-            .WithMany()
-            .HasForeignKey(w => w.UserId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        builder.Entity<WalletTransaction>()
-            .Property(t => t.Amount)
-            .HasPrecision(18, 2);
-
-        builder.Entity<WalletTransaction>()
-            .Property(t => t.BalanceAfter)
-            .HasPrecision(18, 2);
-
-        builder.Entity<WalletTransaction>()
-            .HasIndex(t => t.TransactionId)
-            .IsUnique();
 
         DataSeeding.Seed(builder);
     }

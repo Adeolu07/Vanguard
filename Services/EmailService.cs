@@ -7,12 +7,12 @@ public class EmailService : IEmailService
 {
     private readonly IConfiguration _config;
     private readonly ILogger<EmailService> _logger;
-
-    public EmailService(IConfiguration config, ILogger<EmailService> logger)
+    public EmailService(IConfiguration config,  ILogger<EmailService> logger)
     {
         _config = config;
         _logger = logger;
     }
+    
 
     public async Task SendEmailAsync(string email, string subject, string htmlMessage)
     {
@@ -21,16 +21,10 @@ public class EmailService : IEmailService
             var apiKey = _config["Resend:apiKey"];
             var fromEmail = _config["Resend:fromEmail"];
 
-            if (string.IsNullOrEmpty(apiKey) || apiKey.Contains("your_actual_resend_api_key_here") || string.IsNullOrEmpty(fromEmail))
-            {
-                _logger.LogWarning("Email service skipped local delivery: Resend:apiKey configuration details are missing or unassigned.");
-                return;
-            }
-
-            IResend resend = ResendClient.Create(apiKey);
+            IResend resend = ResendClient.Create(apiKey!);
             var response = await resend.EmailSendAsync(new EmailMessage
             {
-                From = fromEmail,
+                From = fromEmail!,
                 To = email,
                 Subject = subject,
                 HtmlBody = htmlMessage,
@@ -39,6 +33,7 @@ public class EmailService : IEmailService
             if (response.Success)
             {
                 _logger.LogInformation("Email sent successfully");
+                
             }
         }
         catch (Exception ex)
@@ -47,7 +42,8 @@ public class EmailService : IEmailService
             throw;
         }
     }
-
+    
+        
     public Task SendConfirmationEmailAsync(string email, string confirmationLink)
     {
         try
@@ -59,6 +55,7 @@ public class EmailService : IEmailService
             <p>This link will expire in 24 hours.</p>";
 
             return SendEmailAsync(email, "Confirm Your Email on Tripfinity", htmlMessage);
+
         }
         catch (Exception ex)
         {
@@ -66,4 +63,7 @@ public class EmailService : IEmailService
             throw;
         }
     }
+    
+    
+    
 }
