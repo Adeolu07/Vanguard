@@ -30,16 +30,23 @@
 @section Scripts {
     <script>
         async function loadBalance() {
+            const balanceEl = document.getElementById('balanceAmount');
+            balanceEl.textContent = 'Loading...';
+
             try {
                 const res = await fetch('/api/wallet/my-balance');
+                if (res.status === 401) {
+                    balanceEl.textContent = 'Please sign in to view your balance';
+                    return;
+                }
                 const data = await res.json();
                 if (data.success) {
-                    document.getElementById('balanceAmount').textContent = `₦${data.balance.toLocaleString()}`;
+                    balanceEl.textContent = `₦${data.balance.toLocaleString()}`;
                 } else {
-                    document.getElementById('balanceAmount').textContent = 'Error loading balance';
+                    balanceEl.innerHTML = `Unable to fetch balance. <a href="#" onclick="loadBalance();return false;">Retry</a>`;
                 }
             } catch (err) {
-                document.getElementById('balanceAmount').textContent = err;
+                balanceEl.innerHTML = `Network error. <a href="#" onclick="loadBalance();return false;">Retry</a>`;
             }
         }
 

@@ -74,7 +74,11 @@ public class WalletApiController : ControllerBase
     {
         var user = _authService.GetCurrentUser(HttpContext);
         if (user == null || string.IsNullOrEmpty(user.UserWalletId))
-            return Unauthorized(new { message = "Not authenticated or wallet not linked" });
+            return Unauthorized(new
+            {
+                message = "Not authenticated or wallet not linked",
+                code = "96"
+            });
 
         var request = new GetBalanceRequest { CustomerId = user.UserWalletId };
         var response = await _walletService.GetBalanceAsync(request);

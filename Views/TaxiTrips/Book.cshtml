@@ -3,6 +3,11 @@
     ViewData["Title"] = "Book Taxi";
 }
 
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+<!-- rest of your existing booking form -->
 <div class="booking-container">
     <h2>Confirm Taxi Booking</h2>
 
