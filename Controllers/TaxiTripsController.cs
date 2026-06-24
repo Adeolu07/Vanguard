@@ -48,6 +48,7 @@ public class TaxiTripsController : ParentController
             _logger.LogWarning("Taxi trip not found.");
             return NotFound();
         }
+        ViewBag.Trip = trip;
         ViewBag.UserId = UserId;
         return View("Book",trip);
     }

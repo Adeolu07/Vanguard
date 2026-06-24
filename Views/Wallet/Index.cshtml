@@ -157,13 +157,32 @@
 
         // ── Load Balance ──
         async function loadBalance() {
+            const balanceEl = document.getElementById('balanceAmount');
+            balanceEl.textContent = 'Loading...';
+
             try {
+<<<<<<< HEAD
                 const res  = await fetch('/api/wallet/my-balance', { credentials: 'include' });
                 const data = await res.json();
                 document.getElementById('balanceAmount').textContent =
                     data.success ? `₦${data.balance.toLocaleString()}` : (data.message || 'Error loading balance');
             } catch (err) {
                 document.getElementById('balanceAmount').textContent = 'Failed to load balance';
+=======
+                const res = await fetch('/api/wallet/my-balance');
+                if (res.status === 401) {
+                    balanceEl.textContent = 'Please sign in to view your balance';
+                    return;
+                }
+                const data = await res.json();
+                if (data.success) {
+                    balanceEl.textContent = `₦${data.balance.toLocaleString()}`;
+                } else {
+                    balanceEl.innerHTML = `Unable to fetch balance. <a href="#" onclick="loadBalance();return false;">Retry</a>`;
+                }
+            } catch (err) {
+                balanceEl.innerHTML = `Network error. <a href="#" onclick="loadBalance();return false;">Retry</a>`;
+>>>>>>> 08e0ab55030f4436ffd0f4b246462201b0008b1d
             }
         }
 
