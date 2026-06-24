@@ -1,0 +1,27 @@
+﻿@{
+    ViewData["Title"] = "Marshal Confirmation";
+    Layout = "_AuthLayout"; 
+    ViewData["HideNavbar"] = true;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/Confirmation.css" />
+}
+
+<header>
+    <div class="nav-container">
+        <p>Tripfinity</p>
+    </div>
+</header>
+
+<main class="content-container">
+    <div class="message-box">
+        <h1 class="main-heading">A link has been sent to the email you provided</h1>
+        <p class="sub-heading">Please click the link to verify your account</p>
+
+        <div class="action-area">
+            <a asp-controller="Auth" asp-action="MarshalSignIn" class="btn-login">Go back to Login</a>
+            <span class="expiry-note">(the link lasts for 10 mins, hurry up!)</span>
+        </div>
+    </div>
+</main>
