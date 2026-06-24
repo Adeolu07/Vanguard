@@ -220,7 +220,10 @@ public class WalletService : IWalletService
 
     public async Task<GetBalanceResponse> GetBalanceAsync(GetBalanceRequest request)
     {
-        var wallet = await _context.Wallets.FirstOrDefaultAsync(w => w.CustomerId == request.CustomerId);
+        var wallet = await _context.Wallets
+            .AsNoTracking()
+            .FirstOrDefaultAsync(w => w.CustomerId == request.CustomerId);
+
         if (wallet == null)
             return new GetBalanceResponse
             {
@@ -266,6 +269,7 @@ public class WalletService : IWalletService
     public async Task<List<WalletTransaction>> GetTransactionHistoryAsync(string customerId)
     {
         return await _context.WalletTransactions
+            .AsNoTracking()
             .Where(t => t.CustomerId == customerId)
             .OrderByDescending(t => t.CreatedAt)
             .Take(20)
