@@ -1,4 +1,4 @@
-namespace _Tripfinity.Models;
+namespace _Tripfinity.Models.ViewModels;
 
 public class ErrorViewModel
 {
