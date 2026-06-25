@@ -2,10 +2,10 @@ namespace _Tripfinity.Models.Data.Response;
 
 public class DebitWalletResponse
 {
-    public ResponseHeader? ResponseHeader { get; set; }
-    public decimal Amount { get; set; }
-    public decimal Balance { get; set; }
-    public string? Description { get; set; }
-    public string? TransactionId { get; set; }
-    public string? TraceId { get; set; }
+    public required ResponseHeader ResponseHeader { get; set; }
+    public required decimal Amount { get; set; }
+    public required decimal Balance { get; set; }
+    public required string Description { get; set; }
+    public required string TransactionId { get; set; }
+    public required string TraceId { get; set; }
 }

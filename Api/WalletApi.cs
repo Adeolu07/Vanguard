@@ -1,5 +1,4 @@
 ﻿using _Tripfinity.Interfaces;
-using _Tripfinity.Models.Data;
 using _Tripfinity.Models.Data.Requests;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,7 +18,7 @@ public class WalletApiController : ControllerBase
         _walletService = walletService;
         _authService = authService;
     }
-
+    
     [HttpPost("createWallet")]
     public async Task<IActionResult> CreateWallet([FromBody] CreateWalletRequest request)
     {
@@ -68,7 +67,9 @@ public class WalletApiController : ControllerBase
         return Ok(response);
     }
 
-    [HttpGet("my-balance")]
+    // ------- user‑specific endpoints (moved from old WalletController) -------
+
+    [HttpGet("my-balance")]          // -> GET /api/wallet/my-balance
     public async Task<IActionResult> GetMyBalance()
     {
         var user = _authService.GetCurrentUser(HttpContext);
@@ -91,7 +92,7 @@ public class WalletApiController : ControllerBase
         });
     }
 
-    [HttpPost("my-fund")]
+    [HttpPost("my-fund")]            // -> POST /api/wallet/my-fund
     public async Task<IActionResult> FundMyWallet([FromBody] CreditWalletRequest model)
     {
         var user = _authService.GetCurrentUser(HttpContext);
@@ -113,6 +114,7 @@ public class WalletApiController : ControllerBase
 
         if (response?.ResponseHeader?.ResponseCode == "00")
         {
+            // Fetch updated balance
             var balResp = await _walletService.GetBalanceAsync(new GetBalanceRequest { CustomerId = user.UserWalletId });
             return Ok(new
             {
@@ -127,43 +129,6 @@ public class WalletApiController : ControllerBase
         {
             success = false,
             message = response?.ResponseHeader?.ResponseMessage ?? "Funding failed"
-        });
-    }
-
-    [HttpPost("create-my-wallet")]
-    public async Task<IActionResult> CreateMyWallet()
-    {
-        var user = _authService.GetCurrentUser(HttpContext);
-        if (user == null) return Unauthorized(new { message = "Not logged in" });
-
-        if (!string.IsNullOrEmpty(user.UserWalletId))
-            return Ok(new { message = "Wallet already exists", walletId = user.UserWalletId });
-
-        var response = await _walletService.CreateWalletAsync(new CreateWalletRequest
-        {
-            FirstName = user.FirstName,
-            LastName = user.LastName,
-        });
-
-        if (response?.ResponseHeader?.ResponseCode == "00")
-        {
-            user.UserWalletId = response.AccountDetails?.CustomerId;
-            var db = HttpContext.RequestServices.GetRequiredService<AppDbContext>();
-            db.Users.Update(user);
-            await db.SaveChangesAsync();
-            _logger.LogInformation("Wallet created for user {UserId}: {WalletId}", user.Id, user.UserWalletId);
-            return Ok(new { message = "Wallet created", walletId = user.UserWalletId });
-        }
-
-        _logger.LogWarning("Wallet creation failed for user {UserId}: {Code} - {Message}",
-            user.Id,
-            response?.ResponseHeader?.ResponseCode,
-            response?.ResponseHeader?.ResponseMessage);
-
-        return BadRequest(new
-        {
-            message = response?.ResponseHeader?.ResponseMessage ?? "Failed",
-            code = response?.ResponseHeader?.ResponseCode
         });
     }
 }
