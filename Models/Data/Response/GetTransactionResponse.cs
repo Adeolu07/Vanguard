@@ -2,8 +2,8 @@ namespace _Tripfinity.Models.Data.Response;
 
 public class GetTransactionResponse
 {
-    public ResponseHeader? ResponseHeader { get; set; }
-    public TransactionDetails? TransactionDetails { get; set; }
+    public required ResponseHeader ResponseHeader { get; set; }
+    public TransactionDetails? TransactionDetails { get; set; } 
 }
 
 public class TransactionDetails
