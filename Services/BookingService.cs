@@ -30,13 +30,18 @@ public class BookingService : IBookingService
     {
         IQueryable<Booking> query = _context.Bookings.Include(b => b.User);
 
-        if (transportType == "Bus")
-            query = query.Include(b => b.BusTrip);
-        else if (transportType == "Railway")
-            query = query.Include(b => b.RailwayTrip);
-        else if (transportType == "Taxi")
-            query = query.Include(b => b.TaxiTrip);
-
+        switch (transportType)
+        {
+            case "Bus":
+                query = query.Include(b => b.BusTrip);
+                break;
+            case "Railway":
+                query = query.Include(b => b.RailwayTrip);
+                break;
+            case "Taxi":
+                query = query.Include(b => b.TaxiTrip);
+                break;
+        }
         return await query.FirstOrDefaultAsync(b => b.Id == id);
     }
 
@@ -44,9 +49,12 @@ public class BookingService : IBookingService
     {
         var user = await _context.Users.FindAsync(userId);
         var trip = await _context.BusTrips.FindAsync(tripId);
-        if (user == null || trip == null) return Failed("Trip or user not found");
-        if (seats < 1) return Failed("Invalid number of seats");
-        if (seats > trip.AvailableSeats) return Failed("Not enough available seats");
+        if (user == null || trip == null) 
+            return Failed("Trip or user not found");
+        if (seats < 1) 
+            return Failed("Invalid number of seats");
+        if (seats > trip.AvailableSeats) 
+            return Failed("Not enough available seats");
 
         var booking = new Booking
         {
@@ -93,9 +101,12 @@ public class BookingService : IBookingService
     {
         var user = await _context.Users.FindAsync(userId);
         var trip = await _context.TaxiTrips.FindAsync(tripId);
-        if (user == null || trip == null) return Failed("Trip or user not found");
-        if (seats < 1) return Failed("Invalid number of seats");
-        if (seats > trip.MaxPassengers) return Failed("Seats requested exceed taxi capacity");
+        if (user == null || trip == null) 
+            return Failed("Trip or user not found");
+        if (seats < 1) 
+            return Failed("Invalid number of seats");
+        if (seats > trip.MaxPassengers) 
+            return Failed("Seats requested exceed taxi capacity");
 
         var booking = new Booking
         {
@@ -200,9 +211,7 @@ public class BookingService : IBookingService
             .Take(5)
             .ToListAsync();
     }
-
-    // ---- internals -------------------------------------------------------
-
+    
     private async Task<BookingResult> ProcessBookingAsync(User user, Booking booking, Action applySeatChange)
     {
         if (string.IsNullOrEmpty(user.UserWalletId))
@@ -306,10 +315,10 @@ public class BookingService : IBookingService
     }
 
     private static BookingResult Failed(string message) =>
-        new()
+        new ()
         {
             Success = false, 
             Status = "Failed", 
-            Message = message
+            Message = message,
         };
 }
