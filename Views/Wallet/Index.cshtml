@@ -5,7 +5,6 @@
 @section Styles {
     <link rel="stylesheet" href="~/css/wallet.css"/>
     <style>
-        /* ── Payment Result Modal ── */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -93,7 +92,7 @@
     </div>
 </div>
 
-<!-- ── Payment Result Modal ── -->
+<!-- Payment Result Modal -->
 <div class="modal-overlay" id="paymentModal">
     <div class="modal-box">
         <div class="modal-icon"  id="modalIcon"></div>
@@ -109,7 +108,6 @@
 
 @section Scripts {
     <script>
-        // ── Modal helpers ──
         function showModal(type, data) {
             const overlay  = document.getElementById('paymentModal');
             const icon     = document.getElementById('modalIcon');
@@ -130,13 +128,12 @@
             message.textContent = data.message || '';
             tryAgain.style.display = type === 'failed' ? 'inline-block' : 'none';
 
-            // Build detail rows
             details.innerHTML = '';
-            if (data.amount)         addDetail(details, 'Amount',         `₦${Number(data.amount).toLocaleString()}`);
-            if (data.transactionId)  addDetail(details, 'Transaction ID', data.transactionId);
-            if (data.balance != null) addDetail(details, 'New Balance',   `₦${Number(data.balance).toLocaleString()}`);
-            if (data.date)           addDetail(details, 'Date',           data.date);
-            if (data.description)    addDetail(details, 'Description',    data.description);
+            if (data.amount)          addDetail(details, 'Amount',         `₦${Number(data.amount).toLocaleString()}`);
+            if (data.transactionId)   addDetail(details, 'Transaction ID', data.transactionId);
+            if (data.balance != null) addDetail(details, 'New Balance',    `₦${Number(data.balance).toLocaleString()}`);
+            if (data.date)            addDetail(details, 'Date',           data.date);
+            if (data.description)     addDetail(details, 'Description',    data.description);
 
             overlay.classList.add('active');
         }
@@ -150,26 +147,15 @@
             document.getElementById('paymentModal').classList.remove('active');
         }
 
-        // Close on backdrop click
         document.getElementById('paymentModal').addEventListener('click', function(e) {
             if (e.target === this) closeModal();
         });
 
-        // ── Load Balance ──
         async function loadBalance() {
             const balanceEl = document.getElementById('balanceAmount');
             balanceEl.textContent = 'Loading...';
-
             try {
-<<<<<<< HEAD
-                const res  = await fetch('/api/wallet/my-balance', { credentials: 'include' });
-                const data = await res.json();
-                document.getElementById('balanceAmount').textContent =
-                    data.success ? `₦${data.balance.toLocaleString()}` : (data.message || 'Error loading balance');
-            } catch (err) {
-                document.getElementById('balanceAmount').textContent = 'Failed to load balance';
-=======
-                const res = await fetch('/api/wallet/my-balance');
+                const res = await fetch('/api/wallet/my-balance', { credentials: 'include' });
                 if (res.status === 401) {
                     balanceEl.textContent = 'Please sign in to view your balance';
                     return;
@@ -182,11 +168,9 @@
                 }
             } catch (err) {
                 balanceEl.innerHTML = `Network error. <a href="#" onclick="loadBalance();return false;">Retry</a>`;
->>>>>>> 08e0ab55030f4436ffd0f4b246462201b0008b1d
             }
         }
 
-        // ── Add Funds ──
         document.getElementById('fundButton').addEventListener('click', async () => {
             const amount = parseFloat(document.getElementById('fundAmount').value);
             const desc   = document.getElementById('fundDescription').value;
@@ -224,7 +208,6 @@
                     });
                     loadBalance();
                 } else {
-                    // Check if pending or failed
                     const isPending = (data.message || '').toLowerCase().includes('pending');
                     showModal(isPending ? 'pending' : 'failed', {
                         message:     data.message || 'Transaction failed',
