@@ -31,7 +31,7 @@ public class WalletService : IWalletService
         _cache = cache;
     }
 
-    private async Task EnsureAuthenticatedAsync()
+    public async Task EnsureAuthenticatedAsync()
     {
         // Check cache first
         if (_cache.TryGetValue<string>(TokenCacheKey, out var cachedToken))
@@ -283,4 +283,5 @@ public class WalletService : IWalletService
             throw;
         }
     }
+    
 }
