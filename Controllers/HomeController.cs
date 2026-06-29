@@ -2,6 +2,7 @@ using System.Diagnostics;
 using _Tripfinity.Interfaces;
 using _Tripfinity.Models.ViewModels;
 using _Tripfinity.Models.Data;
+using _Tripfinity.Models.Data.Requests;   
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,20 +12,19 @@ public class HomeController : ParentController
 {
     private readonly AppDbContext _context;
     private readonly IBookingService _bookingService;
+    private readonly IWalletService _walletService;   
     private readonly ILogger<HomeController> _logger;
 
-    public HomeController(AppDbContext context, IBookingService bookingService,  ILogger<HomeController> logger)
+    public HomeController(AppDbContext context, IBookingService bookingService, IWalletService walletService, ILogger<HomeController> logger)
     {
         _context = context;
         _bookingService = bookingService;
+        _walletService = walletService;
         _logger = logger;
     }
-    
+
     public IActionResult Index() => View();
     public IActionResult Privacy() => View();
-
-    // [Route("/home")]
-    // [Route("/")]
 
     [HttpGet]
     public IActionResult Wallet()
@@ -37,7 +37,7 @@ public class HomeController : ParentController
         }
         return View("~/Views/Wallet/Index.cshtml");
     }
-    
+
     [HttpGet]
     public async Task<IActionResult> Dashboard()
     {
@@ -47,9 +47,16 @@ public class HomeController : ParentController
             _logger.LogInformation("Not Authenticated");
             return RedirectToLogin();
         }
-        
+
+       
         var user = await _context.Users.FindAsync(UserId!.Value);
         ViewBag.FirstName = user?.FirstName ?? "Passenger";
+
+        var balanceResponse = await _walletService.GetBalanceAsync(
+            new GetBalanceRequest { CustomerId = UserId.Value.ToString() }
+        );
+        ViewBag.WalletBalance = balanceResponse?.Balance ?? 0m; 
+
         var madeBookings = await _context.Bookings
             .Include(b => b.BusTrip)
             .Include(b => b.TaxiTrip)
@@ -58,11 +65,10 @@ public class HomeController : ParentController
             .OrderByDescending(b => b.BookingDate)
             .Take(10)
             .ToListAsync();
+
         return View(madeBookings);
     }
 
-
-    // [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {
         return View(new ErrorViewModel
@@ -70,6 +76,4 @@ public class HomeController : ParentController
             RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
         });
     }
-
-    
 }
