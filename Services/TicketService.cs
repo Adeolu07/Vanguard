@@ -27,7 +27,7 @@ public class TicketService : ITicketService
 
         var ticket = new Ticket
         {
-            TicketReference = $"TKT-{Guid.NewGuid().ToString("N")[..8].ToUpperInvariant()}",
+            TicketReference = $"TKT-{Guid.NewGuid().ToString("N")[..8].ToUpper()}",
             BookingId = booking.Id,
             PassengerId = booking.UserId,
             VehicleId = vehicleId,

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Vanguard.Models;
+namespace _Tripfinity.Models;
 
 public class AuthToken
 {

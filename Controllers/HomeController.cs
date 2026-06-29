@@ -61,7 +61,7 @@ public class HomeController : ParentController
             .Include(b => b.BusTrip)
             .Include(b => b.TaxiTrip)
             .Include(b => b.RailwayTrip)
-            .Where(b => b.UserId == UserId.Value)
+            .Where(b => b.UserId == UserId.Value && b.BookingDate > DateTime.Now)
             .OrderByDescending(b => b.BookingDate)
             .Take(10)
             .ToListAsync();
