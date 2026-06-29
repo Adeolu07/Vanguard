@@ -91,6 +91,7 @@ public class BusTripsController : ParentController
             _logger.LogWarning("Bus trip not found.");
             return NotFound();
         }
+        
         ViewBag.PaymentTransaction = await FetchTransaction(_walletService, booking);
         return View("Confirmation",booking);
     }
