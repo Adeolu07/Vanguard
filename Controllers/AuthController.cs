@@ -35,7 +35,7 @@ public class AuthController : Controller
     [HttpPost]
     public async Task<IActionResult> SignIn(LoginViewModel model)
     {
-        if (!ModelState.IsValid) 
+        if (!ModelState.IsValid)
             return View(model);
 
         var result = await _authService.SignInAsync(model.Email, model.Password);
@@ -62,7 +62,7 @@ public class AuthController : Controller
     [HttpPost]
     public async Task<IActionResult> MarshalSignIn(LoginViewModel model)
     {
-        if (!ModelState.IsValid) 
+        if (!ModelState.IsValid)
             return View(model);
 
         var result = await _authService.SignInAsync(model.Email, model.Password);
@@ -89,7 +89,7 @@ public class AuthController : Controller
     [HttpPost]
     public async Task<IActionResult> SignUp(RegisterViewModel model)
     {
-        if (!ModelState.IsValid) 
+        if (!ModelState.IsValid)
             return View(model);
 
         var result = await _authService.SignUpAsync(model);
@@ -100,11 +100,30 @@ public class AuthController : Controller
             return View(model);
         }
 
+        _logger.LogInformation($"Passenger Signup for {result.User.Email}");
+
+        if (string.IsNullOrWhiteSpace(result.User.Email))
+        {
+            _logger.LogError("Email is missing for user ID {UserId}", result.User.Id);
+            ModelState.AddModelError("", "Email address missing, cannot send confirmation.");
+            return View(model);
+        }
+
         var confirmationLink = $"{Request.Scheme}://{Request.Host}/auth/ConfirmEmail?" +
                                $"userId={result.User.Id}&token={result.User.EmailConfirmationToken}";
-        await _emailService.SendConfirmationEmailAsync(result.User.Email, confirmationLink);
 
-        return RedirectToAction("Index", "Home");
+        try
+        {
+            await _emailService.SendConfirmationEmailAsync(result.User.Email, confirmationLink);
+            _logger.LogInformation("Confirmation email sent to {Email}", result.User.Email);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send confirmation email to {Email}", result.User.Email);
+            TempData["ErrorMessage"] = "Account created, but failed to send confirmation email.";
+        }
+
+        return RedirectToAction("PassengerConfirmation");
     }
 
     [HttpGet]
@@ -118,7 +137,7 @@ public class AuthController : Controller
     [HttpPost]
     public async Task<IActionResult> MarshalSignUp(MarshalRegisterRequest model)
     {
-        if (!ModelState.IsValid) 
+        if (!ModelState.IsValid)
             return View(model);
 
         var result = await _authService.RegisterMarshalAsync(model);
@@ -128,8 +147,17 @@ public class AuthController : Controller
             ModelState.AddModelError("", result.Message);
             return View(model);
         }
-        
-        return RedirectToAction("Index", "Home");
+
+        _logger.LogInformation($"Marshal Signup for {result.User.Email}");
+
+        if (string.IsNullOrWhiteSpace(result.User.Email))
+        {
+            _logger.LogError("Email is missing for marshal ID {UserId}", result.User.Id);
+            ModelState.AddModelError("", "Email address missing, cannot send confirmation.");
+            return View(model);
+        }
+
+        return RedirectToAction("MarshalConfirmation");
     }
 
     [HttpGet]
@@ -195,4 +223,10 @@ public class AuthController : Controller
         _authService.ClearUserSession(HttpContext);
         return RedirectToAction("Index", "Home");
     }
+
+    [HttpGet]
+    public IActionResult PassengerConfirmation() => View();
+
+    [HttpGet]
+    public IActionResult MarshalConfirmation() => View();
 }
