@@ -6,8 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace _Tripfinity.Api;
 
-[Route("api/bustrips")]
 [ApiController]
+[Route("api/bustrips")]
 public class BusTripsApi : ControllerBase
 {
     private readonly AppDbContext _context;
@@ -22,7 +22,7 @@ public class BusTripsApi : ControllerBase
     {
         var query = _context.BusTrips
             .Where(trip => trip.IsActive && trip.DepartureTime > DateTime.Now)
-            .OrderBy(trip => trip.Id);
+            .OrderBy(trip => trip.DepartureTime);
 
         var paginatedList = await PaginatedList<BusTrip>.CreateAsync(query, page, pageSize);
 
