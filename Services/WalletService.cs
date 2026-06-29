@@ -68,7 +68,6 @@ public class WalletService : IWalletService
 
             if (result?.ResponseHeader.ResponseCode == "00")
             {
-                // Cache the token until its expiry (default 1 hour if not provided)
                 var expiry = DateTime.TryParse(result.ExpiryDate, out var expiryDate);
                 AuthToken token = new AuthToken
                 {
@@ -81,6 +80,7 @@ public class WalletService : IWalletService
             
                 _context.AuthTokens.Add(token);
                 await _context.SaveChangesAsync();
+                
                 _cache.Set(TokenCacheKey, result.Token, expiryDate);
                 _logger.LogInformation("Wallet token acquired and cached");
                 
