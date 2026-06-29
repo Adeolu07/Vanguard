@@ -1,10 +1,8 @@
 using System.Net.Http.Headers;
 using System.Text;
 using _Tripfinity.Interfaces;
-using _Tripfinity.Models.Data;
 using _Tripfinity.Models.Data.Requests;
 using _Tripfinity.Models.Data.Response;
-using _Tripfinity.Models.Tables;
 using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
 
@@ -14,19 +12,16 @@ public class WalletService : IWalletService
 {
     private readonly HttpClient _client;
     private readonly ILogger<WalletService> _logger;
-    private readonly AppDbContext _context;
     private readonly IConfiguration _config;
     private readonly IMemoryCache _cache;
     private const string TokenCacheKey = "WalletToken";
 
     public WalletService( HttpClient client,
-        ILogger<WalletService> logger,
-        AppDbContext context, IConfiguration config
+        ILogger<WalletService> logger, IConfiguration config
         , IMemoryCache cache)
     {
         _logger = logger;
         _client = client;
-        _context = context;
         _config = config;
         _cache = cache;
     }

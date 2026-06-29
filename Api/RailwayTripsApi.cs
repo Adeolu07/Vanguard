@@ -1,6 +1,8 @@
-﻿using _Tripfinity.Models.Data;
+﻿using _Tripfinity.Models;
+using _Tripfinity.Models.Data;
+using _Tripfinity.Views;
+using _Tripfinity.Utilities;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace _Tripfinity.Api;
 
@@ -16,32 +18,48 @@ public class RailwayTripsApi : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetTrips([FromQuery] int page = 1, [FromQuery] int pageSize = 9)
+    public async Task<IActionResult> GetActiveTrainTrips([FromQuery] int page = 1, [FromQuery] int pageSize = 9)
     {
         var query = _context.RailwayTrips
-            .Where(t => t.IsActive)
+            .Where(trip => trip.IsActive && trip.DepartureTime > DateTime.Now )
             .OrderBy(t => t.DepartureTime);
 
-        var totalCount = await query.CountAsync();
-        var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+        var paginatedList = await PaginatedList<RailwayTrip>.CreateAsync(query, page, pageSize);
 
-        var trips = await query
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
-
-        return Ok(new
-        {
-            success = true,
-            data = trips,
-            pagination = new
+        return Ok(
+            new
             {
-                pageIndex = page,
-                totalPages,
-                totalCount,
-                hasPreviousPage = page > 1,
-                hasNextPage = page < totalPages
-            }
-        });
+                success = true,
+                data = paginatedList,
+                pagination = new
+                {
+                    pageIndex = paginatedList.PageIndex,
+                    totalPages = paginatedList.TotalPages,
+                    totalCount = paginatedList.TotalCount,
+                    hasPreviousPage = paginatedList.HasPreviousPage,
+                    hasNextPage = paginatedList.HasNextPage
+                }
+            });
+    }
+    
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetRailwayTrip(int id)
+    {
+        var trip = await _context.RailwayTrips.FindAsync(id);
+
+        if (trip == null)
+            return NotFound(new ErrorResponse
+            {
+                Success = false,
+                Message = $"Train Trip with id {id} not found.",
+                ErrorCode = "404"
+            });
+
+        return Ok(
+            new 
+            {
+                success = true,
+                data = trip 
+            });
     }
 }

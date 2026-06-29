@@ -22,7 +22,7 @@ public class TaxiTripsApi : ControllerBase
     {
         var query = _context.TaxiTrips
             .Where(t => t.IsActive && t.PickupTime > DateTime.Now)
-            .AsQueryable();
+            .OrderBy(t => t.PickupTime);
 
         query = sort switch
         {
@@ -59,6 +59,11 @@ public class TaxiTripsApi : ControllerBase
                 ErrorCode = "404"
             });
 
-        return Ok(new { success = true, data = trip });
+        return Ok(
+            new
+            {
+                success = true,
+                data = trip
+            });
     }
 }
