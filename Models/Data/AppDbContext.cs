@@ -1,3 +1,4 @@
+using _Tripfinity.Models.Tables;
 using Microsoft.EntityFrameworkCore;
 
 namespace _Tripfinity.Models.Data
@@ -15,6 +16,7 @@ namespace _Tripfinity.Models.Data
     public DbSet<RailwayTrip> RailwayTrips { get; set; }
     public DbSet<Booking> Bookings { get; set; }
     public DbSet<Ticket> Tickets { get; set; }
+    public DbSet<AuthToken> AuthTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -29,49 +31,52 @@ namespace _Tripfinity.Models.Data
                 .HasPrecision(18, 2);
 
             builder.Entity<BusTrip>()
-                .Property(b => b.Price)
+                .Property(bus => bus.Price)
                 .HasPrecision(18, 2);
 
             builder.Entity<TaxiTrip>()
-                .Property(t => t.Price)
+                .Property(taxi => taxi.Price)
                 .HasPrecision(18, 2);
 
             builder.Entity<RailwayTrip>()
-                .Property(r => r.Price)
+                .Property(train => train.Price)
                 .HasPrecision(18, 2);
 
             builder.Entity<Booking>()
-                .HasOne(b => b.BusTrip)
+                .HasOne(booking => booking.BusTrip)
                 .WithMany()
-                .HasForeignKey(b => b.BusTripId)
+                .HasForeignKey(booking => booking.BusTripId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<Booking>()
-                .HasOne(b => b.TaxiTrip)
+                .HasOne(booking => booking.TaxiTrip)
                 .WithMany()
-                .HasForeignKey(b => b.TaxiTripId)
+                .HasForeignKey(booking => booking.TaxiTripId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<Booking>()
-                .HasOne(b => b.RailwayTrip)
+                .HasOne(booking => booking.RailwayTrip)
                 .WithMany()
-                .HasForeignKey(b => b.RailwayTripId)
+                .HasForeignKey(booking => booking.RailwayTripId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<Ticket>()
-                .Property(t => t.Fare)
+                .Property(ticket => ticket.Fare)
                 .HasPrecision(18, 2);
 
             builder.Entity<Ticket>()
-                .HasIndex(t => t.QrToken)
+                .HasIndex(ticket => ticket.QrToken)
                 .IsUnique();
 
             builder.Entity<Ticket>()
-                .HasOne(t => t.Booking)
+                .HasOne(ticket => ticket.Booking)
                 .WithMany()
-                .HasForeignKey(t => t.BookingId)
+                .HasForeignKey(ticket => ticket.BookingId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            builder.Entity<AuthToken>()
+                .Property(token => token.Token);
+            
             DataSeeding.Seed(builder);
         }
     }

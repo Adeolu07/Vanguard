@@ -1,6 +1,8 @@
 using System.Net.Http.Headers;
 using System.Text;
 using _Tripfinity.Interfaces;
+using _Tripfinity.Models;
+using _Tripfinity.Models.Data;
 using _Tripfinity.Models.Data.Requests;
 using _Tripfinity.Models.Data.Response;
 using Microsoft.Extensions.Caching.Memory;
@@ -14,20 +16,23 @@ public class WalletService : IWalletService
     private readonly ILogger<WalletService> _logger;
     private readonly IConfiguration _config;
     private readonly IMemoryCache _cache;
+    private readonly AppDbContext _context;
     private const string TokenCacheKey = "WalletToken";
 
     public WalletService( HttpClient client,
         ILogger<WalletService> logger, IConfiguration config
-        , IMemoryCache cache)
+        ,AppDbContext context, IMemoryCache cache)
     {
         _logger = logger;
         _client = client;
         _config = config;
         _cache = cache;
+        _context = context;
     }
 
     public async Task EnsureAuthenticatedAsync()
     {
+        
         // Check cache first
         if (_cache.TryGetValue<string>(TokenCacheKey, out var cachedToken))
         {
@@ -36,36 +41,55 @@ public class WalletService : IWalletService
             return;
         }
 
-        // Authenticate fresh
-        var authRequest = new AuthenticationRequest
+        var authToken = _context.AuthTokens.FirstOrDefault(t => t.ExpiryDate > DateTime.Now);
+
+        if (authToken == null)
         {
-            Username = _config["WalletStation:username"]!,
-            Password = _config["WalletStation:password"]!,
-        };
+            var authRequest = new AuthenticationRequest
+            {
+                Username = _config["WalletStation:username"]!,
+                Password = _config["WalletStation:password"]!,
+            };
 
-        var requestBody = JsonConvert.SerializeObject(authRequest);
-        var response = await _client.PostAsync("Auth",
-            new StringContent(requestBody, Encoding.UTF8, "application/json"));
+            var requestBody = JsonConvert.SerializeObject(authRequest);
+            var response = await _client.PostAsync("Auth",
+                new StringContent(requestBody, Encoding.UTF8, "application/json"));
 
-        if (!response.IsSuccessStatusCode)
-        {
-            var error = await response.Content.ReadAsStringAsync();
-            _logger.LogWarning("Wallet auth failed: {Error}", error);
-            return;
-        }
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                _logger.LogWarning("Wallet auth failed: {Error}", error);
+                return;
+            }
 
-        var json = await response.Content.ReadAsStringAsync();
-        var result = JsonConvert.DeserializeObject<AuthenticationResponse>(json);
+            var json = await response.Content.ReadAsStringAsync();
+            var result = JsonConvert.DeserializeObject<AuthenticationResponse>(json);
         
 
-        if (result?.ResponseHeader.ResponseCode == "00")
+            if (result?.ResponseHeader.ResponseCode == "00")
+            {
+                // Cache the token until its expiry (default 1 hour if not provided)
+                var expiry = DateTime.TryParse(result.ExpiryDate, out var expiryDate);
+                AuthToken token = new AuthToken
+                {
+                    ExpiryDate = DateTime.Parse(result.ExpiryDate),
+                    Token = result.Token!,
+                };
+            
+                _client.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", result.Token);
+            
+                _context.AuthTokens.Add(token);
+                await _context.SaveChangesAsync();
+                _cache.Set(TokenCacheKey, result.Token, expiryDate);
+                _logger.LogInformation("Wallet token acquired and cached");
+                
+            }
+        }
+        else
         {
-            // Cache the token until its expiry (default 1 hour if not provided)
-            var expiry = DateTime.TryParse(result.ExpiryDate, out var expiryDate);
-            _client.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", result.Token);
-            _cache.Set(TokenCacheKey, result.Token, expiryDate);
-            _logger.LogInformation("Wallet token acquired and cached");
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authToken.Token);
+            _cache.Set(TokenCacheKey,authToken.Token, authToken.ExpiryDate);
         }
     }
     
