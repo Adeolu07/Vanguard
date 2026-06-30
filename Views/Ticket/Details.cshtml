@@ -33,7 +33,9 @@
             </div>
         </div>
 
+        <!-- Route info unchanged -->
         <div class="ticket-route-info">
+            @* Bus, Taxi, Railway trip info blocks remain the same *@
             @if (Model.BusTrip != null)
             {
                 <div class="route-stations">
@@ -88,16 +90,27 @@
             }
         </div>
 
+        <!-- QR section updated -->
         <div class="qr-section">
             <div class="qr-code">
-                <div class="qr-placeholder">
-                    📱 QR CODE
-                    <div class="qr-text">@ViewBag.QRCodeText</div>
-                </div>
+                @if (ViewBag.Ticket != null && !string.IsNullOrEmpty(ViewBag.Ticket.QrCodeBase64))
+                {
+                    <img src="data:image/png;base64,@ViewBag.Ticket.QrCodeBase64"
+                         alt="QR Code"
+                         class="qr-container__image" />
+                }
+                else
+                {
+                    <div class="qr-placeholder">
+                        📱 QR CODE
+                        <div class="qr-text">@ViewBag.QRCodeText</div>
+                    </div>
+                }
             </div>
             <p class="qr-note">Show this QR code to the marshal for validation</p>
         </div>
 
+        <!-- Passenger & booking info unchanged -->
         <div class="ticket-footer-details">
             <div class="passenger-info">
                 <h4>Passenger Details</h4>
@@ -118,6 +131,7 @@
         </div>
     </div>
 </div>
+
 
 <style>
     .ticket-details-container {

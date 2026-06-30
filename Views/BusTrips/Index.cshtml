@@ -1,14 +1,60 @@
 @{
-    Layout = "_Layout";
+    Layout = null;
     ViewData["Title"] = "Bus Trips";
 }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Tripfinity</title>
+    <link rel="stylesheet" href="~/css/bus-trips.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="dashboard-layout">
+        <aside class="sidebar">
+            <div>
+                <div class="brand-logo">Tripfinity</div>
+                <nav class="sidebar-nav">
+                    <a href="/Home/Dashboard" class="nav-item">Dashboard</a>
+                    <a href="/Ticket/Index" class="nav-item">My Tickets</a>
+                    <a href="/Home/Wallet" class="nav-item">Wallet</a>
+                </nav>
+            </div>
+            <div class="user-avatar-tag" style="font-size:12px; font-weight:700; color:var(--text-muted)">
+                Oreoluwa<br><span style="font-size:10px; font-weight:400;">VERIFIED MEMBER</span>
+            </div>
+        </aside>
 
-<h2>Available Bus Trips</h2>
-<div id="trips-container">
-    <p>Loading trips...</p>
-</div>
+        <main class="main-content">
+            <header class="top-header">
+                <div></div>
+                <div class="header-meta">
+                    <a href="/Home/Dashboard" class="btn-back">← Back to Dashboard</a>
+                    <span>Hello, Oreoluwa</span>
+                    <a href="/Auth/Logout" class="btn-signout">Sign Out</a>
+                </div>
+            </header>
 
-@section Scripts {
+            <section class="page-title-section">
+                <div class="breadcrumbs">Passenger Dashboard > Book a Bus</div>
+                <h1>Available Bus Trips</h1>
+                <p>Real-time inter-city transport availability.</p>
+            </section>
+
+            <div id="trips-container">
+                <p>Loading trips...</p>
+            </div>
+
+            <footer class="system-footer">
+                &copy; 2026 Tripfinity Ecosystem. All rights reserved.
+            </footer>
+        </main>
+    </div>
+
     <script>
         let currentPage = 1;
         let totalPages = 1;
@@ -16,12 +62,11 @@
 
         async function loadTrips(page = 1) {
             if (isLoading) return;
-
             isLoading = true;
             document.getElementById('trips-container').innerHTML = '<p>Loading trips...</p>';
 
             try {
-                const response = await fetch(`/api/bustrips?page=${page}&pageSize=9`);
+                const response = await fetch(`/api/bustrips?page=${page}&pageSize=4`);
                 const result = await response.json();
 
                 if (result.success) {
@@ -40,53 +85,64 @@
 
         function displayTrips(trips) {
             if (!trips || trips.length === 0) {
-                document.getElementById('trips-container').innerHTML = '<p>No trips available.</p>';
+                document.getElementById('trips-container').innerHTML = '<p>No trips available right now.</p>';
                 return;
             }
 
             let html = '<div class="trip-options">';
-
             trips.forEach(trip => {
+                const dateObj = new Date(trip.departureTime);
+                const formattedDate = dateObj.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+                const formattedTime = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+
                 html += `
                     <div class="trip-card">
-                        <div class="trip-icon bus">🚌</div>
-                        <div class="trip-content">
-                            <h3>${trip.from} → ${trip.destination}</h3>
-                            <p>Departure: ${new Date(trip.departureTime).toLocaleString()}</p>
-                            <p>Price: ₦${trip.price}</p>
-                            <p>Available Seats: ${trip.availableSeats}/${trip.totalSeats}</p>
-                            <button class="btn-book" onclick="bookTrip(${trip.id})">Book Now →</button>
+                        <div class="trip-card-icon">🚌</div>
+                        <div class="route-display">
+                            <h2>${trip.from}</h2>
+                            <span class="route-arrow">→</span>
+                            <h2>${trip.destination}</h2>
                         </div>
+                        <div class="meta-grid">
+                            <div class="meta-item">
+                                <span class="meta-label">Departure</span>
+                                <span class="meta-value">${formattedDate}<br><span style="color:var(--text-muted); font-weight:400;">${formattedTime}</span></span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">Price</span>
+                                <span class="meta-value">₦${trip.price.toLocaleString()}</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">Seats</span>
+                                <span class="meta-value">${trip.availableSeats}/${trip.totalSeats} <span class="tag-full">Full</span></span>
+                            </div>
+                        </div>
+                        <button class="btn-book-action" onclick="bookTrip(${trip.id})">Book Now ></button>
                     </div>
                 `;
             });
-
             html += '</div>';
             document.getElementById('trips-container').innerHTML = html;
         }
 
         function displayPagination(pagination) {
-            // Remove existing pagination if any
             const existingPagination = document.querySelector('.pagination');
-            if (existingPagination) {
-                existingPagination.remove();
-            }
+            if (existingPagination) existingPagination.remove();
 
             let html = '<div class="pagination">';
-
             if (pagination.hasPreviousPage) {
-                html += `<button onclick="loadTrips(${pagination.pageIndex - 1})">← Previous</button>`;
+                html += `<button onclick="loadTrips(${pagination.pageIndex - 1})">Previous</button>`;
             }
 
-            html += `<span>Page ${pagination.pageIndex} of ${pagination.totalPages}</span>`;
+            html += `<div class="page-num active">${pagination.pageIndex}</div>`;
+            if (pagination.totalPages > pagination.pageIndex) {
+                html += `<div class="page-num" style="cursor:pointer" onclick="loadTrips(${pagination.pageIndex + 1})">${pagination.pageIndex + 1}</div>`;
+            }
 
             if (pagination.hasNextPage) {
-                html += `<button onclick="loadTrips(${pagination.pageIndex + 1})">Next →</button>`;
+                html += `<button onclick="loadTrips(${pagination.pageIndex + 1})">Next ></button>`;
             }
-
             html += '</div>';
-
-            // Add pagination to the page
             document.getElementById('trips-container').insertAdjacentHTML('afterend', html);
         }
 
@@ -94,7 +150,7 @@
             window.location.href = `/BusTrips/Book?tripId=${tripId}`;
         }
 
-        // Load trips when page loads
         loadTrips();
     </script>
-}
+</body>
+</html>

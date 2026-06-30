@@ -45,8 +45,9 @@ public class RailwayTripsController : ParentController
             return RedirectToLogin();
         }
         _logger.LogInformation("GET: /Book train");
-        
-        var trip = await _context.BusTrips.FindAsync(tripId);
+
+        var trip = await _context.RailwayTrips.FindAsync(tripId);
+
         if (trip == null)
         {
             _logger.LogWarning("Train trip not found.");

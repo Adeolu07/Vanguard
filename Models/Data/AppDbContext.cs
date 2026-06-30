@@ -10,13 +10,13 @@ namespace _Tripfinity.Models.Data
         {
         }
 
-    public DbSet<User> Users { get; set; }
-    public DbSet<BusTrip> BusTrips { get; set; }
-    public DbSet<TaxiTrip> TaxiTrips { get; set; }
-    public DbSet<RailwayTrip> RailwayTrips { get; set; }
-    public DbSet<Booking> Bookings { get; set; }
-    public DbSet<Ticket> Tickets { get; set; }
-    public DbSet<AuthToken> AuthTokens { get; set; }
+        public DbSet<User> Users { get; set; }
+        public DbSet<BusTrip> BusTrips { get; set; }
+        public DbSet<TaxiTrip> TaxiTrips { get; set; }
+        public DbSet<RailwayTrip> RailwayTrips { get; set; }
+        public DbSet<Booking> Bookings { get; set; }
+        public DbSet<Ticket> Tickets { get; set; }
+        public DbSet<AuthToken> AuthTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -64,8 +64,9 @@ namespace _Tripfinity.Models.Data
                 .Property(ticket => ticket.Fare)
                 .HasPrecision(18, 2);
 
+            //  Removed QrToken index, replaced with TicketReference
             builder.Entity<Ticket>()
-                .HasIndex(ticket => ticket.QrToken)
+                .HasIndex(ticket => ticket.TicketReference)
                 .IsUnique();
 
             builder.Entity<Ticket>()
@@ -76,7 +77,7 @@ namespace _Tripfinity.Models.Data
 
             builder.Entity<AuthToken>()
                 .Property(token => token.Token);
-            
+
             DataSeeding.Seed(builder);
         }
     }
