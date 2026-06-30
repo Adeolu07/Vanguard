@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using _Tripfinity.Models.Data;
 
@@ -11,9 +12,11 @@ using _Tripfinity.Models.Data;
 namespace _Tripfinity.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260629160815_AddQrCodeBase64Column")]
+    partial class AddQrCodeBase64Column
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -156,8 +159,8 @@ namespace _Tripfinity.Migrations
                         {
                             Id = 1,
                             AvailableSeats = 45,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DepartureTime = new DateTime(2026, 7, 6, 8, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DepartureTime = new DateTime(2026, 6, 24, 8, 0, 0, 0, DateTimeKind.Unspecified),
                             Destination = "Ibadan",
                             From = "Lagos",
                             IsActive = true,
@@ -168,8 +171,8 @@ namespace _Tripfinity.Migrations
                         {
                             Id = 2,
                             AvailableSeats = 50,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DepartureTime = new DateTime(2026, 7, 7, 7, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DepartureTime = new DateTime(2026, 6, 25, 7, 0, 0, 0, DateTimeKind.Unspecified),
                             Destination = "Benin",
                             From = "Lagos",
                             IsActive = true,
@@ -180,8 +183,8 @@ namespace _Tripfinity.Migrations
                         {
                             Id = 3,
                             AvailableSeats = 48,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DepartureTime = new DateTime(2026, 7, 8, 6, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DepartureTime = new DateTime(2026, 6, 26, 6, 0, 0, 0, DateTimeKind.Unspecified),
                             Destination = "Abuja",
                             From = "Lagos",
                             IsActive = true,
@@ -192,8 +195,8 @@ namespace _Tripfinity.Migrations
                         {
                             Id = 4,
                             AvailableSeats = 50,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DepartureTime = new DateTime(2026, 7, 9, 9, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DepartureTime = new DateTime(2026, 6, 27, 9, 0, 0, 0, DateTimeKind.Unspecified),
                             Destination = "Port Harcourt",
                             From = "Lagos",
                             IsActive = true,
@@ -204,8 +207,8 @@ namespace _Tripfinity.Migrations
                         {
                             Id = 5,
                             AvailableSeats = 40,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DepartureTime = new DateTime(2026, 7, 10, 5, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DepartureTime = new DateTime(2026, 6, 28, 5, 0, 0, 0, DateTimeKind.Unspecified),
                             Destination = "Kano",
                             From = "Lagos",
                             IsActive = true,
@@ -216,8 +219,8 @@ namespace _Tripfinity.Migrations
                         {
                             Id = 6,
                             AvailableSeats = 45,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DepartureTime = new DateTime(2026, 7, 6, 10, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DepartureTime = new DateTime(2026, 6, 24, 10, 0, 0, 0, DateTimeKind.Unspecified),
                             Destination = "Kaduna",
                             From = "Abuja",
                             IsActive = true,
@@ -228,8 +231,8 @@ namespace _Tripfinity.Migrations
                         {
                             Id = 7,
                             AvailableSeats = 42,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DepartureTime = new DateTime(2026, 7, 8, 7, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DepartureTime = new DateTime(2026, 6, 26, 7, 0, 0, 0, DateTimeKind.Unspecified),
                             Destination = "Jos",
                             From = "Abuja",
                             IsActive = true,
@@ -240,8 +243,8 @@ namespace _Tripfinity.Migrations
                         {
                             Id = 8,
                             AvailableSeats = 50,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DepartureTime = new DateTime(2026, 7, 9, 8, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DepartureTime = new DateTime(2026, 6, 27, 8, 0, 0, 0, DateTimeKind.Unspecified),
                             Destination = "Enugu",
                             From = "Abuja",
                             IsActive = true,
@@ -252,8 +255,8 @@ namespace _Tripfinity.Migrations
                         {
                             Id = 9,
                             AvailableSeats = 30,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DepartureTime = new DateTime(2026, 7, 7, 12, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DepartureTime = new DateTime(2026, 6, 25, 12, 0, 0, 0, DateTimeKind.Unspecified),
                             Destination = "Aba",
                             From = "Port Harcourt",
                             IsActive = true,
@@ -264,8 +267,8 @@ namespace _Tripfinity.Migrations
                         {
                             Id = 10,
                             AvailableSeats = 40,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DepartureTime = new DateTime(2026, 7, 10, 6, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DepartureTime = new DateTime(2026, 6, 28, 6, 0, 0, 0, DateTimeKind.Unspecified),
                             Destination = "Calabar",
                             From = "Port Harcourt",
                             IsActive = true,
@@ -276,8 +279,8 @@ namespace _Tripfinity.Migrations
                         {
                             Id = 11,
                             AvailableSeats = 35,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DepartureTime = new DateTime(2026, 7, 8, 9, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DepartureTime = new DateTime(2026, 6, 26, 9, 0, 0, 0, DateTimeKind.Unspecified),
                             Destination = "Asaba",
                             From = "Benin",
                             IsActive = true,
@@ -288,8 +291,8 @@ namespace _Tripfinity.Migrations
                         {
                             Id = 12,
                             AvailableSeats = 36,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DepartureTime = new DateTime(2026, 7, 9, 7, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DepartureTime = new DateTime(2026, 6, 27, 7, 0, 0, 0, DateTimeKind.Unspecified),
                             Destination = "Katsina",
                             From = "Kano",
                             IsActive = true,
@@ -300,8 +303,8 @@ namespace _Tripfinity.Migrations
                         {
                             Id = 13,
                             AvailableSeats = 45,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DepartureTime = new DateTime(2026, 7, 6, 14, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DepartureTime = new DateTime(2026, 6, 24, 14, 0, 0, 0, DateTimeKind.Unspecified),
                             Destination = "Lagos",
                             From = "Ibadan",
                             IsActive = true,
@@ -312,8 +315,8 @@ namespace _Tripfinity.Migrations
                         {
                             Id = 14,
                             AvailableSeats = 40,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DepartureTime = new DateTime(2026, 7, 10, 8, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DepartureTime = new DateTime(2026, 6, 28, 8, 0, 0, 0, DateTimeKind.Unspecified),
                             Destination = "Owerri",
                             From = "Ibadan",
                             IsActive = true,
@@ -324,8 +327,8 @@ namespace _Tripfinity.Migrations
                         {
                             Id = 15,
                             AvailableSeats = 42,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DepartureTime = new DateTime(2026, 7, 8, 13, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DepartureTime = new DateTime(2026, 6, 26, 13, 0, 0, 0, DateTimeKind.Unspecified),
                             Destination = "Abuja",
                             From = "Jos",
                             IsActive = true,
@@ -390,8 +393,8 @@ namespace _Tripfinity.Migrations
                         {
                             Id = 1,
                             AvailableSeats = 280,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DepartureTime = new DateTime(2026, 7, 6, 8, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DepartureTime = new DateTime(2026, 6, 24, 8, 0, 0, 0, DateTimeKind.Unspecified),
                             Destination = "Ibadan",
                             From = "Lagos",
                             IsActive = true,
@@ -404,8 +407,8 @@ namespace _Tripfinity.Migrations
                         {
                             Id = 2,
                             AvailableSeats = 280,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DepartureTime = new DateTime(2026, 7, 6, 15, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DepartureTime = new DateTime(2026, 6, 24, 15, 0, 0, 0, DateTimeKind.Unspecified),
                             Destination = "Lagos",
                             From = "Ibadan",
                             IsActive = true,
@@ -418,8 +421,8 @@ namespace _Tripfinity.Migrations
                         {
                             Id = 3,
                             AvailableSeats = 100,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DepartureTime = new DateTime(2026, 7, 7, 7, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DepartureTime = new DateTime(2026, 6, 25, 7, 0, 0, 0, DateTimeKind.Unspecified),
                             Destination = "Kaduna",
                             From = "Abuja",
                             IsActive = true,
@@ -432,8 +435,8 @@ namespace _Tripfinity.Migrations
                         {
                             Id = 4,
                             AvailableSeats = 100,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DepartureTime = new DateTime(2026, 7, 7, 14, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DepartureTime = new DateTime(2026, 6, 25, 14, 0, 0, 0, DateTimeKind.Unspecified),
                             Destination = "Abuja",
                             From = "Kaduna",
                             IsActive = true,
@@ -446,8 +449,8 @@ namespace _Tripfinity.Migrations
                         {
                             Id = 5,
                             AvailableSeats = 240,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DepartureTime = new DateTime(2026, 7, 8, 9, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DepartureTime = new DateTime(2026, 6, 26, 9, 0, 0, 0, DateTimeKind.Unspecified),
                             Destination = "Itakpe",
                             From = "Warri",
                             IsActive = true,
@@ -460,8 +463,8 @@ namespace _Tripfinity.Migrations
                         {
                             Id = 6,
                             AvailableSeats = 240,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DepartureTime = new DateTime(2026, 7, 8, 16, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DepartureTime = new DateTime(2026, 6, 26, 16, 0, 0, 0, DateTimeKind.Unspecified),
                             Destination = "Warri",
                             From = "Itakpe",
                             IsActive = true,
@@ -474,8 +477,8 @@ namespace _Tripfinity.Migrations
                         {
                             Id = 7,
                             AvailableSeats = 80,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DepartureTime = new DateTime(2026, 7, 7, 7, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DepartureTime = new DateTime(2026, 6, 25, 7, 0, 0, 0, DateTimeKind.Unspecified),
                             Destination = "Ibadan",
                             From = "Lagos",
                             IsActive = true,
@@ -488,8 +491,8 @@ namespace _Tripfinity.Migrations
                         {
                             Id = 8,
                             AvailableSeats = 95,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DepartureTime = new DateTime(2026, 7, 8, 11, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DepartureTime = new DateTime(2026, 6, 26, 11, 0, 0, 0, DateTimeKind.Unspecified),
                             Destination = "Kaduna",
                             From = "Abuja",
                             IsActive = true,
@@ -502,8 +505,8 @@ namespace _Tripfinity.Migrations
                         {
                             Id = 9,
                             AvailableSeats = 160,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DepartureTime = new DateTime(2026, 7, 9, 8, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DepartureTime = new DateTime(2026, 6, 27, 8, 0, 0, 0, DateTimeKind.Unspecified),
                             Destination = "Aba",
                             From = "Port Harcourt",
                             IsActive = true,
@@ -516,8 +519,8 @@ namespace _Tripfinity.Migrations
                         {
                             Id = 10,
                             AvailableSeats = 160,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DepartureTime = new DateTime(2026, 7, 9, 15, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DepartureTime = new DateTime(2026, 6, 27, 15, 0, 0, 0, DateTimeKind.Unspecified),
                             Destination = "Port Harcourt",
                             From = "Aba",
                             IsActive = true,
@@ -530,8 +533,8 @@ namespace _Tripfinity.Migrations
                         {
                             Id = 11,
                             AvailableSeats = 180,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DepartureTime = new DateTime(2026, 7, 10, 7, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DepartureTime = new DateTime(2026, 6, 28, 7, 0, 0, 0, DateTimeKind.Unspecified),
                             Destination = "Abeokuta",
                             From = "Lagos",
                             IsActive = true,
@@ -544,8 +547,8 @@ namespace _Tripfinity.Migrations
                         {
                             Id = 12,
                             AvailableSeats = 180,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DepartureTime = new DateTime(2026, 7, 10, 16, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DepartureTime = new DateTime(2026, 6, 28, 16, 0, 0, 0, DateTimeKind.Unspecified),
                             Destination = "Lagos",
                             From = "Abeokuta",
                             IsActive = true,
@@ -558,8 +561,8 @@ namespace _Tripfinity.Migrations
                         {
                             Id = 13,
                             AvailableSeats = 200,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DepartureTime = new DateTime(2026, 7, 11, 8, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DepartureTime = new DateTime(2026, 6, 29, 8, 0, 0, 0, DateTimeKind.Unspecified),
                             Destination = "Minna",
                             From = "Abuja",
                             IsActive = true,
@@ -572,8 +575,8 @@ namespace _Tripfinity.Migrations
                         {
                             Id = 14,
                             AvailableSeats = 200,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DepartureTime = new DateTime(2026, 7, 11, 15, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DepartureTime = new DateTime(2026, 6, 29, 15, 0, 0, 0, DateTimeKind.Unspecified),
                             Destination = "Abuja",
                             From = "Minna",
                             IsActive = true,
@@ -586,8 +589,8 @@ namespace _Tripfinity.Migrations
                         {
                             Id = 15,
                             AvailableSeats = 48,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DepartureTime = new DateTime(2026, 7, 8, 9, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DepartureTime = new DateTime(2026, 6, 26, 9, 0, 0, 0, DateTimeKind.Unspecified),
                             Destination = "Ibadan",
                             From = "Lagos",
                             IsActive = true,
@@ -644,133 +647,133 @@ namespace _Tripfinity.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DropoffLocation = "Victoria Island",
                             IsActive = true,
                             MaxPassengers = 4,
                             PickupLocation = "Ikeja",
-                            PickupTime = new DateTime(2026, 7, 6, 9, 0, 0, 0, DateTimeKind.Unspecified),
+                            PickupTime = new DateTime(2026, 6, 24, 9, 0, 0, 0, DateTimeKind.Unspecified),
                             Price = 12000m
                         },
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DropoffLocation = "Lekki",
                             IsActive = true,
                             MaxPassengers = 4,
                             PickupLocation = "Ikeja",
-                            PickupTime = new DateTime(2026, 7, 6, 14, 0, 0, 0, DateTimeKind.Unspecified),
+                            PickupTime = new DateTime(2026, 6, 24, 14, 0, 0, 0, DateTimeKind.Unspecified),
                             Price = 10000m
                         },
                         new
                         {
                             Id = 3,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DropoffLocation = "Ikeja",
                             IsActive = true,
                             MaxPassengers = 4,
                             PickupLocation = "Lekki",
-                            PickupTime = new DateTime(2026, 7, 7, 8, 0, 0, 0, DateTimeKind.Unspecified),
+                            PickupTime = new DateTime(2026, 6, 25, 8, 0, 0, 0, DateTimeKind.Unspecified),
                             Price = 10000m
                         },
                         new
                         {
                             Id = 4,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DropoffLocation = "Ikeja",
                             IsActive = true,
                             MaxPassengers = 4,
                             PickupLocation = "Victoria Island",
-                            PickupTime = new DateTime(2026, 7, 7, 15, 0, 0, 0, DateTimeKind.Unspecified),
+                            PickupTime = new DateTime(2026, 6, 25, 15, 0, 0, 0, DateTimeKind.Unspecified),
                             Price = 12000m
                         },
                         new
                         {
                             Id = 5,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DropoffLocation = "Garki",
                             IsActive = true,
                             MaxPassengers = 4,
                             PickupLocation = "Abuja CBD",
-                            PickupTime = new DateTime(2026, 7, 8, 10, 0, 0, 0, DateTimeKind.Unspecified),
+                            PickupTime = new DateTime(2026, 6, 26, 10, 0, 0, 0, DateTimeKind.Unspecified),
                             Price = 4500m
                         },
                         new
                         {
                             Id = 6,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DropoffLocation = "Wuse",
                             IsActive = true,
                             MaxPassengers = 4,
                             PickupLocation = "Garki",
-                            PickupTime = new DateTime(2026, 7, 8, 16, 0, 0, 0, DateTimeKind.Unspecified),
+                            PickupTime = new DateTime(2026, 6, 26, 16, 0, 0, 0, DateTimeKind.Unspecified),
                             Price = 3500m
                         },
                         new
                         {
                             Id = 7,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DropoffLocation = "Maitama",
                             IsActive = true,
                             MaxPassengers = 4,
                             PickupLocation = "Wuse",
-                            PickupTime = new DateTime(2026, 7, 9, 8, 0, 0, 0, DateTimeKind.Unspecified),
+                            PickupTime = new DateTime(2026, 6, 27, 8, 0, 0, 0, DateTimeKind.Unspecified),
                             Price = 4000m
                         },
                         new
                         {
                             Id = 8,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DropoffLocation = "Rumuokoro",
                             IsActive = true,
                             MaxPassengers = 4,
                             PickupLocation = "Port Harcourt",
-                            PickupTime = new DateTime(2026, 7, 9, 13, 0, 0, 0, DateTimeKind.Unspecified),
+                            PickupTime = new DateTime(2026, 6, 27, 13, 0, 0, 0, DateTimeKind.Unspecified),
                             Price = 5000m
                         },
                         new
                         {
                             Id = 9,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DropoffLocation = "Sabon Gari",
                             IsActive = true,
                             MaxPassengers = 4,
                             PickupLocation = "Kano",
-                            PickupTime = new DateTime(2026, 7, 10, 11, 0, 0, 0, DateTimeKind.Unspecified),
+                            PickupTime = new DateTime(2026, 6, 28, 11, 0, 0, 0, DateTimeKind.Unspecified),
                             Price = 3000m
                         },
                         new
                         {
                             Id = 10,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DropoffLocation = "Mokola",
                             IsActive = true,
                             MaxPassengers = 4,
                             PickupLocation = "Ibadan",
-                            PickupTime = new DateTime(2026, 7, 10, 17, 0, 0, 0, DateTimeKind.Unspecified),
+                            PickupTime = new DateTime(2026, 6, 28, 17, 0, 0, 0, DateTimeKind.Unspecified),
                             Price = 3500m
                         },
                         new
                         {
                             Id = 11,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DropoffLocation = "Ugbowo",
                             IsActive = true,
                             MaxPassengers = 4,
                             PickupLocation = "Benin",
-                            PickupTime = new DateTime(2026, 7, 11, 8, 0, 0, 0, DateTimeKind.Unspecified),
+                            PickupTime = new DateTime(2026, 6, 29, 8, 0, 0, 0, DateTimeKind.Unspecified),
                             Price = 4000m
                         },
                         new
                         {
                             Id = 12,
-                            CreatedAt = new DateTime(2026, 7, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedAt = new DateTime(2026, 6, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DropoffLocation = "New Haven",
                             IsActive = true,
                             MaxPassengers = 4,
                             PickupLocation = "Enugu",
-                            PickupTime = new DateTime(2026, 7, 11, 14, 0, 0, 0, DateTimeKind.Unspecified),
+                            PickupTime = new DateTime(2026, 6, 29, 14, 0, 0, 0, DateTimeKind.Unspecified),
                             Price = 3800m
                         });
                 });
@@ -799,6 +802,11 @@ namespace _Tripfinity.Migrations
                     b.Property<string>("QrCodeBase64")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("QrToken")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -832,7 +840,7 @@ namespace _Tripfinity.Migrations
 
                     b.HasIndex("BookingId");
 
-                    b.HasIndex("TicketReference")
+                    b.HasIndex("QrToken")
                         .IsUnique();
 
                     b.ToTable("Tickets");

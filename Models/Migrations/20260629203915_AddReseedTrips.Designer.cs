@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using _Tripfinity.Models.Data;
 
@@ -11,9 +12,11 @@ using _Tripfinity.Models.Data;
 namespace _Tripfinity.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260629203915_AddReseedTrips")]
+    partial class AddReseedTrips
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -796,9 +799,10 @@ namespace _Tripfinity.Migrations
                     b.Property<int>("PassengerId")
                         .HasColumnType("int");
 
-                    b.Property<string>("QrCodeBase64")
+                    b.Property<string>("QrToken")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -832,7 +836,7 @@ namespace _Tripfinity.Migrations
 
                     b.HasIndex("BookingId");
 
-                    b.HasIndex("TicketReference")
+                    b.HasIndex("QrToken")
                         .IsUnique();
 
                     b.ToTable("Tickets");

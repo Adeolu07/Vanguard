@@ -23,9 +23,6 @@ public class Ticket
 
     [Required] public decimal Fare { get; set; }
 
-    // Opaque token encoded inside the QR code and checked on validation
-    [Required] [MaxLength(100)] public string QrToken { get; set; } = string.Empty;
-
     [Required] [MaxLength(20)] public string Status { get; set; } = "Issued"; // Issued, Validated, Cancelled
 
     public DateTime IssuedAt { get; set; } = DateTime.Now;
@@ -33,6 +30,9 @@ public class Ticket
     public DateTime? ValidatedAt { get; set; }
 
     public int? ValidatedByMarshalId { get; set; }
+
+    // NEW: store QR image as Base64
+    public string QrCodeBase64 { get; set; } = string.Empty;
 
     // Navigation
     public Booking? Booking { get; set; }

@@ -24,19 +24,23 @@ public class TicketService : ITicketService
         _logger.LogInformation("Issuing ticket for booking {BookingId}", booking.Id);
 
         var tripTime = ResolveTripTime(booking);
+        var ticketReference = $"TKT-{Guid.NewGuid().ToString("N")[..8].ToUpper()}";
+
+        var qrBytes = GenerateQrCode(ticketReference);
+        var qrBase64 = Convert.ToBase64String(qrBytes);
 
         var ticket = new Ticket
         {
-            TicketReference = $"TKT-{Guid.NewGuid().ToString("N")[..8].ToUpper()}",
+            TicketReference = ticketReference,
             BookingId = booking.Id,
             PassengerId = booking.UserId,
             VehicleId = vehicleId,
             TransportType = booking.TransportType,
             TripTime = tripTime,
             Fare = booking.TotalAmount,
-            QrToken = Guid.NewGuid().ToString("N"),
             Status = "Issued",
-            IssuedAt = DateTime.Now
+            IssuedAt = DateTime.Now,
+            QrCodeBase64 = qrBase64
         };
 
         _context.Tickets.Add(ticket);
@@ -46,9 +50,9 @@ public class TicketService : ITicketService
         return ticket;
     }
 
-    public async Task<TicketValidationResult> ValidateTicketAsync(string qrToken, int marshalId)
+    public async Task<TicketValidationResult> ValidateTicketAsync(string ticketReference, int marshalId)
     {
-        var ticket = await _context.Tickets.FirstOrDefaultAsync(t => t.QrToken == qrToken);
+        var ticket = await _context.Tickets.FirstOrDefaultAsync(t => t.TicketReference == ticketReference);
 
         if (ticket == null)
             return new TicketValidationResult { Success = false, Message = "Ticket not found" };
@@ -89,10 +93,10 @@ public class TicketService : ITicketService
         return await _context.Tickets.FirstOrDefaultAsync(t => t.BookingId == bookingId);
     }
 
-    public byte[] GenerateQrCode(string qrToken)
+    public byte[] GenerateQrCode(string ticketReference)
     {
         using var generator = new QRCodeGenerator();
-        using var data = generator.CreateQrCode(qrToken, QRCodeGenerator.ECCLevel.Q);
+        using var data = generator.CreateQrCode(ticketReference, QRCodeGenerator.ECCLevel.Q);
         var png = new PngByteQRCode(data);
         return png.GetGraphic(20);
     }

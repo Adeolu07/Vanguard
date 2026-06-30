@@ -7,7 +7,7 @@ public static class DataSeeding
 {
     public static void Seed(ModelBuilder builder)
     {
-        var now = new DateTime(2026, 6, 23);
+        var now = new DateTime(2026, 7, 5);
         var busTrips = new List<BusTrip>
         {
             new() { Id = 1,  From = "Lagos", Destination = "Ibadan",        DepartureTime = now.AddDays(1).AddHours(8),  Price = 4500m,  TotalSeats = 45, AvailableSeats = 45, IsActive = true, CreatedAt = now },

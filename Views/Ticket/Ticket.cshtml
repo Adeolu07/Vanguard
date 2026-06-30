@@ -1,8 +1,10 @@
 @model List<Booking>
+@using _Tripfinity.Models.Tables
 
 @{
     Layout = "_Layout";
     ViewData["Title"] = "My Tickets";
+    var tickets = ViewBag.Tickets as List<Ticket>;
 }
 
 <div class="tickets-header">
@@ -13,56 +15,68 @@
 @if (Model != null && Model.Any())
 {
     <div class="tickets-list">
-        @foreach (var ticket in Model)
+        @foreach (var booking in Model)
         {
+            var ticket = tickets?.FirstOrDefault(t => t.BookingId == booking.Id);
+
             <div class="ticket-card">
                 <div class="ticket-header">
                     <div class="ticket-type">
-                        @if (ticket.BusTrip != null)
+                        @if (booking.BusTrip != null)
                         {
                             <span>🚌 Bus Ticket</span>
                         }
-                        else if (ticket.TaxiTrip != null)
+                        else if (booking.TaxiTrip != null)
                         {
                             <span>🚕 Taxi Ticket</span>
                         }
-                        else if (ticket.RailwayTrip != null)
+                        else if (booking.RailwayTrip != null)
                         {
                             <span>🚆 Railway Ticket</span>
                         }
                     </div>
-                    <div class="ticket-status @ticket.Status.ToLower()">
-                        @ticket.Status
+                    <div class="ticket-status @booking.Status.ToLower()">
+                        @booking.Status
                     </div>
                 </div>
-                
+
                 <div class="ticket-body">
-                    @if (ticket.BusTrip != null)
+                    @if (booking.BusTrip != null)
                     {
-                        <div class="ticket-route">@ticket.BusTrip.From → @ticket.BusTrip.Destination</div>
-                        <div class="ticket-datetime">📅 @ticket.BusTrip.DepartureTime.ToString("MMM dd, yyyy - hh:mm tt")</div>
+                        <div class="ticket-route">@booking.BusTrip.From → @booking.BusTrip.Destination</div>
+                        <div class="ticket-datetime">📅 @booking.BusTrip.DepartureTime.ToString("MMM dd, yyyy - hh:mm tt")</div>
                     }
-                    else if (ticket.TaxiTrip != null)
+                    else if (booking.TaxiTrip != null)
                     {
-                        <div class="ticket-route">@ticket.TaxiTrip.PickupLocation → @ticket.TaxiTrip.DropoffLocation</div>
-                        <div class="ticket-datetime">📅 @ticket.TaxiTrip.PickupTime.ToString("MMM dd, yyyy - hh:mm tt")</div>
+                        <div class="ticket-route">@booking.TaxiTrip.PickupLocation → @booking.TaxiTrip.DropoffLocation</div>
+                        <div class="ticket-datetime">📅 @booking.TaxiTrip.PickupTime.ToString("MMM dd, yyyy - hh:mm tt")</div>
                     }
-                    else if (ticket.RailwayTrip != null)
+                    else if (booking.RailwayTrip != null)
                     {
-                        <div class="ticket-route">@ticket.RailwayTrip.From → @ticket.RailwayTrip.Destination</div>
-                        <div class="ticket-datetime">📅 @ticket.RailwayTrip.DepartureTime.ToString("MMM dd, yyyy - hh:mm tt")</div>
-                        <div class="ticket-class">🚂 Class: @ticket.RailwayTrip.TrainClass</div>
+                        <div class="ticket-route">@booking.RailwayTrip.From → @booking.RailwayTrip.Destination</div>
+                        <div class="ticket-datetime">📅 @booking.RailwayTrip.DepartureTime.ToString("MMM dd, yyyy - hh:mm tt")</div>
+                        <div class="ticket-class">🚂 Class: @booking.RailwayTrip.TrainClass</div>
                     }
-                    
+
                     <div class="ticket-details-row">
-                        <span>🎫 Seats: @ticket.NumberOfSeats</span>
-                        <span>💰 ₦@ticket.TotalAmount.ToString("N0")</span>
-                        <span>📅 Booked: @ticket.BookingDate.ToString("MMM dd, yyyy")</span>
+                        <span>🎫 Seats: @booking.NumberOfSeats</span>
+                        <span>💰 ₦@booking.TotalAmount.ToString("N0")</span>
+                        <span>📅 Booked: @booking.BookingDate.ToString("MMM dd, yyyy")</span>
+                    </div>
+
+                    <!-- QR preview -->
+                    <div class="ticket-qr">
+                        @if (ticket != null && !string.IsNullOrEmpty(ticket.QrCodeBase64))
+                        {
+                            <img src="data:image/png;base64,@ticket.QrCodeBase64"
+                                 alt="QR Code"
+                                 class="qr-container__image" />
+                        }
                     </div>
                 </div>
-                
+
                 <div class="ticket-footer">
-                    <a href="/Ticket/Details/@ticket.Id" class="btn-view">View Ticket →</a>
+                    <a href="/Ticket/Details/@booking.Id" class="btn-view">View Ticket →</a>
                 </div>
             </div>
         }
