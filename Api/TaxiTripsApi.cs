@@ -24,11 +24,11 @@ public class TaxiTripsApi : ControllerBase
             .Where(t => t.IsActive && t.PickupTime > DateTime.Now)
             .OrderBy(t => t.PickupTime);
 
-        query = sort switch
-        {
-            "price" => query.OrderBy(t => t.Price),
-            _ => query.OrderBy(t => t.PickupTime)
-        };
+        // query = sort switch
+        // {
+        //     "price" => query.OrderBy(t => t.Price),
+        //     _ => query.OrderBy(t => t.PickupTime)
+        // };
 
         var paginatedList = await PaginatedList<TaxiTrip>.CreateAsync(query, page, pageSize);
         return Ok(new

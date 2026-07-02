@@ -39,7 +39,7 @@ namespace _Tripfinity.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AuthTokens");
+                    b.ToTable("AuthTokens", (string)null);
                 });
 
             modelBuilder.Entity("_Tripfinity.Models.Booking", b =>
@@ -107,7 +107,7 @@ namespace _Tripfinity.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Bookings");
+                    b.ToTable("Bookings", (string)null);
                 });
 
             modelBuilder.Entity("_Tripfinity.Models.BusTrip", b =>
@@ -149,7 +149,7 @@ namespace _Tripfinity.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("BusTrips");
+                    b.ToTable("BusTrips", (string)null);
 
                     b.HasData(
                         new
@@ -383,7 +383,7 @@ namespace _Tripfinity.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("RailwayTrips");
+                    b.ToTable("RailwayTrips", (string)null);
 
                     b.HasData(
                         new
@@ -638,7 +638,7 @@ namespace _Tripfinity.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TaxiTrips");
+                    b.ToTable("TaxiTrips", (string)null);
 
                     b.HasData(
                         new
@@ -835,7 +835,7 @@ namespace _Tripfinity.Migrations
                     b.HasIndex("TicketReference")
                         .IsUnique();
 
-                    b.ToTable("Tickets");
+                    b.ToTable("Tickets", (string)null);
                 });
 
             modelBuilder.Entity("_Tripfinity.Models.User", b =>
@@ -918,7 +918,7 @@ namespace _Tripfinity.Migrations
                     b.HasIndex("Email")
                         .IsUnique();
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("_Tripfinity.Models.Booking", b =>

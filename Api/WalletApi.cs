@@ -22,7 +22,6 @@ public class WalletApiController : ControllerBase
     [HttpPost("auth")]
     public async Task<IActionResult> Authentication([FromBody] AuthenticationRequest request)
     {
-        _logger.LogInformation("Creating wallet for {User}", request.Username);
         await _walletService.EnsureAuthenticatedAsync();
         return Ok("Successful authentication");
     }
