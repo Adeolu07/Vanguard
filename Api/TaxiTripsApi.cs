@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace _Tripfinity.Api;
 
-[Route("api/taxi")]
+[Route("api/taxitrips")]
 [ApiController]
 public class TaxiTripsApi : ControllerBase
 {

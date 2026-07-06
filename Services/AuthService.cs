@@ -46,6 +46,7 @@ public class AuthService : IAuthService
                 Email = model.Email,
                 FirstName = model.FirstName,
                 LastName = model.LastName,
+                PhoneNumber =  model.PhoneNumber,
                 CreatedAt = DateTime.Now,
                 IsActive = false,
                 Role = "Passenger",
@@ -325,12 +326,10 @@ public class AuthService : IAuthService
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
             if (user == null)
             {
-                // For security, don't reveal that the email doesn't exist
                 _logger.LogWarning("Forgot password for non-existent email: {Email}", email);
                 return new AuthResponse { Success = true, Message = "If your email exists, a reset link has been sent." };
             }
-
-            // Generate a reset token
+            
             user.PasswordResetToken = Guid.NewGuid().ToString();
             user.PasswordResetTokenExpiry = DateTime.Now.AddHours(1); // valid for 1 hour
             await _context.SaveChangesAsync();
@@ -338,6 +337,9 @@ public class AuthService : IAuthService
             // Build reset link
             var resetLink = $"https://localhost:5001/Auth/ResetPassword?email={Uri.EscapeDataString(email)}&token={user.PasswordResetToken}";
 
+
+            var confirmationLink =
+                $"http://localhost/auth/ResetPassword??userId={user.Id}&token={user.PasswordResetToken}?";
             // Send email
             await _emailService.SendEmailAsync(
                 email,

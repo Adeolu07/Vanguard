@@ -21,6 +21,7 @@ body, html {
     text-align: center;
     position: relative;
     overflow: hidden;
+    border-radius: 15px;
 }
 
 .main-content {
@@ -29,6 +30,7 @@ body, html {
     flex-direction: column;
     align-items: center;
     z-index: 1;
+    border-radius: 15px;
 }
 
 .main-content h1 {
@@ -37,11 +39,12 @@ body, html {
     letter-spacing: -0.5px;
     line-height: 1.15;
     margin-bottom: 16px;
+    color: #1e293b;
 }
 
 .main-content p {
     font-size: 15px;
-    color: #cbd5e1;
+    color: #1e293b;
     line-height: 1.6;
     margin-bottom: 32px;
     max-width: 480px;
@@ -77,7 +80,7 @@ body, html {
 .btn-login {
     display: inline-flex;
     align-items: center;
-    background-color: rgba(255, 255, 255, 0.08);
+    background: linear-gradient(135deg, #03132e 0%, #0f172a 60%, #1e293b 100%);
     border: 1px solid rgba(255, 255, 255, 0.16);
     color: #ffffff;
     text-decoration: none;

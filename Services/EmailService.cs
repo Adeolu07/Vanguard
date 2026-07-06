@@ -36,7 +36,7 @@ public class EmailService : IEmailService
                 HtmlBody = htmlMessage,
             });
 
-            if (response.Success)
+            if (!response.Success)
             {
                 _logger.LogInformation("Email sent successfully");
             }
