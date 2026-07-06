@@ -26,7 +26,7 @@
                 </nav>
             </div>
             <div class="user-avatar-tag" style="font-size:12px; font-weight:700; color:var(--text-muted)">
-                Oreoluwa<br><span style="font-size:10px; font-weight:400;">Verified Member</span>
+                @ViewBag.FirstName<br><span style="font-size:10px; font-weight:400;">Verified Member</span>
             </div>
         </aside>
 
@@ -34,7 +34,7 @@
             <header class="top-header">
                 <h2 style="margin:0; font-size: 22px; color: var(--primary-blue)">Passenger Dashboard</h2>
                 <div class="header-meta">
-                    <a href="/BusTrips/Index" class="btn-back">← Back to Dashboard</a>
+                    <a href="/Home/Dashboard" class="btn-back">← Back to Dashboard</a>
                     <a href="/Auth/Logout" class="btn-signout">Sign Out</a>
                 </div>
             </header>
@@ -132,6 +132,5 @@
                 seatsInput.addEventListener('input', updatePrice);
                 updatePrice();
             });
-    </script>
-</body>
+    </script></body>
 </html>

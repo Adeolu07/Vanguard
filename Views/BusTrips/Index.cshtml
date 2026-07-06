@@ -1,7 +1,6 @@
-@model IEnumerable<object>
 @{
-    ViewData["Title"] = "Bus Trips";
     Layout = null;
+    ViewData["Title"] = "Bus Trips";
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -57,101 +56,100 @@
     </div>
 
     <script>
-        let currentPage = 1;
-        let totalPages = 1;
-        let isLoading = false;
+            let currentPage = 1;
+            let totalPages = 1;
+            let isLoading = false;
 
-        async function loadTrips(page = 1) {
-            if (isLoading) return;
-            isLoading = true;
-            document.getElementById('trips-container').innerHTML = '<p>Loading trips...</p>';
+            async function loadTrips(page = 1) {
+                if (isLoading) return;
+                isLoading = true;
+                document.getElementById('trips-container').innerHTML = '<p>Loading trips...</p>';
 
-            try {
-                const response = await fetch(`/api/bus?page=${page}&pageSize=4`);
-                const result = await response.json();
+                try {
+                    const response = await fetch(`/api/bustrips?page=${page}&pageSize=4`);
+                    const result = await response.json();
 
-                if (result.success) {
-                    displayTrips(result.data);
-                    currentPage = result.pagination.pageIndex;
-                    totalPages = result.pagination.totalPages;
-                    displayPagination(result.pagination);
+                    if (result.success) {
+                        displayTrips(result.data);
+                        currentPage = result.pagination.pageIndex;
+                        totalPages = result.pagination.totalPages;
+                        displayPagination(result.pagination);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    document.getElementById('trips-container').innerHTML = '<p>Error loading trips.</p>';
+                } finally {
+                    isLoading = false;
                 }
-            } catch (error) {
-                console.error('Error:', error);
-                document.getElementById('trips-container').innerHTML = '<p>Error loading trips.</p>';
-            } finally {
-                isLoading = false;
-            }
-        }
-
-        function displayTrips(trips) {
-            if (!trips || trips.length === 0) {
-                document.getElementById('trips-container').innerHTML = '<p>No trips available right now.</p>';
-                return;
             }
 
-            let html = '<div class="trip-options">';
-            trips.forEach(trip => {
-                const dateObj = new Date(trip.departureTime);
-                const formattedDate = dateObj.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
-                const formattedTime = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+            function displayTrips(trips) {
+                if (!trips || trips.length === 0) {
+                    document.getElementById('trips-container').innerHTML = '<p>No trips available right now.</p>';
+                    return;
+                }
 
-                html += `
-                    <div class="trip-card">
-                        <div class="trip-card-icon">🚌</div>
-                        <div class="route-display">
-                            <h2>${trip.from}</h2>
-                            <span class="route-arrow">→</span>
-                            <h2>${trip.destination}</h2>
+                let html = '<div class="trip-options">';
+                trips.forEach(trip => {
+                    const dateObj = new Date(trip.departureTime);
+                    const formattedDate = dateObj.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+                    const formattedTime = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+                    html += `
+                        <div class="trip-card">
+                            <div class="trip-card-icon">🚌</div>
+                            <div class="route-display">
+                                <h2>${trip.from}</h2>
+                                <span class="route-arrow">→</span>
+                                <h2>${trip.destination}</h2>
+                            </div>
+                            <div class="meta-grid">
+                                <div class="meta-item">
+                                    <span class="meta-label">Departure</span>
+                                    <span class="meta-value">${formattedDate}<br><span style="color:var(--text-muted); font-weight:400;">${formattedTime}</span></span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">Price</span>
+                                    <span class="meta-value">₦${trip.price.toLocaleString()}</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">Seats</span>
+                                    <span class="meta-value">${trip.availableSeats}/${trip.totalSeats} <span class="tag-full">Full</span></span>
+                                </div>
+                            </div>
+                            <button class="btn-book-action" onclick="bookTrip(${trip.id})">Book Now ></button>
                         </div>
-                        <div class="meta-grid">
-                            <div class="meta-item">
-                                <span class="meta-label">Departure</span>
-                                <span class="meta-value">${formattedDate}<br><span style="color:var(--text-muted); font-weight:400;">${formattedTime}</span></span>
-                            </div>
-                            <div class="meta-item">
-                                <span class="meta-label">Price</span>
-                                <span class="meta-value">₦${trip.price.toLocaleString()}</span>
-                            </div>
-                            <div class="meta-item">
-                                <span class="meta-label">Seats</span>
-                                <span class="meta-value">${trip.availableSeats}/${trip.totalSeats} <span class="tag-full">Full</span></span>
-                            </div>
-                        </div>
-                        <button class="btn-book-action" onclick="bookTrip(${trip.id})">Book Now ></button>
-                    </div>
-                `;
-            });
-            html += '</div>';
-            document.getElementById('trips-container').innerHTML = html;
-        }
-
-        function displayPagination(pagination) {
-            const existingPagination = document.querySelector('.pagination');
-            if (existingPagination) existingPagination.remove();
-
-            let html = '<div class="pagination">';
-            if (pagination.hasPreviousPage) {
-                html += `<button onclick="loadTrips(${pagination.pageIndex - 1})">Previous</button>`;
+                    `;
+                });
+                html += '</div>';
+                document.getElementById('trips-container').innerHTML = html;
             }
 
-            html += `<div class="page-num active">${pagination.pageIndex}</div>`;
-            if (pagination.totalPages > pagination.pageIndex) {
-                html += `<div class="page-num" style="cursor:pointer" onclick="loadTrips(${pagination.pageIndex + 1})">${pagination.pageIndex + 1}</div>`;
+            function displayPagination(pagination) {
+                const existingPagination = document.querySelector('.pagination');
+                if (existingPagination) existingPagination.remove();
+
+                let html = '<div class="pagination">';
+                if (pagination.hasPreviousPage) {
+                    html += `<button onclick="loadTrips(${pagination.pageIndex - 1})">Previous</button>`;
+                }
+
+                html += `<div class="page-num active">${pagination.pageIndex}</div>`;
+                if (pagination.totalPages > pagination.pageIndex) {
+                    html += `<div class="page-num" style="cursor:pointer" onclick="loadTrips(${pagination.pageIndex + 1})">${pagination.pageIndex + 1}</div>`;
+                }
+
+                if (pagination.hasNextPage) {
+                    html += `<button onclick="loadTrips(${pagination.pageIndex + 1})">Next ></button>`;
+                }
+                html += '</div>';
+                document.getElementById('trips-container').insertAdjacentHTML('afterend', html);
             }
 
-            if (pagination.hasNextPage) {
-                html += `<button onclick="loadTrips(${pagination.pageIndex + 1})">Next ></button>`;
+            function bookTrip(tripId) {
+                window.location.href = `/BusTrips/Book?tripId=${tripId}`;
             }
-            html += '</div>';
-            document.getElementById('trips-container').insertAdjacentHTML('afterend', html);
-        }
 
-        function bookTrip(tripId) {
-            window.location.href = `/BusTrips/Book?tripId=${tripId}`;
-        }
-
-        loadTrips();
-    </script>
-</body>
+            loadTrips();
+    </script></body>
 </html>

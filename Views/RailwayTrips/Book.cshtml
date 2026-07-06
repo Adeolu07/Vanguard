@@ -1,46 +1,134 @@
 @model _Tripfinity.Models.RailwayTrip
-
 @{
-    Layout = "_Layout";
-    ViewData["Title"] = "Book Train Trip";
-}
+    Layout = null;
+    ViewData["Title"] = "Confirm Train Booking";
+}<!DOCTYPE html><html lang="en"><head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Tripfinity</title>
+  
+    <link rel="stylesheet" href="~/css/bus-trips.css" />
+ 
+    <link rel="stylesheet" href="~/css/railway-booking.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=400;500;600;700&display=swap" rel="stylesheet"></head><body>
+    <div class="dashboard-layout">
+        <aside class="sidebar">
+            <div>
+                <div class="brand-logo" style="line-height: 1.2;">Tripfinity<br><span style="font-size:11px; font-weight:400; color:var(--text-muted)">Smart Transport</span></div>
+                <nav class="sidebar-nav" style="margin-top: 32px;">
+                    <a href="/Ticket/Index" class="nav-item">My Tickets</a>
+                    <a href="/Railway Trips/Index" class="nav-item">Book a Train</a>
+                    <a href="/Home/Wallet" class="nav-item">Wallet</a>
+                </nav>
+            </div>
+            <div class="user-avatar-tag" style="font-size:12px; font-weight:700; color:var(--text-muted)">
+                @ViewBag.FirstName<br><span style="font-size:10px; font-weight:400;">Verified Member</span>
+            </div>
+        </aside>
 
-@if (TempData["Error"] != null)
-{
-    <div class="alert alert-danger">@TempData["Error"]</div>
-}
-<div class="booking-container">
-    <h2>Confirm Train Booking</h2>
+        <main class="main-content">
+            <header class="top-header">
+                <div></div>
+                <div class="header-meta">
+                    <a href="/Home/Dashboard" class="btn-back" style="text-decoration:none; color:var(--text-muted); font-size:13px; font-weight:500; margin-right:16px;">◂ Back to Dashboard</a>
+                    <a href="/Auth/Logout" class="btn-signout">Sign Out</a>
+                </div>
+            </header>
 
-    <div class="trip-details">
-        <p><strong>From:</strong> @ViewBag.Trip.From</p>
-        <p><strong>To:</strong> @ViewBag.Trip.Destination</p>
-        <p><strong>Departure:</strong> @ViewBag.Trip.DepartureTime</p>
-        <p><strong>Class:</strong> @ViewBag.Trip.TrainClass</p>
-        <p><strong>Price per seat:</strong> ₦@ViewBag.Trip.Price</p>
-        <p><strong>Available seats:</strong> @ViewBag.Trip.AvailableSeats</p>
+            <!-- Railway Container Component wrapper -->
+            <div class="railway-booking-wrapper">
+                
+                <header style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px;">
+                    <div>
+                        <h2 style="margin: 0 0 6px 0; font-size: 20px; color: #0f172a; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Confirm Train Booking</h2>
+                        <p style="margin: 0; color: #64748b; font-size: 14px;">Review your travel details and secure your seat on the Tripfinity Express.</p>
+                    </div>
+                    <span class="railway-badge-standard">
+                        @((ViewBag.Trip.TrainClass ?? "Standard Class").ToUpper())
+                    </span>
+                </header>
+
+                @if (TempData["Error"] != null)
+                {
+                    <div style="background: #fee2e2; border-left: 4px solid #ef4444; color: #b91c1c; padding: 16px; border-radius: 8px; margin-bottom: 24px; font-weight: 500;">
+                        ⚠️ @TempData["Error"]
+                    </div>
+                }
+
+                <div class="railway-interactive-node">
+                    <div>
+                        <span class="railway-node-label">From</span>
+                        <div class="railway-node-value">@ViewBag.Trip.From</div>
+                    </div>
+                    <div>
+                        <span class="railway-node-label">To</span>
+                        <div class="railway-node-value">@ViewBag.Trip.Destination</div>
+                    </div>
+                </div>
+
+                <div class="railway-meta-container">
+                    <div>
+                        <span class="railway-block-lbl">📅 Departure</span>
+                        <span class="railway-block-val">
+                            @(((DateTime)ViewBag.Trip.DepartureTime).ToString("MM/dd/yyyy"))<br>
+                            <span style="font-size: 12px; color: #64748b; font-weight: 400;">@(((DateTime)ViewBag.Trip.DepartureTime).ToString("h:mm:ss tt"))</span>
+                        </span>
+                    </div>
+                    <div>
+                        <span class="railway-block-lbl">💺 Capacity</span>
+                        <span class="railway-block-val">@ViewBag.Trip.AvailableSeats Seats</span>
+                    </div>
+                    <div>
+                        <span class="railway-block-lbl">💵 Price Per Seat</span>
+                        <span class="railway-block-val">₦@(((decimal)ViewBag.Trip.Price).ToString("N2"))</span>
+                    </div>
+                </div>
+
+                <form method="post" action="/RailwayTrips/Book">
+                    <input type="hidden" name="tripId" value="@ViewBag.Trip.Id" />
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <label for="seats" style="font-size: 11px; font-weight:600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Number of Seats</label>
+                            <input type="number" name="seats" id="seats" min="1" max="@ViewBag.Trip.AvailableSeats" value="1" required class="railway-input-field" />
+                        </div>
+
+                        <div style="text-align: right;">
+                            <span style="font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">Total Amount</span>
+                            <div style="font-size: 28px; font-weight: 700; color: #0f172a;">₦<span id="totalPriceDisplay">0</span></div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end; margin-top: 32px;">
+                        <button type="submit" class="railway-btn-submit">
+                            Confirm Booking ➔
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+
+            <footer class="system-footer" style="border-top: none; margin-top: 60px; font-size: 12px; color: #94a3b8; text-align: center;">
+                &copy; 2026 - Tripfinity - Smart Transport Booking System.
+            </footer>
+        </main>
     </div>
 
-    <form method="post">
-        <input type="hidden" name="tripId" value="@ViewBag.Trip.Id"/>
+    <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                const basePrice = @ViewBag.Trip.Price;
+                const seatsInput = document.getElementById('seats');
+                const totalDisplay = document.getElementById('totalPriceDisplay');
 
-        <div class="form-group">
-            <label for="seats">Number of Seats:</label>
-            <input type="number" name="seats" id="seats" min="1" max="@ViewBag.Trip.AvailableSeats" required/>
-        </div>
+                function updatePrice() {
+                    const currentSeats = parseInt(seatsInput.value) || 0;
+                    const finalTotal = basePrice * currentSeats;
+                    totalDisplay.textContent = finalTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                }
 
-        <div class="total">Total: ₦<span id="total">0</span></div>
-
-        <button type="submit" class="btn-primary">Confirm Booking</button>
-    </form>
-</div>
-
-<script>
-    const price = @ViewBag.Trip.Price;
-    const seatsInput = document.getElementById('seats');
-    const totalSpan = document.getElementById('total');
-
-    seatsInput.addEventListener('input', function () {
-        totalSpan.textContent = price * this.value;
-    });
-</script>
+                seatsInput.addEventListener('input', updatePrice);
+                updatePrice();
+            });
+    </script></body></html>

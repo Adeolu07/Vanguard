@@ -1,91 +1,175 @@
 @{
-    Layout = "_Layout";
+    Layout = null;
     ViewData["Title"] = "Taxi Trips";
 }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Tripfinity</title>
+    <link rel="stylesheet" href="~/css/bus-trips.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="dashboard-layout">
+        <aside class="sidebar">
+            <div>
+                <div class="brand-logo">Tripfinity</div>
+                <nav class="sidebar-nav">
+                    <a href="/Home/Dashboard" class="nav-item">Dashboard</a>
+                    <a href="/Ticket/Index" class="nav-item">My Tickets</a>
+                    <a href="/Home/Wallet" class="nav-item">Wallet</a>
+                </nav>
+            </div>
+            <div class="user-avatar-tag" style="font-size:12px; font-weight:700; color:var(--text-muted)">
+                @ViewBag.FirstName<br><span style="font-size:10px; font-weight:400;">VERIFIED MEMBER</span>
+            </div>
+        </aside>
 
+        <main class="main-content">
+            <header class="top-header">
+                <div></div>
+                <div class="header-meta">
+                    <span>Hello, @ViewBag.FirstName</span>
+                    <a href="/Auth/Logout" class="btn-signout">Sign Out</a>
+                </div>
+            </header>
 
-<div class="trips-header">
-    <h2>🚕 Available Taxi Trips</h2>
-    <div class="trip-filters">
-        <select class="filter-select" id="sortFilter">
-            <option value="time">Sort by Time</option>
-            <option value="price">Sort by Price</option>
-        </select>
+            <section class="page-title-section" style="display: flex; justify-content: space-between; align-items: flex-end;">
+                <div>
+                    <div class="breadcrumbs">Passenger Dashboard > Book a Taxi</div>
+                    <h1>Available Taxi Trips</h1>
+                    <p>Real-time on-demand regional transport availability.</p>
+                </div>
+                <div class="trip-filters" style="margin-bottom: 4px;">
+                    <select class="filter-select" id="sortFilter" style="padding: 8px 16px; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; font-family: inherit; font-size: 13px; font-weight: 500; color: var(--text-dark); cursor: pointer;">
+                        <option value="time">Sort by Time</option>
+                        <option value="price">Sort by Price</option>
+                    </select>
+                </div>
+            </section>
+
+            <div id="trips-container">
+                <p>Loading taxi rides...</p>
+            </div>
+
+            <footer class="system-footer">
+                &copy; 2026 Tripfinity Ecosystem. All rights reserved.
+            </footer>
+        </main>
     </div>
-</div>
 
-<div id="trips-container">
-    <div class="loading">Loading taxi trips...</div>
-</div>
-
-@section Scripts {
     <script>
-        let currentPage = 1;
-        let totalPages = 1;
-        let currentSort = "time";
+            let currentPage = 1;
+            let totalPages = 1;
+            let currentSort = "time";
+            let isLoading = false;
 
-        async function loadTrips(page = 1) {
-            try {
-                const response = await fetch(`/api/taxi?page=${page}&pageSize=10&sort=${currentSort}`);
-                const result = await response.json();
+            async function loadTrips(page = 1) {
+                if (isLoading) return;
+                isLoading = true;
+                document.getElementById('trips-container').innerHTML = '<p>Loading trips...</p>';
 
-                if (result.success && result.data && result.data.length > 0) {
-                    displayTrips(result.data);
-                    displayPagination(result.pagination);
-                } else {
-                    document.getElementById('trips-container').innerHTML = '<div class="empty-state"><div class="empty-icon">🚕</div><h3>No taxi trips available</h3><p>Check back later for available rides</p></div>';
+                try {
+                    const response = await fetch(`/api/taxitrips?page=${page}&pageSize=4&sort=${currentSort}`);
+                    const result = await response.json();
+
+                    if (result.success && result.data && result.data.length > 0) {
+                        displayTrips(result.data);
+                        currentPage = result.pagination.pageIndex;
+                        totalPages = result.pagination.totalPages;
+                        displayPagination(result.pagination);
+                    } else {
+                        document.getElementById('trips-container').innerHTML = `
+                            <div style="text-align:center; padding: 40px; background:#fff; border-radius:16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+                                <div style="font-size:40px; margin-bottom:12px;">🚕</div>
+                                <h3 style="color:var(--primary-blue); margin:0 0 8px 0;">No taxi trips available</h3>
+                                <p style="color:var(--text-muted); margin:0;">Check back later for available rides</p>
+                            </div>`;
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    document.getElementById('trips-container').innerHTML = `
+                        <div style="text-align:center; padding: 40px; background:#fff; border-radius:16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+                            <div style="font-size:40px; margin-bottom:12px;">⚠️</div>
+                            <h3 style="color:var(--primary-blue); margin:0 0 8px 0;">Coming Soon</h3>
+                            <p style="color:var(--text-muted); margin:0 0 16px 0;">Taxi trips will be available shortly</p>
+                        </div>`;
+                } finally {
+                    isLoading = false;
                 }
-            } catch (error) {
-                document.getElementById('trips-container').innerHTML = '<div class="empty-state"><div class="empty-icon">🚕</div><h3>Coming Soon</h3><p>Taxi trips will be available shortly</p><a href="/Home/Index" class="btn-book" style="display: inline-block; width: auto; margin-top: 20px;">Go Back</a></div>';
             }
-        }
 
-        function displayTrips(trips) {
-            let html = '<div class="trip-options">';
-            trips.forEach(trip => {
-                html += `
-                    <div class="trip-card">
-                        <div class="trip-icon taxi">🚕</div>
-                        <div class="trip-content">
-                            <h3>${trip.pickupLocation || 'Pickup'} → ${trip.dropoffLocation || 'Dropoff'}</h3>
-                            <div class="trip-details">
-                                <div class="trip-detail"><span>Pickup Time</span><span>${new Date(trip.pickupTime).toLocaleString()}</span></div>
-                                <div class="trip-detail"><span>Vehicle</span><span>${trip.vehicleType || 'Standard'}</span></div>
-                                <div class="trip-detail"><span>Capacity</span><span>${trip.maxPassengers || 4} passengers</span></div>
+            function displayTrips(trips) {
+                let html = '<div class="trip-options">';
+                trips.forEach(trip => {
+                    const dateObj = new Date(trip.pickupTime);
+                    const formattedDate = dateObj.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+                    const formattedTime = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+                    html += `
+                        <div class="trip-card">
+                            <div class="trip-card-icon" style="background: #fffdf5;">🚕</div>
+                            <div class="route-display">
+                                <h2>${trip.pickupLocation || 'Pickup'}</h2>
+                                <span class="route-arrow">→</span>
+                                <h2>${trip.dropoffLocation || 'Dropoff'}</h2>
                             </div>
-                            <div class="trip-price">₦${trip.price?.toLocaleString() || '0'}</div>
-                            <button class="btn-book" onclick="bookTrip(${trip.id})">Book Now →</button>
+                            <div class="meta-grid">
+                                <div class="meta-item">
+                                    <span class="meta-label">Pickup Time</span>
+                                    <span class="meta-value">${formattedDate}<br><span style="color:var(--text-muted); font-weight:400;">${formattedTime}</span></span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">Price</span>
+                                    <span class="meta-value">₦${trip.price?.toLocaleString() || '0'}</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">Capacity</span>
+                                    <span class="meta-value">${trip.maxPassengers || 4} seats <span class="tag-full" style="color:#eab308; background:transparent; font-weight:700;">Active</span></span>
+                                </div>
+                            </div>
+                            <button class="btn-book-action" onclick="bookTrip(${trip.id})">Book Now ></button>
                         </div>
-                    </div>
-                `;
+                    `;
+                });
+                html += '</div>';
+                document.getElementById('trips-container').innerHTML = html;
+            }
+
+            function displayPagination(pagination) {
+                const existingPagination = document.querySelector('.pagination');
+                if (existingPagination) existingPagination.remove();
+
+                let html = '<div class="pagination">';
+                if (pagination.hasPreviousPage) {
+                    html += `<button onclick="loadTrips(${pagination.pageIndex - 1})">Previous</button>`;
+                }
+
+                html += `<div class="page-num active">${pagination.pageIndex}</div>`;
+                if (pagination.totalPages > pagination.pageIndex) {
+                    html += `<div class="page-num" style="cursor:pointer" onclick="loadTrips(${pagination.pageIndex + 1})">${pagination.pageIndex + 1}</div>`;
+                }
+
+                if (pagination.hasNextPage) {
+                    html += `<button onclick="loadTrips(${pagination.pageIndex + 1})">Next ></button>`;
+                }
+                html += '</div>';
+                document.getElementById('trips-container').insertAdjacentHTML('afterend', html);
+            }
+
+            function bookTrip(tripId) {
+                window.location.href = `/TaxiTrips/Book?tripId=${tripId}`;
+            }
+
+            document.getElementById('sortFilter').addEventListener('change', (e) => {
+                currentSort = e.target.value;
+                loadTrips(1);
             });
-            html += '</div>';
-            document.getElementById('trips-container').innerHTML = html;
-        }
 
-        function displayPagination(pagination) {
-            // Remove existing pagination
-            const existingPagination = document.querySelector('.pagination');
-            if (existingPagination) existingPagination.remove();
-
-            let html = '<div class="pagination">';
-            if (pagination.hasPreviousPage) html += `<button onclick="loadTrips(${pagination.pageIndex - 1})">← Previous</button>`;
-            html += `<span>Page ${pagination.pageIndex} of ${pagination.totalPages}</span>`;
-            if (pagination.hasNextPage) html += `<button onclick="loadTrips(${pagination.pageIndex + 1})">Next →</button>`;
-            html += '</div>';
-            document.getElementById('trips-container').insertAdjacentHTML('afterend', html);
-        }
-
-        function bookTrip(tripId) {
-            window.location.href = `/TaxiTrips/Book?tripId=${tripId}`;
-        }
-
-        // Sort filter handler
-        document.getElementById('sortFilter').addEventListener('change', (e) => {
-            currentSort = e.target.value;
-            loadTrips(1);
-        });
-
-        loadTrips();
-    </script>
-}
+            loadTrips();
+    </script></body>
+</html>
