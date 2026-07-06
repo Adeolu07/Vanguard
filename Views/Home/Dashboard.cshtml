@@ -157,17 +157,17 @@
     <script>
             document.addEventListener("DOMContentLoaded", () => {
                 const toggleBtn = document.getElementById("toggleBalance");
-                const balanceEl = document.getElementById("walletBalance");
+                const balance = document.getElementById("walletBalance");
                 let isHidden = false;
 
                 const realBalance = "$@(((decimal)ViewBag.WalletBalance).ToString("N2"))";
 
                 toggleBtn.addEventListener("click", () => {
                     if (!isHidden) {
-                        balanceEl.textContent = "$ ••••••";
+                        balance.textContent = "$ ••••••";
                         isHidden = true;
                     } else {
-                        balanceEl.textContent = realBalance;
+                        balance.textContent = realBalance;
                         isHidden = false;
                     }
                 });

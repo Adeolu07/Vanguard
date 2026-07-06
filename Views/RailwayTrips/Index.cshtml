@@ -25,7 +25,7 @@
         async function loadTrips(page = 1) {
             try {
                 // TODO: Replace with actual railway API endpoint
-                const response = await fetch(`/api/railwaytrips?page=${page}&pageSize=10`);
+                const response = await fetch(`/api/railway?page=${page}&pageSize=10`);
                 const result = await response.json();
 
                 if (result.success && result.data && result.data.length > 0) {
