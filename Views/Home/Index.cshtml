@@ -1,36 +1,33 @@
 ﻿@{
     Layout = "_Layout";
     ViewData["Title"] = "Welcome";
+    
+    <link rel="stylesheet" href="~/css/landing.css" />
 }
 
-<div class="hero-section">
-    <div class="hero-content">
-        <h1>Smart Transport<br>Made Simple</h1>
+<div class="main-section">
+    <div class="main-content">
+        <h1>Smart Transport,<br>Made Simple</h1>
         <p>Book bus trips, pay with wallet, travel stress-free. No queues, no cash, no hassle.</p>
-        <div class="hero-buttons">
-            <!-- Link to Signup Decision -->
-            <a href="/Auth/DecisionSignUp" class="btn-primary">Create Account →</a>
-            <!-- Link to Login Decision -->
-            <a href="/Auth/DecisionLogin" class="btn-secondary">Sign In</a>
+        <div class="decision-buttons">
+            <a href="/Auth/DecisionSignUp" class="btn-signup">Create Account →</a>
+            <a href="/Auth/DecisionLogin" class="btn-login">Sign In</a>
         </div>
     </div>
     <div class="hero-stats">
         <div class="stat">
-            <span class="stat-number">500+</span>
-            <span class="stat-label">Daily Rides</span>
+            <span class="stat-number">500+ Daily rides</span>
         </div>
         <div class="stat">
-            <span class="stat-number">50k+</span>
-            <span class="stat-label">Happy Passengers</span>
+            <span class="stat-number">50k+ Happy Passengers</span>
         </div>
         <div class="stat">
-            <span class="stat-number">24/7</span>
-            <span class="stat-label">Support</span>
+            <span class="stat-number">24/7 Support</span>
         </div>
     </div>
 </div>
 
-<div class="features-section">
+<div class="secondary-section">
     <h2>Why Choose Tripfinity</h2>
     <div class="features-grid">
         <div class="feature">
@@ -42,11 +39,6 @@
             <div class="feature-icon">🎫</div>
             <h3>QR Tickets</h3>
             <p>Get digital tickets with QR codes. Scan and board.</p>
-        </div>
-        <div class="feature">
-            <div class="feature-icon">💺</div>
-            <h3>Seat Hold</h3>
-            <p>Hold your seat for 5 minutes while you complete payment.</p>
         </div>
         <div class="feature">
             <div class="feature-icon">🔄</div>

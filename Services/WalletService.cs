@@ -32,12 +32,12 @@ public class WalletService : IWalletService
 
     public async Task EnsureAuthenticatedAsync()
     {
-        
         // Check cache first
         if (_cache.TryGetValue<string>(TokenCacheKey, out var cachedToken))
         {
             _client.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("Bearer", cachedToken);
+            _logger.LogInformation("Wallet token found in cache");
             return;
         }
 
@@ -77,8 +77,10 @@ public class WalletService : IWalletService
             
                 _client.DefaultRequestHeaders.Authorization =
                     new AuthenticationHeaderValue("Bearer", result.Token);
-            
-                _context.AuthTokens.Add(token);
+                _context.AuthTokens.Update(token);
+                
+                
+                
                 await _context.SaveChangesAsync();
                 
                 _cache.Set(TokenCacheKey, result.Token, expiryDate);
@@ -88,11 +90,11 @@ public class WalletService : IWalletService
         }
         else
         {
+            _logger.LogInformation("Wallet token acquired from DB");
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authToken.Token);
             _cache.Set(TokenCacheKey,authToken.Token, authToken.ExpiryDate);
         }
     }
-    
     
     public async Task<CreateWalletResponse> CreateWalletAsync(CreateWalletRequest createWallet)
     {
@@ -220,6 +222,7 @@ public class WalletService : IWalletService
             var json = await response.Content.ReadAsStringAsync();
             var result = JsonConvert.DeserializeObject<GetBalanceResponse>(json);
             
+            _logger.LogInformation(result.ResponseHeader.ResponseMessage);
             if(result.ResponseHeader.ResponseCode == "00")
                 _logger.LogInformation("Successfully fetched balance");
 

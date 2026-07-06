@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace _Tripfinity.Api;
 
 [ApiController]
-[Route("api/railwaytrips")]
+[Route("api/railway")]
 public class RailwayTripsApi : ControllerBase
 {
     private readonly AppDbContext _context;
