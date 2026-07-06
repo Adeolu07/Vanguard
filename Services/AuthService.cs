@@ -77,15 +77,15 @@ public class AuthService : IAuthService
         }
     }
 
-    public async Task<AuthResponse> RegisterMarshalAsync(MarshalRegisterRequest request)
+    public async Task<AuthResponse> RegisterMarshalAsync(MarshalRegisterViewModel model)
     {
         _logger.LogInformation("Registering new marshal");
         try
         {
-            var existingUser = await _context.Users.AnyAsync(u => u.Email == request.Email);
+            var existingUser = await _context.Users.AnyAsync(u => u.Email == model.Email);
             if (existingUser)
             {
-                _logger.LogWarning("Marshal registration failed: email {Email} already exists", request.Email);
+                _logger.LogWarning("Marshal registration failed: email {Email} already exists", model.Email);
                 return new AuthResponse
                 {
                     Success = false,
@@ -94,26 +94,27 @@ public class AuthService : IAuthService
             }
             
             var hasher = new PasswordHasher<User>();
-            var prefix = (request.VehicleType.Length >= 3 
-                ? request.VehicleType[..3] :
-                request.VehicleType).ToUpper();
+            var prefix = (model.VehicleType.Length >= 3 
+                ? model.VehicleType[..3] :
+                model.VehicleType).ToUpper();
             
             var marshal = new User
             {
-                Email = request.Email,
-                FirstName = request.FirstName,
-                LastName = request.LastName,
+                Email = model.Email,
+                FirstName = model.FirstName,
+                LastName = model.LastName,
                 CreatedAt = DateTime.Now,
+                PhoneNumber =  model.PhoneNumber,
                 Role = "Marshal",
-                VehicleType = request.VehicleType,
-                LicenseId = request.LicenseId,
+                VehicleType = model.VehicleType,
+                LicenseId = model.LicenseId,
                 VehicleId = $"VEH-{prefix}-{Guid.NewGuid().ToString("N")[..8].ToUpper()}",
                 // Marshals are activated immediately; no email confirmation or wallet required. for now sha
                 IsActive = true,
                 IsEmailConfirmed = true
             };
 
-            marshal.PasswordHash = hasher.HashPassword(marshal, request.Password);
+            marshal.PasswordHash = hasher.HashPassword(marshal, model.Password);
 
             _context.Users.Add(marshal);
             await _context.SaveChangesAsync();

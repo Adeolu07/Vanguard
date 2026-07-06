@@ -106,7 +106,7 @@ public class TripService : ITripService
 
     private async Task<List<Booking>> GetActiveBookingsAsync(string transportType, int tripId)
     {
-        IQueryable<Booking> query = _context.Bookings
+        var query = _context.Bookings
             .Where(b => b.Status == "Confirmed" || b.Status == "Pending");
 
         query = transportType switch
@@ -116,7 +116,7 @@ public class TripService : ITripService
             "Taxi" => query.Where(b => b.TaxiTripId == tripId),
             _ => query.Where(b => false)
         };
-
         return await query.ToListAsync();
     }
+    
 }
