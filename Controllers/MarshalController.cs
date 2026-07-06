@@ -25,10 +25,6 @@ public class MarshalController : ParentController
 
         ViewBag.VehicleId = user.VehicleId;
         ViewBag.VehicleType = user.VehicleType;
-        ViewBag.TripsCount = 5;               // fetch from DB later
-        ViewBag.ScannedCount = 12;
-        ViewBag.PendingCount = 3;
-        ViewBag.RecentTickets = new List<object>();
         return View();
     }
 
@@ -36,7 +32,6 @@ public class MarshalController : ParentController
     public IActionResult Scan()
     {
         var user = _authService.GetCurrentUser(HttpContext);
-        
         if(user == null || user.Role != "Marshal")
             return  RedirectToLogin();
         return View();
@@ -61,7 +56,6 @@ public class MarshalController : ParentController
             return RedirectToLogin();
 
         ViewBag.VehicleType = user.VehicleType;
-        ViewBag.Trips = new List<object>();
         return View();
     }
     
