@@ -1,0 +1,54 @@
+@{
+    ViewData["Title"] = "Scan Ticket QR";
+    Layout = "_Layout";
+}
+
+<h2>Scan QR Code</h2>
+
+<div class="scan-container">
+    <div class="form-group">
+        <label>QR Token</label>
+        <input type="text" id="qrToken" placeholder="Enter QR token manually" />
+        <button class="btn-primary" onclick="validateTicket()">Validate</button>
+    </div>
+
+    <div id="validationResult" class="message" style="margin-top: 20px;"></div>
+</div>
+
+@section Scripts {
+    <script>
+        async function validateTicket() {
+            const token = document.getElementById('qrToken').value.trim();
+            if (!token) {
+                document.getElementById('validationResult').innerHTML = '<span class="error">Enter a QR token</span>';
+                return;
+            }
+
+            document.getElementById('validationResult').innerHTML = 'Processing...';
+
+            try {
+                const res = await fetch('/api/marshal/tickets/validate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ qrToken: token })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    document.getElementById('validationResult').innerHTML = `
+                        <div class="alert alert-success">
+                            ✅ ${data.message}<br>
+                            <strong>Ticket Ref:</strong> ${data.data.ticketReference}<br>
+                            <strong>Type:</strong> ${data.data.transportType}<br>
+                            <strong>Trip Time:</strong> ${data.data.tripTime}<br>
+                            <strong>Status:</strong> ${data.data.status}
+                        </div>`;
+                } else {
+                    document.getElementById('validationResult').innerHTML = `<div class="alert alert-danger">❌ ${data.message}</div>`;
+                }
+            } catch (err) {
+                document.getElementById('validationResult').innerHTML = '<div class="alert alert-danger">Network error</div>';
+            }
+        }
+    </script>
+}
