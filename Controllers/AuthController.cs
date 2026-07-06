@@ -46,7 +46,7 @@ public class AuthController : Controller
             return View(model);
         }
 
-        _authService.SetUserSession(HttpContext, result.User);
+        await _authService.SetUserSession(HttpContext, result.User);
         await HttpContext.Session.CommitAsync();
         return RedirectToAction("Dashboard", "Home");
     }
@@ -73,9 +73,43 @@ public class AuthController : Controller
             return View(model);
         }
 
-        _authService.SetUserSession(HttpContext, result.User);
-        return RedirectToAction("Index", "Marshal");
+        await _authService.SetUserSession(HttpContext, result.User);
+        return RedirectToAction("Index", "MarshalApi");
         // change to marshal dashboard
+    }
+    
+    [HttpGet]
+    public IActionResult MarshalSignUp()
+    {
+        if (HttpContext.Session.GetInt32("userId") != null)
+            return RedirectToAction("Index", "Home");
+        return View();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> MarshalSignUp(MarshalRegisterViewModel model)
+    {
+        if (!ModelState.IsValid)
+            return View(model);
+
+        var result = await _authService.RegisterMarshalAsync(model);
+
+        if (!result.Success || result.User == null)
+        {
+            ModelState.AddModelError("", result.Message);
+            return View(model);
+        }
+
+        _logger.LogInformation("Marshal Signup for {result.User.Email}",  result.User.Email);
+
+        if (string.IsNullOrWhiteSpace(result.User.Email))
+        {
+            _logger.LogError("Email is missing for marshal ID {UserId}", result.User.Id);
+            ModelState.AddModelError("", "Email address missing, cannot send confirmation.");
+            return View(model);
+        }
+
+        return RedirectToAction("MarshalConfirmation");
     }
 
     [HttpGet]
@@ -126,39 +160,7 @@ public class AuthController : Controller
         return RedirectToAction("PassengerConfirmation");
     }
 
-    [HttpGet]
-    public IActionResult MarshalSignUp()
-    {
-        if (HttpContext.Session.GetInt32("userId") != null)
-            return RedirectToAction("Index", "Home");
-        return View();
-    }
-
-    [HttpPost]
-    public async Task<IActionResult> MarshalSignUp(MarshalRegisterRequest model)
-    {
-        if (!ModelState.IsValid)
-            return View(model);
-
-        var result = await _authService.RegisterMarshalAsync(model);
-
-        if (!result.Success || result.User == null)
-        {
-            ModelState.AddModelError("", result.Message);
-            return View(model);
-        }
-
-        _logger.LogInformation($"Marshal Signup for {result.User.Email}");
-
-        if (string.IsNullOrWhiteSpace(result.User.Email))
-        {
-            _logger.LogError("Email is missing for marshal ID {UserId}", result.User.Id);
-            ModelState.AddModelError("", "Email address missing, cannot send confirmation.");
-            return View(model);
-        }
-
-        return RedirectToAction("MarshalConfirmation");
-    }
+    
 
     [HttpGet]
     public async Task<IActionResult> ConfirmEmail([FromQuery] int userId, [FromQuery] string token)

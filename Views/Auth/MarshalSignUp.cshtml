@@ -1,4 +1,4 @@
-﻿@model _Tripfinity.Models.ViewModels.RegisterViewModel
+﻿@model _Tripfinity.Models.ViewModels.MarshalRegisterViewModel
 
 @{
     ViewData["Title"] = "Marshal Sign Up";
@@ -12,7 +12,6 @@
     ViewData["HideNavbar"] = true;
 }
 
-
 <header>
     <div class="nav-container">
         <p>Tripfinity</p>
@@ -21,7 +20,7 @@
 
 <main class="page-container">
     <section class="form-section">
-        <h1 class="page-title">Sign up</h1>
+        <h1 class="page-title">Sign up as Marshal</h1>
 
         @if (TempData["Success"] != null)
         {
@@ -69,8 +68,24 @@
                 <span asp-validation-for="ConfirmPassword" class="error"></span>
             </div>
 
+            <!-- Marshal‑specific fields -->
+            <div class="form-group">
+                <select asp-for="VehicleType" class="form-select">
+                    <option value="">-- Select Vehicle Type --</option>
+                    <option value="Bus">Bus</option>
+                    <option value="Railway">Railway</option>
+                    <option value="Taxi">Taxi</option>
+                </select>
+                <span asp-validation-for="VehicleType" class="error"></span>
+            </div>
+
+            <div class="form-group">
+                <input asp-for="LicenseId" placeholder="License ID" />
+                <span asp-validation-for="LicenseId" class="error"></span>
+            </div>
+
             <div class="action-container">
-                <button type="submit" class="btn-next">Next</button>
+                <button type="submit" class="btn-next">Create Marshal Account</button>
                 <div class="login-redirect">
                     <span>Existing user? <a href="/Auth/DecisionLogin">→ Log in</a></span>
                 </div>

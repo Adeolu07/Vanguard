@@ -10,7 +10,7 @@ public interface IAuthService
 {
     Task<AuthResponse> SignUpAsync(RegisterViewModel model);
 
-    Task<AuthResponse> RegisterMarshalAsync(MarshalRegisterRequest request);
+    Task<AuthResponse> RegisterMarshalAsync(MarshalRegisterViewModel model);
 
     Task<AuthResponse?> SignInAsync(string email, string password);
 
