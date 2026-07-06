@@ -58,7 +58,8 @@ public class TripService : ITripService
     public async Task<bool> CancelTripAsync(string transportType, int tripId, int marshalId, string reason)
     {
         var found = await DeactivateTripAsync(transportType, tripId);
-        if (!found) return false;
+        if (!found) 
+            return false;
 
         var activeBookings = await GetActiveBookingsAsync(transportType, tripId);
         foreach (var booking in activeBookings)
@@ -79,17 +80,20 @@ public class TripService : ITripService
         {
             case "Bus":
                 var bus = await _context.BusTrips.FindAsync(tripId);
-                if (bus == null) return false;
+                if (bus == null) 
+                    return false;
                 bus.IsActive = false;
                 break;
             case "Railway":
                 var rail = await _context.RailwayTrips.FindAsync(tripId);
-                if (rail == null) return false;
+                if (rail == null) 
+                    return false;
                 rail.IsActive = false;
                 break;
             case "Taxi":
                 var taxi = await _context.TaxiTrips.FindAsync(tripId);
-                if (taxi == null) return false;
+                if (taxi == null) 
+                    return false;
                 taxi.IsActive = false;
                 break;
             default:

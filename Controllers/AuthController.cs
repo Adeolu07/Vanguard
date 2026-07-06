@@ -171,7 +171,7 @@ public class AuthController : Controller
         }
 
         TempData["SuccessMessage"] = "Email confirmation and wallet creation successful.";
-        return RedirectToAction("Index", "Home");
+        return RedirectToAction("Dashboard", "Home");
     }
 
     [HttpGet]
