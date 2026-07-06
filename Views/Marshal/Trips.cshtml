@@ -6,65 +6,73 @@
 <h2>Manage Trips (@ViewBag.VehicleType)</h2>
 
 <div class="action-bar">
-    <a href="/Marshal/CreateTrip" class="btn-primary">Create New Trip</a>   @* to be built later *@
+    <a href="/Marshal/CreateTrip" class="btn-primary">Create New Trip</a>
     <a href="/Marshal/Cancel" class="btn-secondary">Cancel a Trip</a>
 </div>
 
 <hr />
 
-@if (ViewBag.Trips != null && ViewBag.Trips.Count > 0)
-{
-    <table class="table">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>From</th>
-                <th>To</th>
-                <th>Departure</th>
-                <th>Price</th>
-                <th>Seats</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var trip in ViewBag.Trips)
-            {
-                <tr>
-                    <td>@trip.Id</td>
-                    <td>@trip.From</td>
-                    <td>@trip.Destination</td>
-                    <td>@trip.DepartureTime.ToString("g")</td>
-                    <td>₦@trip.Price</td>
-                    <td>@trip.AvailableSeats / @trip.TotalSeats</td>
-                    <td>
-                        <button class="btn-danger btn-sm" onclick="cancelTrip(@trip.Id)">Cancel</button>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
-else
-{
-    <p>No trips found. <a href="/Marshal/CreateTrip">Create one</a>.</p>
-}
+<table class="table" id="tripsTable">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>From</th>
+            <th>To</th>
+            <th>Departure</th>
+            <th>Price</th>
+            <th>Seats</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody id="tripsBody">
+        <tr><td colspan="7">Loading trips...</td></tr>
+    </tbody>
+</table>
 
 @section Scripts {
     <script>
+        const vehicleType = '@ViewBag.VehicleType'.toLowerCase();
+
+        async function loadTrips() {
+            const tbody = document.getElementById('tripsBody');
+            try {
+                const res = await fetch('/api/marshal/trips');
+                const data = await res.json();
+                if (data.success && data.data.length > 0) {
+                    tbody.innerHTML = data.data.map(trip => `
+                        <tr>
+                            <td>${trip.id}</td>
+                            <td>${trip.from}</td>
+                            <td>${trip.destination}</td>
+                            <td>${new Date(trip.departureTime).toLocaleString()}</td>
+                            <td>₦${trip.price.toLocaleString()}</td>
+                            <td>${trip.availableSeats} / ${trip.totalSeats || trip.availableSeats}</td>
+                            <td>
+                                <button class="btn-danger btn-sm" onclick="cancelTrip(${trip.id})">Cancel</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="7">No trips found. <a href="/Marshal/CreateTrip">Create one</a>.</td></tr>';
+                }
+            } catch (err) {
+                tbody.innerHTML = '<tr><td colspan="7">Error loading trips.</td></tr>';
+            }
+        }
+
         async function cancelTrip(tripId) {
             if (!confirm('Cancel this trip? Refunds will be issued for affected bookings.')) return;
 
-            const type = '@ViewBag.VehicleType'.toLowerCase();
             try {
                 const res = await fetch('/api/marshal/trips/cancel', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ tripId: tripId, transportType: type, reason: 'Cancelled by marshal' })
+                    body: JSON.stringify({ tripId: tripId, transportType: vehicleType, reason: 'Cancelled by marshal' })
                 });
                 const data = await res.json();
                 if (data.success) {
                     alert(data.message);
-                    location.reload();
+                    loadTrips(); // refresh list
                 } else {
                     alert(data.message);
                 }
@@ -72,5 +80,8 @@ else
                 alert('Network error');
             }
         }
+
+        // Initial load
+        loadTrips();
     </script>
 }

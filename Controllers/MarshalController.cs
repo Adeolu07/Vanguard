@@ -50,7 +50,6 @@ public class MarshalController : ParentController
             return RedirectToLogin();
 
         ViewBag.VehicleType = user.VehicleType;
-        ViewBag.Trips = new List<object>(); // placeholder
         return View();
     }
     
@@ -63,6 +62,17 @@ public class MarshalController : ParentController
 
         ViewBag.VehicleType = user.VehicleType;
         ViewBag.Trips = new List<object>();
+        return View();
+    }
+    
+    [HttpGet]
+    public IActionResult CreateTrip()
+    {
+        var user = _authService.GetCurrentUser(HttpContext);
+        if (user == null || user.Role != "Marshal")
+            return RedirectToLogin();
+
+        ViewBag.VehicleType = user.VehicleType;
         return View();
     }
 }
