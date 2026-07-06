@@ -1,0 +1,156 @@
+@{
+    ViewData["Title"] = "Create Trip";
+    Layout = "_Layout";
+}
+
+<h2>Create @ViewBag.VehicleType Trip</h2>
+
+<div id="createMessage" class="message"></div>
+
+@if (ViewBag.VehicleType?.ToString() == "Bus")
+{
+    <form id="tripForm">
+        <div class="form-group">
+            <label>From</label>
+            <input type="text" id="from" required />
+        </div>
+        <div class="form-group">
+            <label>Destination</label>
+            <input type="text" id="destination" required />
+        </div>
+        <div class="form-group">
+            <label>Departure Time</label>
+            <input type="datetime-local" id="departureTime" required />
+        </div>
+        <div class="form-group">
+            <label>Price per Seat (₦)</label>
+            <input type="number" id="price" step="0.01" min="0" required />
+        </div>
+        <div class="form-group">
+            <label>Total Seats</label>
+            <input type="number" id="totalSeats" min="1" required />
+        </div>
+        <button type="submit" class="btn-primary">Create Bus Trip</button>
+    </form>
+}
+else if (ViewBag.VehicleType?.ToString() == "Railway")
+{
+    <form id="tripForm">
+        <div class="form-group">
+            <label>From</label>
+            <input type="text" id="from" required />
+        </div>
+        <div class="form-group">
+            <label>Destination</label>
+            <input type="text" id="destination" required />
+        </div>
+        <div class="form-group">
+            <label>Departure Time</label>
+            <input type="datetime-local" id="departureTime" required />
+        </div>
+        <div class="form-group">
+            <label>Price per Seat (₦)</label>
+            <input type="number" id="price" step="0.01" min="0" required />
+        </div>
+        <div class="form-group">
+            <label>Total Seats</label>
+            <input type="number" id="totalSeats" min="1" required />
+        </div>
+        <div class="form-group">
+            <label>Train Number</label>
+            <input type="text" id="trainNumber" />
+        </div>
+        <button type="submit" class="btn-primary">Create Railway Trip</button>
+    </form>
+}
+else if (ViewBag.VehicleType?.ToString() == "Taxi")
+{
+    <form id="tripForm">
+        <div class="form-group">
+            <label>From</label>
+            <input type="text" id="from" required />
+        </div>
+        <div class="form-group">
+            <label>Destination</label>
+            <input type="text" id="destination" required />
+        </div>
+        <div class="form-group">
+            <label>Departure Time</label>
+            <input type="datetime-local" id="departureTime" required />
+        </div>
+        <div class="form-group">
+            <label>Price per Trip (₦)</label>
+            <input type="number" id="price" step="0.01" min="0" required />
+        </div>
+        <div class="form-group">
+            <label>Available Seats (usually 1–4)</label>
+            <input type="number" id="availableSeats" min="1" required />
+        </div>
+        <div class="form-group">
+            <label>Driver Name</label>
+            <input type="text" id="driverName" />
+        </div>
+        <button type="submit" class="btn-primary">Create Taxi Trip</button>
+    </form>
+}
+else
+{
+    <p>Your vehicle type is not set. Please contact admin.</p>
+}
+
+@section Scripts {
+    <script>
+        document.getElementById('tripForm')?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const type = '@ViewBag.VehicleType'.toLowerCase();
+            const msgDiv = document.getElementById('createMessage');
+            msgDiv.innerHTML = 'Creating trip...';
+
+            // Collect common fields
+            const from = document.getElementById('from')?.value;
+            const destination = document.getElementById('destination')?.value;
+            const departureTime = document.getElementById('departureTime')?.value;
+            const price = parseFloat(document.getElementById('price')?.value);
+            const totalSeats = parseInt(document.getElementById('totalSeats')?.value);
+            const availableSeats = parseInt(document.getElementById('availableSeats')?.value) || totalSeats || 1;
+
+            let payload = {
+                from,
+                destination,
+                departureTime,
+                price,
+                isActive: true,
+                availableSeats: availableSeats,
+                totalSeats: totalSeats || 0
+            };
+
+            // Add type‑specific fields
+            if (type === 'railway') {
+                payload.trainNumber = document.getElementById('trainNumber')?.value || '';
+            } else if (type === 'taxi') {
+                payload.driverName = document.getElementById('driverName')?.value || '';
+                payload.totalSeats = availableSeats; // taxis usually don't have separate total seats
+            } else {
+                // bus: totalSeats already set
+            }
+
+            try {
+                const res = await fetch(`/api/marshal/trips/${type}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    msgDiv.innerHTML = `<div class="alert alert-success">✅ ${data.message} – Trip ID: ${data.data.id}</div>`;
+                    e.target.reset();
+                } else {
+                    msgDiv.innerHTML = `<div class="alert alert-danger">❌ ${data.message}</div>`;
+                }
+            } catch (err) {
+                msgDiv.innerHTML = '<div class="alert alert-danger">Network error</div>';
+            }
+        });
+    </script>
+}

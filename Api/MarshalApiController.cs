@@ -5,6 +5,7 @@ using _Tripfinity.Models.Data.Requests;
 using _Tripfinity.Models.Tables;
 using _Tripfinity.Utilities;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace _Tripfinity.Api;
 
@@ -101,6 +102,38 @@ public class MarshalApiController : ControllerBase
                 result.Ticket.ValidatedAt
             }
         });
+    }
+    
+    [HttpGet("trips")]
+    public async Task<IActionResult> GetMyTrips()
+    {
+        var marshal = await GetMarshalAsync();
+        if (marshal == null) return MarshalUnauthorized();
+
+        List<object> trips = marshal.VehicleType switch
+        {
+            "Bus" => (await _context.BusTrips
+                    .Where(t => t.IsActive)
+                    .OrderByDescending(t => t.DepartureTime)
+                    .ToListAsync())
+                .Cast<object>()
+                .ToList(),
+            "Railway" => (await _context.RailwayTrips
+                    .Where(t => t.IsActive)
+                    .OrderByDescending(t => t.DepartureTime)
+                    .ToListAsync())
+                .Cast<object>()
+                .ToList(),
+            "Taxi" => (await _context.TaxiTrips
+                    .Where(t => t.IsActive)
+                    .OrderByDescending(t => t.PickupTime)
+                    .ToListAsync())
+                .Cast<object>()
+                .ToList(),
+            _ => new List<object>()
+        };
+
+        return Ok(new { success = true, data = trips });
     }
 
     private async Task<User?> GetMarshalAsync()
