@@ -1,0 +1,65 @@
+@{
+    ViewData["Title"] = "Cancel a Trip";
+    Layout = "_Layout";
+}
+
+<h2>Cancel Trip (@ViewBag.VehicleType)</h2>
+
+@if (ViewBag.Trips != null && ViewBag.Trips.Count > 0)
+{
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Trip ID</th>
+            <th>From</th>
+            <th>To</th>
+            <th>Departure</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var trip in ViewBag.Trips)
+        {
+            <tr>
+                <td>@trip.Id</td>
+                <td>@trip.From</td>
+                <td>@trip.Destination</td>
+                <td>@trip.DepartureTime.ToString("g")</td>
+                <td>
+                    <button class="btn-danger btn-sm" onclick="cancelTrip(@trip.Id)">Cancel</button>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No active trips to cancel.</p>
+}
+
+@section Scripts {
+    <script>
+        async function cancelTrip(tripId) {
+            if (!confirm('Cancel this trip? Refunds will be issued for affected bookings.')) return;
+
+            const type = '@ViewBag.VehicleType'.toLowerCase();
+            try {
+                const res = await fetch('/api/marshal/trips/cancel', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tripId: tripId, transportType: type, reason: 'Cancelled by marshal' })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert(data.message);
+                }
+            } catch (err) {
+                alert('Network error');
+            }
+        }
+    </script>
+}
