@@ -74,8 +74,7 @@ public class AuthController : Controller
         }
 
         await _authService.SetUserSession(HttpContext, result.User);
-        return RedirectToAction("Index", "MarshalApi");
-        // change to marshal dashboard
+        return RedirectToAction("Index", "Marshal");
     }
     
     [HttpGet]
