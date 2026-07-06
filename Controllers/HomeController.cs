@@ -50,7 +50,20 @@ public class HomeController : ParentController
 
        
         var user = await _context.Users.FindAsync(UserId!.Value);
-        ViewBag.FirstName = user?.FirstName ?? "Passenger";
+
+        if (user == null)
+        {
+            _logger.LogInformation("User not found");
+            return RedirectToLogin();
+        }
+
+        if (user.Role != "Passenger")
+        {
+            _logger.LogWarning("User is not Passenger");
+            return RedirectToAction("Index", "Marshal");
+        }
+        
+        ViewBag.FirstName = user.FirstName ?? "Passenger";
 
         var balanceResponse = await _walletService.GetBalanceAsync(
             new GetBalanceRequest { CustomerId = user.UserWalletId }
