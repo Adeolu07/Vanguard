@@ -1,0 +1,113 @@
+﻿:root {
+    --railway-bg-card: #ffffff;
+    --railway-border: #e2e8f0;
+    --railway-text-dark: #0f172a;
+    --railway-text-muted: #64748b;
+    --railway-text-lbl: #94a3b8;
+    --railway-badge-cyan: #3ee0ff;
+    --railway-navy: #021533;
+}
+
+.railway-booking-wrapper {
+    background: var(--railway-bg-card);
+    border: 1px solid var(--railway-border);
+    border-radius: 16px;
+    padding: 40px;
+    margin-top: 20px;
+    max-width: 900px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+}
+
+.railway-badge-standard {
+    background: var(--railway-badge-cyan);
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 6px 16px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.railway-interactive-node {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    margin-bottom: 32px;
+    padding-bottom: 8px;
+}
+
+.railway-node-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: var(--railway-text-lbl);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.railway-node-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-top: 4px;
+}
+
+.railway-meta-container {
+    background: #f8fafc;
+    border: 1px solid var(--railway-border);
+    border-radius: 12px;
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 1.2fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 40px;
+}
+
+.railway-block-lbl {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--railway-text-lbl);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.railway-block-val {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #334155;
+    margin-top: 6px;
+}
+
+.railway-input-field {
+    width: 160px;
+    padding: 12px 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    color: #334155;
+    font-family: inherit;
+}
+
+.railway-btn-submit {
+    background: var(--railway-navy);
+    color: #ffffff;
+    padding: 14px 32px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s ease;
+}
+
+    .railway-btn-submit:hover {
+        background: #0a224a;
+    }

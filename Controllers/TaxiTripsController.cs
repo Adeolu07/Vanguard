@@ -8,10 +8,10 @@ public class TaxiTripsController : ParentController
     private readonly IBookingService _bookingService;
     private readonly AppDbContext _context;
     private readonly IWalletService _walletService;
-    private readonly ILogger<BusTripsController> _logger;
+    private readonly ILogger<TaxiTripsController> _logger;
     
 
-    public TaxiTripsController(AppDbContext context, IBookingService bookingService, IWalletService walletService,  ILogger<BusTripsController> logger)
+    public TaxiTripsController(AppDbContext context, IBookingService bookingService, IWalletService walletService,  ILogger<TaxiTripsController> logger)
     {
         _context = context;
         _bookingService = bookingService;
