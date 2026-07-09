@@ -1,11 +1,34 @@
 using _Tripfinity.Interfaces;
 using _Tripfinity.Models;
+using _Tripfinity.Models.Tables;
 using _Tripfinity.Models.Data;
 using _Tripfinity.Models.Data.Requests;
 using _Tripfinity.Models.Data.Response;
 using Microsoft.EntityFrameworkCore;
 
 namespace _Tripfinity.Services;
+public enum TransportType
+{
+    Railway,
+    Taxi,
+    Bus
+}
+    
+public enum TicketStatus
+{
+    Issued,
+    Validated,
+    Expired,
+    Cancelled,
+}
+
+public enum BookingStatus
+{
+    Pending,
+    Confirmed,
+    Cancelled,
+    Failed
+}
 
 public class BookingService : IBookingService
 {
@@ -26,23 +49,16 @@ public class BookingService : IBookingService
         _logger = logger;
     }
 
-    public async Task<Booking?> GetBookingAsync(int id, string transportType)
+    public async Task<Booking?> GetBookingAsync(int id, TransportType transportType)
     {
-        IQueryable<Booking> query = _context.Bookings.Include(b => b.User);
+        return await _context.Bookings
+            .Include(booking => booking.User)
+            .FirstOrDefaultAsync(booking => booking.Id == id && booking.TransportType == transportType);
+    }
 
-        switch (transportType)
-        {
-            case "Bus":
-                query = query.Include(b => b.BusTrip);
-                break;
-            case "Railway":
-                query = query.Include(b => b.RailwayTrip);
-                break;
-            case "Taxi":
-                query = query.Include(b => b.TaxiTrip);
-                break;
-        }
-        return await query.FirstOrDefaultAsync(b => b.Id == id);
+    public Task<List<Booking>> GetRecentBookings(int userId, string transportType)
+    {
+        throw new NotImplementedException();
     }
 
     public async Task<BookingResult> BookBusAsync(int tripId, int seats, int? userId)
@@ -61,10 +77,10 @@ public class BookingService : IBookingService
             UserId = user.Id,
             BusTripId = tripId,
             BusTrip = trip,
-            TransportType = "Bus",
+            TransportType = TransportType.Bus,
             NumberOfSeats = seats,
             TotalAmount = trip.Price * seats,
-            Status = "Pending",
+            Status = BookingStatus.Pending,
             BookingDate = DateTime.Now
         };
 
@@ -87,10 +103,10 @@ public class BookingService : IBookingService
             UserId = user.Id,
             RailwayTripId = tripId,
             RailwayTrip = trip,
-            TransportType = "Railway",
+            TransportType = TransportType.Railway,
             NumberOfSeats = seats,
             TotalAmount = trip.Price * seats,
-            Status = "Pending",
+            Status = BookingStatus.Pending,
             BookingDate = DateTime.Now
         };
 
@@ -113,10 +129,10 @@ public class BookingService : IBookingService
             UserId = user.Id,
             TaxiTripId = tripId,
             TaxiTrip = trip,
-            TransportType = "Taxi",
+            TransportType = TransportType.Taxi,
             NumberOfSeats = seats,
             TotalAmount = trip.Price, // taxi is flat-rate per ride
-            Status = "Pending",
+            Status = BookingStatus.Pending,
             BookingDate = DateTime.Now
         };
 
@@ -136,17 +152,17 @@ public class BookingService : IBookingService
             return Failed("Booking not found");
         if (requestingUserId != null && booking.UserId != requestingUserId)
             return Failed("You are not authorized to cancel this booking");
-        if (booking.Status == "Cancelled") 
+        if (booking.Status == BookingStatus.Cancelled) 
             return Failed("Booking is already cancelled");
 
         var ticket = await _context.Tickets.FirstOrDefaultAsync(t => t.BookingId == bookingId);
-
+        
         // A validated ticket means the trip was already taken — not cancellable.
-        if (ticket is { Status: "Validated" })
+        if (ticket is { Status: TicketStatus.Validated })
             return Failed("Ticket has already been used and cannot be cancelled");
 
         var tripTime = ResolveTripTime(booking);
-        var eligibleForRefund = booking.Status == "Confirmed" && tripTime > DateTime.Now.AddHours(2);
+        var eligibleForRefund = booking.Status == BookingStatus.Confirmed && tripTime > DateTime.Now.AddHours(2);
 
         await using var tx = await _context.Database.BeginTransactionAsync();
         try
@@ -158,13 +174,14 @@ public class BookingService : IBookingService
                 else if (booking.RailwayTrip != null) booking.RailwayTrip.AvailableSeats += booking.NumberOfSeats;
             }
 
-            booking.Status = "Cancelled";
+            booking.Status = BookingStatus.Cancelled;
             booking.CancelledAt = DateTime.Now;
             booking.CancellationReason = reason;
 
             if (eligibleForRefund)
             {
-                if (ticket != null) ticket.Status = "Cancelled";
+                if (ticket != null) 
+                    ticket.Status = TicketStatus.Cancelled;
                 await _context.SaveChangesAsync();
 
                 var refunded = await RefundAsync(booking);
@@ -173,23 +190,23 @@ public class BookingService : IBookingService
                 return new BookingResult
                 {
                     Success = true,
-                    Status = "Cancelled",
+                    Status = BookingStatus.Cancelled,
                     Message = refunded
                         ? "Booking cancelled and wallet refunded"
-                        : "Booking cancelled. Refund could not be processed automatically; please contact support.",
+                        : "Booking cancelled. Refund could not be processed",
                     Booking = booking
                 };
             }
 
             // Not eligible for a refund: delete the issued ticket outright.
-            if (ticket != null) _context.Tickets.Remove(ticket);
-            await _context.SaveChangesAsync();
-            await tx.CommitAsync();
+            // if (ticket != null) _context.Tickets.Remove(ticket);
+            // await _context.SaveChangesAsync();
+            // await tx.CommitAsync();
 
             return new BookingResult
             {
                 Success = true,
-                Status = "Cancelled",
+                Status = BookingStatus.Cancelled,
                 Message = "Booking cancelled. Not eligible for a refund.",
                 Booking = booking
             };
@@ -202,7 +219,7 @@ public class BookingService : IBookingService
         }
     }
 
-    public async Task<List<Booking>> GetRecentBookings(int userId, string transportType)
+    public async Task<List<Booking>> GetRecentBookings(int userId, TransportType transportType)
     {
         return await _context.Bookings
             .Where(b => b.UserId == userId)
@@ -237,7 +254,7 @@ public class BookingService : IBookingService
 
             if (code == "00")
             {
-                booking.Status = "Confirmed";
+                booking.Status = BookingStatus.Confirmed;
                 booking.PaymentTransactionId = debit!.TransactionId;
                 booking.PaymentTraceId = traceId;
                 await _context.SaveChangesAsync();
@@ -248,7 +265,7 @@ public class BookingService : IBookingService
                 return new BookingResult
                 {
                     Success = true,
-                    Status = "Confirmed",
+                    Status = BookingStatus.Confirmed,
                     Message = "Booking confirmed and ticket issued",
                     Booking = booking,
                     Ticket = ticket
@@ -262,14 +279,14 @@ public class BookingService : IBookingService
                 return new BookingResult
                 {
                     Success = false,
-                    Status = "InsufficientFunds",
+                    Status = BookingStatus.Cancelled,
                     Message = "Insufficient wallet balance. Please fund your wallet and try again."
                 };
 
             return new BookingResult
             {
                 Success = false,
-                Status = "Failed",
+                Status = BookingStatus.Failed,
                 Message = debit?.ResponseHeader?.ResponseMessage ?? "Payment could not be processed"
             };
         }
@@ -318,7 +335,7 @@ public class BookingService : IBookingService
         new ()
         {
             Success = false, 
-            Status = "Failed", 
+            Status = BookingStatus.Failed, 
             Message = message,
         };
 }

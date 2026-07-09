@@ -1,5 +1,6 @@
 using _Tripfinity.Models;
 using _Tripfinity.Models.Tables;
+using _Tripfinity.Services;
 
 namespace _Tripfinity.Interfaces;
 
@@ -11,5 +12,5 @@ public interface ITripService
 
     // Deactivates a trip and cancels/refunds any active bookings on it.
     // Returns false if the trip was not found.
-    Task<bool> CancelTripAsync(string transportType, int tripId, int marshalId, string reason);
+    Task<bool> CancelTripAsync(TransportType transportType, int tripId, int marshalId, string reason);
 }

@@ -1,4 +1,4 @@
-@model Booking
+@model _Tripfinity.Models.Tables.Booking
 
 @{
     Layout = "_Layout";
@@ -28,7 +28,7 @@
                     <p>Booking ID: #@Model.Id</p>
                 </div>
             </div>
-            <div class="ticket-status @Model.Status.ToLower()">
+            <div class="ticket-status @Model.Status.ToString().ToLower()">
                 @Model.Status
             </div>
         </div>

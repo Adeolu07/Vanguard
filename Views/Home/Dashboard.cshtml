@@ -105,7 +105,7 @@
             <section class="trips-section">
                 <h2>Upcoming Trips</h2>
 
-                @if (Model != null && Model.Any())
+                @if (Model.Any())
                 {
                     <div class="bookings-list">
                         @foreach (dynamic booking in Model)

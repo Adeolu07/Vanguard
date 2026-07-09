@@ -2,6 +2,7 @@ using _Tripfinity.Interfaces;
 using _Tripfinity.Models;
 using _Tripfinity.Models.Data;
 using _Tripfinity.Models.Data.Requests;
+using _Tripfinity.Models.Tables;
 using _Tripfinity.Models.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -282,6 +283,7 @@ public class AuthService : IAuthService
                     {
                         FirstName = user.FirstName,
                         LastName = user.LastName,
+                        CustomerAlias = user.Email,
                     };
                     
                     var createWalletResponse = await _walletService.CreateWalletAsync(createWalletRequest);

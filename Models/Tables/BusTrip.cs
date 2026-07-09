@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace _Tripfinity.Models;
+namespace _Tripfinity.Models.Tables;
 
 public class BusTrip
 {
