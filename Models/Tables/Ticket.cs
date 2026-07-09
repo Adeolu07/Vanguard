@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using _Tripfinity.Services;
 
 namespace _Tripfinity.Models.Tables;
 
@@ -17,13 +18,13 @@ public class Ticket
     // Vehicle assigned to the trip (Marshal's VehicleId), may be null until a marshal is assigned
     [MaxLength(50)] public string? VehicleId { get; set; }
 
-    [Required] [MaxLength(20)] public string TransportType { get; set; } = string.Empty; // Bus, Taxi, Railway
+    [Required] [MaxLength(20)] public TransportType TransportType { get; set; } // Bus, Taxi, Railway
 
     [Required] public DateTime TripTime { get; set; }
 
     [Required] public decimal Fare { get; set; }
 
-    [Required] [MaxLength(20)] public string Status { get; set; } = "Issued"; // Issued, Validated, Cancelled
+    [Required] [MaxLength(20)] public TicketStatus Status { get; set; }
 
     public DateTime IssuedAt { get; set; } = DateTime.Now;
 

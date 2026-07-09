@@ -78,9 +78,6 @@ public class WalletService : IWalletService
                 _client.DefaultRequestHeaders.Authorization =
                     new AuthenticationHeaderValue("Bearer", result.Token);
                 _context.AuthTokens.Update(token);
-                
-                
-                
                 await _context.SaveChangesAsync();
                 
                 _cache.Set(TokenCacheKey, result.Token, expiryDate);
@@ -121,13 +118,12 @@ public class WalletService : IWalletService
             var json = await response.Content.ReadAsStringAsync();
             var result = JsonConvert.DeserializeObject<CreateWalletResponse>(json);
             _logger.LogInformation("Wallet endpoint hit successfully");
-            _logger.LogInformation(result.ResponseHeader.ResponseMessage);
-            return result;
+            return result!;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex.Message);
-            throw;
+            return null;
         }
     }
 
@@ -162,7 +158,7 @@ public class WalletService : IWalletService
         catch (Exception ex)
         {
             _logger.LogError(ex.Message);
-            throw;
+            return null;
         }
         
     }
@@ -197,7 +193,7 @@ public class WalletService : IWalletService
         catch (Exception ex)
         {
             _logger.LogError(ex.Message);
-            throw;
+            return null;
         }
     }
 
@@ -231,7 +227,7 @@ public class WalletService : IWalletService
         catch (Exception ex)
         {
             _logger.LogError(ex.Message);
-            throw;
+            return null;
         }
     }
     
@@ -267,7 +263,7 @@ public class WalletService : IWalletService
         catch (Exception ex)
         { 
             _logger.LogError(ex.Message);
-            throw;
+            return null;
         }
     }
 
@@ -302,7 +298,7 @@ public class WalletService : IWalletService
         catch (Exception ex)
         {
             _logger.LogError(ex.Message);
-            throw;
+            return null;
         }
     }
     

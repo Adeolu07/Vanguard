@@ -1,5 +1,6 @@
 using _Tripfinity.Interfaces;
 using _Tripfinity.Models.Data;
+using _Tripfinity.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace _Tripfinity.Controllers;
@@ -83,7 +84,7 @@ public class TaxiTripsController : ParentController
             return RedirectToLogin();
         }
 
-        var booking = await _bookingService.GetBookingAsync(id, "Taxi");
+        var booking = await _bookingService.GetBookingAsync(id, TransportType.Taxi);
         if (booking == null)
         {
             _logger.LogWarning("Taxi trip not found.");
