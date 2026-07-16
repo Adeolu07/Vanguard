@@ -35,10 +35,6 @@ public class Program
 
         builder.Services.AddControllersWithViews();
         builder.Services.AddControllers();
-        
-        
-        
-
         var app = builder.Build();
         app.UseMiddleware<ExceptionMiddleware>();
         // using (var scope = app.Services.CreateScope())
@@ -61,9 +57,6 @@ public class Program
             context.Response.ContentType = "text/html";
             await context.Response.SendFileAsync("wwwroot/404.html");
         });
-        
-
-
         app.Run();
     }
 }
