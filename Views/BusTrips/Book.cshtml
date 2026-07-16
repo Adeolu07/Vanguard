@@ -1,6 +1,6 @@
 @model dynamic
 @{
-    Layout = null;
+    Layout = "_Layout";
     ViewData["Title"] = "Confirm Bus Booking";
 }
 <!DOCTYPE html>
@@ -16,20 +16,6 @@
 </head>
 <body>
     <div class="dashboard-layout">
-        <aside class="sidebar">
-            <div>
-                <div class="brand-logo">Tripfinity</div>
-                <nav class="sidebar-nav">
-                    <a href="/Ticket/Index" class="nav-item">My Tickets</a>
-                    <a href="/BusTrips/Index" class="nav-item active">Book a Bus</a>
-                    <a href="/Home/Wallet" class="nav-item">Wallet</a>
-                </nav>
-            </div>
-            <div class="user-avatar-tag" style="font-size:12px; font-weight:700; color:var(--text-muted)">
-                @ViewBag.FirstName<br><span style="font-size:10px; font-weight:400;">Verified Member</span>
-            </div>
-        </aside>
-
         <main class="main-content">
             <header class="top-header">
                 <h2 style="margin:0; font-size: 22px; color: var(--primary-blue)">Passenger Dashboard</h2>

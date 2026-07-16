@@ -1,7 +1,7 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Login Decision";
     ViewData["FullPage"] = true;
-    Layout = "_Layout";
+    Layout = "_AuthLayout";
 }
 @section Styles {
     <link rel="stylesheet" href="~/css/login-decision.css" />
@@ -9,9 +9,11 @@
 
 <header>
     <div class="header-container">
+        <a href="/" style="text-decoration: none; color: white" >
         <p class="brand-logo">Tripfinity</p>
+        </a>
         <p class="header-action">
-            <a asp-controller="Auth" asp-action="SignUp">Create an account</a>
+            <a asp-controller="Auth" asp-action="DecisionSignUp">Create an account</a>
         </p>
     </div>
 </header>

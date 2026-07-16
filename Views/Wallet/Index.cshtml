@@ -1,5 +1,5 @@
 @{
-    ViewBag.Title = "title";
+    ViewBag.Title = "Wallet";
     Layout = "_Layout";
 }
 @section Styles
@@ -61,7 +61,7 @@
                 const data = await res.json();
                 if (data.success) {
                     document.getElementById('fundMessage').innerHTML = `<span class="success">✅ ${data.message} – New balance: ₦${data.balance.toLocaleString()}</span>`;
-                    loadBalance(); // refresh
+                    await loadBalance(); // refresh
                 } else {
                     document.getElementById('fundMessage').innerHTML = `<span class="error">❌ ${data.message || 'Unknown error'}</span>`;
                 }

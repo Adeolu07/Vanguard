@@ -1,6 +1,6 @@
 @model _Tripfinity.Models.Tables.RailwayTrip
 @{
-    Layout = null;
+    Layout = "_Layout";
     ViewData["Title"] = "Confirm Train Booking";
 }<!DOCTYPE html><html lang="en"><head>
     <meta charset="utf-8" />
@@ -14,20 +14,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=400;500;600;700&display=swap" rel="stylesheet"></head><body>
     <div class="dashboard-layout">
-        <aside class="sidebar">
-            <div>
-                <div class="brand-logo" style="line-height: 1.2;">Tripfinity<br><span style="font-size:11px; font-weight:400; color:var(--text-muted)">Smart Transport</span></div>
-                <nav class="sidebar-nav" style="margin-top: 32px;">
-                    <a href="/Ticket/Index" class="nav-item">My Tickets</a>
-                    <a href="/Railway Trips/Index" class="nav-item">Book a Train</a>
-                    <a href="/Home/Wallet" class="nav-item">Wallet</a>
-                </nav>
-            </div>
-            <div class="user-avatar-tag" style="font-size:12px; font-weight:700; color:var(--text-muted)">
-                @ViewBag.FirstName<br><span style="font-size:10px; font-weight:400;">Verified Member</span>
-            </div>
-        </aside>
-
         <main class="main-content">
             <header class="top-header">
                 <div></div>
