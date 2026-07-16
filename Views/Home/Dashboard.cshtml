@@ -160,11 +160,11 @@
                 const balance = document.getElementById("walletBalance");
                 let isHidden = false;
 
-                const realBalance = "$@(((decimal)ViewBag.WalletBalance).ToString("N2"))";
+                const realBalance = "N@(((decimal)ViewBag.WalletBalance).ToString("N2"))";
 
                 toggleBtn.addEventListener("click", () => {
                     if (!isHidden) {
-                        balance.textContent = "$ ••••••";
+                        balance.textContent = " ••••••";
                         isHidden = true;
                     } else {
                         balance.textContent = realBalance;
