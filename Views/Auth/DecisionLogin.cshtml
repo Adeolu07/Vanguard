@@ -5,27 +5,36 @@
 }
 
 @section Styles {
-    <link rel="stylesheet" href="~/css/login-decision.css" />
+    <link rel="stylesheet" href="~/css/login-decision.css" asp-append-version="true" />
 }
 
-<header>
-    <div class="header-container">
-        <a href="/" style="text-decoration: none; color: white" >
-        <p class="brand-logo">Tripfinity</p>
-        </a>
-        <p class="header-action">
-            <a asp-controller="Auth" asp-action="DecisionSignUp">Create an account</a>
-        </p>
-    </div>
-</header>
-
-<main class="content-container">
-    <div class="decision-box">
-        <h1 class="decision-title">Login as a</h1>
-
-        <div class="button-group">
-            <a asp-controller="Auth" asp-action="SignIn" class="btn-selection">Passenger</a>
-            <a asp-controller="Auth" asp-action="MarshalSignIn" class="btn-selection">Marshal</a>
+<div class="decision-page-wrapper">
+    <!-- Clean Minimalist Header -->
+    <header class="auth-header">
+        <div class="header-container">
+            <span class="brand-logo">Tripfinity</span>
+            <a asp-controller="Auth" asp-action="DecisionSignUp" class="header-link">Create an account</a>
         </div>
-    </div>
-</main>
+    </header>
+
+    <!-- Center Content Layout -->
+    <main class="content-container">
+        <div class="decision-box">
+            <h1 class="decision-title">Login as a</h1>
+
+            <div class="button-group">
+                <a asp-controller="Auth" asp-action="SignIn" class="btn-selection">Passenger</a>
+                <a asp-controller="Auth" asp-action="MarshalSignIn" class="btn-selection">Marshal</a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Center-aligned Minimalist Footer (Matching Mockup Elements) -->
+    <footer class="auth-footer">
+        <p class="copyright">&copy; 2026 Tripfinity Ecosystem. All rights reserved.</p>
+        <div class="footer-links">
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+        </div>
+    </footer>
+</div>

@@ -1,123 +1,176 @@
-﻿/* ===== General Resets ===== */
+﻿/* ===== General Resets & Variables ===== */
+:root {
+    --navy-primary: #0f254c;
+    --navy-hover: #0a1833;
+    --text-dark: #0f172a;
+    --text-muted: #64748b;
+    --bg-page: #f8fafc; /* Warm off-white page background */
+}
+
 * {
-    box-sizing: border-box;
+    box-sizing: border-box !important;
     margin: 0;
     padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
 }
 
-body {
-    background-color: #ffffff;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+body, html {
+    background-color: var(--bg-page) !important;
+    min-height: 100vh !important;
+    height: 100% !important;
 }
 
-/* ===== Header Bar (Solid Black Split Layout) ===== */
-header {
-    background-color: #000000;
-    color: #ffffff;
-    padding: 24px 40px;
-    width: 100%;
+/* Page structural wrapper using flexbox to center elements */
+.decision-page-wrapper {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 100vh !important;
+    background-color: var(--bg-page) !important;
+    width: 100% !important;
+}
+
+/* ===== Elegant Top Header (Clean Transparent Background) ===== */
+.auth-header {
+    background-color: transparent !important; /* Force overrides original solid black background */
+    padding: 32px 80px !important;
+    width: 100% !important;
+    display: block !important;
 }
 
 .header-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    max-width: 1440px;
-    margin: 0 auto;
-    width: 100%;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    max-width: 1400px !important;
+    margin: 0 auto !important;
+    width: 100% !important;
 }
 
 .brand-logo {
-    font-size: 18px;
-    font-weight: bold;
-    letter-spacing: 0.5px;
+    font-size: 22px !important;
+    font-weight: 700 !important;
+    color: var(--navy-primary) !important;
+    letter-spacing: -0.02em !important;
 }
 
-.header-action {
-    font-size: 24px;
-    font-weight: 400;
+.header-link {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: var(--text-dark) !important;
+    text-decoration: none !important;
+    transition: opacity 0.15s ease !important;
 }
 
-/* ===== Center Content Layout ===== */
+    .header-link:hover {
+        opacity: 0.8 !important;
+    }
+
+/* ===== Centered Main Layout Container ===== */
 .content-container {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    padding-left: 10%; 
+    flex: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important; /* Forces layout to center horizontally */
+    padding: 40px 24px 80px !important;
+    width: 100% !important;
 }
 
 .decision-box {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    max-width: 400px; /* Constraints button sizes */
+    width: 100% !important;
+    max-width: 360px !important; /* Lock button block width */
+    text-align: center !important; /* Center-aligns texts */
+    margin: 0 auto !important;
 }
 
 .decision-title {
-    font-size: 48px;
-    font-weight: 500;
-    margin-bottom: 32px;
-    color: #000000;
+    font-size: 26px !important;
+    font-weight: 700 !important;
+    margin-bottom: 28px !important;
+    color: var(--navy-primary) !important;
+    letter-spacing: -0.02em !important;
 }
 
-/* Vertical Stacked Buttons Layout */
+/* Stacked interactive selection buttons */
 .button-group {
-    display: flex;
-    flex-direction: column;
-    gap: 32px; 
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    margin-bottom: 32px !important;
 }
 
-/* Pill Selection Buttons matching Dark Navy Fill */
+/* Navy rounded buttons */
 .btn-selection {
-    display: block;
-    text-align: center;
-    text-decoration: none;
-    padding: 18px 0;
-    background-color: #050a52; 
-    color: #ffffff;
-    border-radius: 14px;
-    font-size: 18px;
-    font-weight: bold;
-    letter-spacing: 0.3px;
-    cursor: pointer;
-    transition: background-color 0.2s ease, transform 0.1s ease;
+    display: block !important;
+    text-align: center !important;
+    text-decoration: none !important;
+    padding: 16px 0 !important;
+    background-color: var(--navy-primary) !important;
+    color: #ffffff !important;
+    border-radius: 8px !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    border: none !important;
+    transition: background-color 0.2s ease, transform 0.1s ease !important;
 }
 
     .btn-selection:hover {
-        background-color: #020536;
+        background-color: var(--navy-hover) !important;
     }
 
-    .btn-selection:active {
-        transform: scale(0.98);
+/* Already have an account redirect prompt style */
+.login-redirect {
+    font-size: 13px !important;
+    color: var(--text-muted) !important;
+}
+
+    .login-redirect a {
+        color: var(--navy-primary) !important;
+        text-decoration: none !important;
+        font-weight: 700 !important;
     }
 
-/* Responsiveness */
+        .login-redirect a:hover {
+            text-decoration: underline !important;
+        }
 
+/* ===== Full-width horizontal divider and Spacious Footer ===== */
+.auth-footer {
+    padding: 48px 24px !important;
+    text-align: center !important;
+    border-top: 1px solid #e2e8f0 !important; /* Horizontal separation line */
+    background-color: var(--bg-page) !important;
+    width: 100% !important;
+    margin-top: auto !important;
+}
+
+.footer-links {
+    display: flex !important;
+    justify-content: center !important;
+    gap: 16px !important;
+    margin-bottom: 12px !important;
+}
+
+    .footer-links a {
+        font-size: 11px !important;
+        color: var(--text-muted) !important;
+        text-decoration: none !important;
+        font-weight: 500 !important;
+        transition: color 0.15s ease !important;
+    }
+
+        .footer-links a:hover {
+            color: var(--navy-primary) !important;
+        }
+
+.copyright {
+    font-size: 11px !important;
+    color: #a0aec0 !important;
+}
+
+/* ===== Responsiveness adjustments ===== */
 @media (max-width: 768px) {
-    header {
-        padding: 20px 24px;
-    }
-
-    .header-action {
-        font-size: 18px; 
-    }
-
-    .content-container {
-        padding: 0 24px;
-        align-items: center;
-        justify-content: center; /* Centers layout on standard screen sizes */
-    }
-
-    .decision-box {
-        max-width: 100%; /* Allows buttons to expand smoothly */
-    }
-
-    .decision-title {
-        font-size: 36px;
-        text-align: center;
-        margin-bottom: 40px;
+    .auth-header {
+        padding: 24px !important;
     }
 }

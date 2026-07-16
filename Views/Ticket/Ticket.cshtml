@@ -2,92 +2,126 @@
 @using _Tripfinity.Models.Tables
 
 @{
-    Layout = "_Layout";
+    Layout = null;
     ViewData["Title"] = "My Tickets";
-    var tickets = ViewBag.Tickets as List<Ticket>;
 }
-
-<div class="tickets-header">
-    <h2>🎫 My Tickets</h2>
-    <p>View all your booked tickets</p>
-</div>
-
-@if (Model.Any())
-{
-    <div class="tickets-list">
-        @foreach (var booking in Model)
-        {
-            var ticket = tickets?.FirstOrDefault(t => t.BookingId == booking.Id);
-
-            <div class="ticket-card">
-                <div class="ticket-header">
-                    <div class="ticket-type">
-                        @if (booking.BusTrip != null)
-                        {
-                            <span>🚌 Bus Ticket</span>
-                        }
-                        else if (booking.TaxiTrip != null)
-                        {
-                            <span>🚕 Taxi Ticket</span>
-                        }
-                        else if (booking.RailwayTrip != null)
-                        {
-                            <span>🚆 Railway Ticket</span>
-                        }
-                    </div>
-                    <div class="ticket-status @booking.Status.ToString().ToLower()">
-                        @booking.Status
-                    </div>
-                </div>
-
-                <div class="ticket-body">
-                    @if (booking.BusTrip != null)
-                    {
-                        <div class="ticket-route">@booking.BusTrip.From → @booking.BusTrip.Destination</div>
-                        <div class="ticket-datetime">📅 @booking.BusTrip.DepartureTime.ToString("MMM dd, yyyy - hh:mm tt")</div>
-                    }
-                    else if (booking.TaxiTrip != null)
-                    {
-                        <div class="ticket-route">@booking.TaxiTrip.PickupLocation → @booking.TaxiTrip.DropoffLocation</div>
-                        <div class="ticket-datetime">📅 @booking.TaxiTrip.PickupTime.ToString("MMM dd, yyyy - hh:mm tt")</div>
-                    }
-                    else if (booking.RailwayTrip != null)
-                    {
-                        <div class="ticket-route">@booking.RailwayTrip.From → @booking.RailwayTrip.Destination</div>
-                        <div class="ticket-datetime">📅 @booking.RailwayTrip.DepartureTime.ToString("MMM dd, yyyy - hh:mm tt")</div>
-                        <div class="ticket-class">🚂 Class: @booking.RailwayTrip.TrainClass</div>
-                    }
-
-                    <div class="ticket-details-row">
-                        <span>🎫 Seats: @booking.NumberOfSeats</span>
-                        <span>💰 ₦@booking.TotalAmount.ToString("N0")</span>
-                        <span>📅 Booked: @booking.BookingDate.ToString("MMM dd, yyyy")</span>
-                    </div>
-
-                    <!-- QR preview -->
-                    <div class="ticket-qr">
-                        @if (ticket != null && !string.IsNullOrEmpty(ticket.QrCodeBase64))
-                        {
-                            <img src="data:image/png;base64,@ticket.QrCodeBase64"
-                                 alt="QR Code"
-                                 class="qr-container__image" />
-                        }
-                    </div>
-                </div>
-
-                <div class="ticket-footer">
-                    <a href="/Ticket/Details/@booking.Id" class="btn-view">View Ticket →</a>
-                </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Tripfinity</title>
+    <!-- Core Layout Frame Structure Stylesheet -->
+    <link rel="stylesheet" href="~/css/bus-trips.css" />
+    <!-- Newly configured External CSS stylesheet link location -->
+    <link rel="stylesheet" href="~/css/ticket.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="dashboard-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div>
+                <div class="brand-logo" style="line-height: 1.2; font-weight: 700; font-size: 20px; color: #0f172a;">Tripfinity<br><span style="font-size:11px; font-weight:400; color:#64748b;">Smart Transport</span></div>
+                <nav class="sidebar-nav" style="margin-top: 32px; display: flex; flex-direction: column; gap: 8px;">
+                    <a href="/Ticket/Index" class="nav-item active" style="text-decoration: none; background: #f1f5f9; color: #0f172a; font-weight: 600; padding: 10px 12px; display: block; border-radius: 6px;">My Tickets</a>
+                    <a href="/BusTrips/Index" class="nav-item" style="text-decoration: none; color: #64748b; padding: 10px 12px; display: block; border-radius: 6px;">Book a Bus</a>
+                    <a href="/TaxiTrips/Index" class="nav-item" style="text-decoration: none; color: #64748b; padding: 10px 12px; display: block; border-radius: 6px;">Book a Taxi</a>
+                    <a href="/RailwayTrips/Index" class="nav-item" style="text-decoration: none; color: #64748b; padding: 10px 12px; display: block; border-radius: 6px;">Book a Train</a>
+                    <a href="/Wallet/Index" class="nav-item" style="text-decoration: none; color: #64748b; padding: 10px 12px; display: block; border-radius: 6px;">Wallet</a>
+                </nav>
             </div>
-        }
+            <!-- Bottom profile dynamic assignment badge -->
+            <div class="user-profile-tag" style="padding: 16px 0; border-top: 1px solid #e2e8f0; margin-top: auto;">
+                <div style="font-size: 14px; font-weight: 700; color: #0f172a;"> @(ViewBag.FirstName ?? "Passenger")</div>
+                <div style="font-size: 11px; font-weight: 400; color: #64748b; margin-top: 2px;">Verified Member</div>
+            </div>
+        </aside>
+
+        <!-- Main Workspace Frame Layout Panel -->
+        <main class="main-content" style="flex: 1; padding: 40px; background: #f8fafc; min-height: 100vh;">
+            <header class="top-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 32px;">
+                <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Passenger Dashboard</div>
+                <div class="header-meta" style="display: flex; align-items: center; gap: 16px;">
+                    <span style="font-size: 13px; font-weight: 500; color: #0f172a;">Hello, @(ViewBag.FirstName ?? "Passenger")</span>
+                    <a href="/Auth/Logout" class="btn-signout" style="text-decoration: none; background: #ffffff; border: 1px solid #cbd5e1; color: #0f172a; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600;">Sign Out</a>
+                </div>
+            </header>
+
+            <section style="margin-bottom: 32px;">
+                <h1 style="font-size: 24px; font-weight: 700; color: #0f172a; margin: 0 0 4px 0;">My Tickets</h1>
+            </section>
+
+            <!-- Cards Presentation Framework Gallery Grid Group -->
+            <div class="ticket-gallery-grid">
+                @if (Model != null && Model.Any())
+                {
+                    @foreach (var booking in Model)
+                    {
+                        <a href="/Ticket/Details/@booking.Id" class="ticket-display-card">
+                            <div>
+                                <div class="ticket-card-route">
+                                    @if (booking.BusTrip != null)
+                                    {
+                                        <span>@booking.BusTrip.From → @booking.BusTrip.Destination</span>
+                                    }
+                                    else if (booking.TaxiTrip != null)
+                                    {
+                                        <span>@booking.TaxiTrip.PickupLocation → @booking.TaxiTrip.DropoffLocation</span>
+                                    }
+                                    else if (booking.RailwayTrip != null)
+                                    {
+                                        <span>@booking.RailwayTrip.From → @booking.RailwayTrip.Destination</span>
+                                    }
+                                </div>
+
+                                <div class="ticket-card-meta-line">
+                                    @if (booking.BusTrip != null)
+                                    {
+                                        <span>@booking.BusTrip.DepartureTime.ToString("MMM dd, yyyy")</span>
+                                    }
+                                    else if (booking.TaxiTrip != null)
+                                    {
+                                        <span>@booking.TaxiTrip.PickupTime.ToString("MMM dd, yyyy")</span>
+                                    }
+                                    else if (booking.RailwayTrip != null)
+                                    {
+                                        <span>@booking.RailwayTrip.DepartureTime.ToString("MMM dd, yyyy")</span>
+                                    }
+                                </div>
+
+                                <div class="ticket-card-time-line">
+                                    @if (booking.BusTrip != null)
+                                    {
+                                        <span>@booking.BusTrip.DepartureTime.ToString("hh:mm tt")</span>
+                                    }
+                                    else if (booking.TaxiTrip != null)
+                                    {
+                                        <span>@booking.TaxiTrip.PickupTime.ToString("hh:mm tt")</span>
+                                    }
+                                    else if (booking.RailwayTrip != null)
+                                    {
+                                        <span>@booking.RailwayTrip.DepartureTime.ToString("hh:mm tt")</span>
+                                    }
+                                </div>
+                            </div>
+                        </a>
+                    }
+                }
+
+                <!-- Shortcut booking trigger element always displayed inside compilation loop matrix layout -->
+                <a href="/BusTrips/Index" class="ticket-creation-placeholder-box">
+                    <div class="ticket-plus-circle">+</div>
+                    <div style="font-size: 14px; font-weight: 600; color: #0f172a; margin-bottom: 4px;">Book a new trip</div>
+                    <div style="font-size: 12px; color: #94a3b8;">Bus, Taxi, or Train</div>
+                </a>
+            </div>
+
+            <footer class="system-footer" style="margin-top: 120px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #94a3b8; text-align: center;">
+                &copy; 2026 Tripfinity Ecosystem. All rights reserved.
+            </footer>
+        </main>
     </div>
-}
-else
-{
-    <div class="empty-state">
-        <div class="empty-icon">🎫</div>
-        <h3>No tickets yet</h3>
-        <p>You haven't booked any trips. Start your first journey!</p>
-        <a href="/BusTrips/Index" class="btn-primary">Book a Trip →</a>
-    </div>
-}
+</body></html>
