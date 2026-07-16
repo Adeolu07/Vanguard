@@ -3,28 +3,44 @@
     ViewData["FullPage"] = true;
     Layout = "_AuthLayout";
 }
+
 @section Styles {
-    <link rel="stylesheet" href="~/css/decision.css" />
+    <link rel="stylesheet" href="~/css/decision.css" asp-append-version="true" />
 }
 
-<header>
-    <div class="header-container">
-        <a href="/" style="text-decoration: none; color: white" >
-            <p class="brand-logo">Tripfinity</p>
-        </a>
-        <p class="header-action">
-            <a asp-controller="Auth" asp-action="DecisionLogin">Sign back in</a>
-        </p>
-    </div>
-</header>
-
-<main class="content-container">
-    <div class="decision-box">
-        <h1 class="decision-title">Sign up as a</h1>
-
-        <div class="button-group">
-            <a asp-controller="Auth" asp-action="SignUp" class="btn-selection">Passenger</a>
-            <a asp-controller="Auth" asp-action="MarshalSignUp" class="btn-selection">Marshal</a>
+<div class="decision-page-wrapper">
+    <!-- Clean Minimalist Header -->
+    <header class="auth-header">
+        <div class="header-container">
+            <span class="brand-logo">Tripfinity</span>
+            <a href="/Auth/DecisionLogin" class="header-link">Sign In</a>
         </div>
-    </div>
-</main>
+    </header>
+
+    <!-- Center Content Layout -->
+    <main class="content-container">
+        <div class="decision-box">
+            <h1 class="decision-title">Sign up as a</h1>
+
+            <div class="button-group">
+                <a asp-controller="Auth" asp-action="SignUp" class="btn-selection">Passenger</a>
+                <a asp-controller="Auth" asp-action="MarshalSignUp" class="btn-selection">Marshal</a>
+            </div>
+
+            <p class="login-redirect">
+                Already have an account? <a href="/Auth/DecisionLogin">Log in here</a>
+            </p>
+        </div>
+    </main>
+
+    <!-- Center-aligned Full-width Footer Divider & Links -->
+    <footer class="auth-footer">
+        <div class="footer-links">
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+            <a href="#">Cookies</a>
+            <a href="#">FAQ</a>
+        </div>
+        <p class="copyright">&copy; 2026 Tripfinity Ecosystem. All rights reserved.</p>
+    </footer>
+</div>

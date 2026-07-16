@@ -1,0 +1,84 @@
+﻿/* Master Grid Configuration matching your layout requirements */
+.ticket-gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 24px;
+    margin-top: 24px;
+}
+
+/* Reconstructed Core Design Card Element */
+.ticket-display-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 180px;
+    text-decoration: none;
+    color: inherit;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.01);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+    .ticket-display-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04);
+    }
+
+/* Inside Typography Meta styling */
+.ticket-card-route {
+    font-size: 22px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 16px 0;
+}
+
+.ticket-card-meta-line {
+    font-size: 13px;
+    font-weight: 500;
+    color: #64748b;
+    margin: 4px 0;
+}
+
+.ticket-card-time-line {
+    font-size: 12px;
+    color: #94a3b8;
+    margin: 4px 0;
+}
+
+/* Blank New-Trip Interactive Template Slot Card */
+.ticket-creation-placeholder-box {
+    border: 2px dashed #cbd5e1;
+    background: transparent;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 180px;
+    text-align: center;
+    padding: 24px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: border-color 0.2s ease;
+}
+
+    .ticket-creation-placeholder-box:hover {
+        border-color: #0f172a;
+    }
+
+.ticket-plus-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 12px;
+}

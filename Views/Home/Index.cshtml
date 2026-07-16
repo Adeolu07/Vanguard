@@ -1,52 +1,123 @@
 ﻿@{
+    Layout = "_Layout";
     ViewData["Title"] = "Welcome";
+    ViewData["FullPage"] = "true"; @* Bypasses the layout container for full-width control *@
+
+    <link rel="stylesheet" href="~/css/landing.css" />
 }
 
-@section Styles
-{
-    <link rel="stylesheet" href="css/landing.css"/>
-}
+<div class="landing-wrapper">
+    <!-- Header/Navigation Overrides (Styled via landing.css to match the mockup) -->
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-content">
+            <h1>Smart Transport, Made Simple</h1>
+            <p>Experience a fluid journey from booking to boarding. Tripfinity centralizes your travel needs into a single, intuitive ecosystem.</p>
+            <div class="decision-buttons">
+                <a href="/Auth/DecisionSignUp" class="btn-signup-hero">Create Account</a>
+                <a href="/Auth/DecisionLogin" class="btn-login-hero">Sign In</a>
+            </div>
+        </div>
+    </section>
 
-<div class="main-section">
-    <div class="main-content">
-        <h1>Smart Transport,<br>Made Simple</h1>
-        <p>Book bus trips, pay with wallet, travel stress-free. No queues, no cash, no hassle.</p>
-        <div class="decision-buttons">
-            <a href="/Auth/DecisionSignUp" class="btn-signup">Create Account →</a>
-            <a href="/Auth/DecisionLogin" class="btn-login">Sign In</a>
+    <!-- Our Services Section -->
+    <section class="services-section">
+        <h2 class="section-title-centered">Our Services</h2>
+        <div class="services-grid">
+            <div class="service-card">
+                <div class="service-icon">🔒</div>
+                <h3>Secure Booking</h3>
+                <p>End-to-end encrypted transactions and seat reservations you can trust.</p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">💳</div>
+                <h3>Wallet Payments</h3>
+                <p>Instant top-ups and one-click payments for a frictionless checkout experience.</p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">🎫</div>
+                <h3>QR Tickets</h3>
+                <p>No paper, no lines. Just scan your digital ticket and go.</p>
+            </div>
         </div>
-    </div>
-    <div class="hero-stats">
-        <div class="stat">
-            <span class="stat-number">500+ Daily rides</span>
+    </section>
+
+    <!-- Passenger Experience Section -->
+    <section class="experience-section">
+        <div class="experience-container">
+            <div class="experience-text">
+                <h2 class="gradient-heading">Passenger<br>Experience</h2>
+                <p class="section-desc">Empowering travelers with a seamless, digital-first experience. Manage every aspect of your journey from a single interface.</p>
+                <ul class="feature-bullets">
+                    <li>Secure booking and seat reservation</li>
+                    <li>Wallet-based fare payments</li>
+                    <li>QR code digital tickets</li>
+                    <li>Booking history and refund requests</li>
+                </ul>
+            </div>
+            <div class="preview-card-wrapper">
+                <div class="preview-card">
+                    <span class="preview-text">Passenger Interface Preview</span>
+                </div>
+            </div>
         </div>
-        <div class="stat">
-            <span class="stat-number">50k+ Happy Passengers</span>
+    </section>
+
+    <!-- Marshal Operations Section -->
+    <section class="experience-section alt-bg">
+        <div class="experience-container reverse">
+            <div class="preview-card-wrapper">
+                <div class="preview-card">
+                    <span class="preview-text">Marshal Dashboard Preview</span>
+                </div>
+            </div>
+            <div class="experience-text">
+                <h2 class="solid-heading">Marshal Operations</h2>
+                <p class="section-desc">Advanced tools for transit personnel to maintain operational excellence and ensure passenger safety.</p>
+                <ul class="feature-bullets">
+                    <li>Trip schedule management</li>
+                    <li>Real-time seating oversight</li>
+                    <li>Cancellation and report generation</li>
+                    <li>Secure marshal authentication</li>
+                </ul>
+            </div>
         </div>
-        <div class="stat">
-            <span class="stat-number">24/7 Support</span>
+    </section>
+
+    <!-- Our Mission Section -->
+    <section class="mission-section">
+        <h2 class="section-title-centered">Our Mission</h2>
+        <p class="mission-desc">
+            Tripfinity aims to eliminate the friction points of modern transit. We've built an ecosystem focused on transparency, security, and ease of use. By integrating digital payments with real-time ticketing, we ensure your journey is as smooth as your destination.
+        </p>
+        <div class="mission-stats-grid">
+            <div class="stat-item">
+                <span class="stat-val">100%</span>
+                <span class="stat-lbl">Digital</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-val">Instant</span>
+                <span class="stat-lbl">Booking</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-val">Secure</span>
+                <span class="stat-lbl">Vault</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-val">24/7</span>
+                <span class="stat-lbl">Support</span>
+            </div>
         </div>
-    </div>
+    </section>
+
+    <!-- Footer Elements -->
+    <footer class="custom-footer">
+        <h3>Tripfinity</h3>
+        <p>&copy; 2026 Tripfinity Ecosystem. All rights reserved.</p>
+        <div class="footer-links">
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+            <a href="#">Cookies</a>
+        </div>
+    </footer>
 </div>
-
-<div class="secondary-section">
-    <h2>Why Choose Tripfinity</h2>
-    <div class="features-grid">
-        <div class="feature">
-            <div class="feature-icon">👛</div>
-            <h3>Digital Wallet</h3>
-            <p>Fund your wallet and pay instantly. No cash needed.</p>
-        </div>
-        <div class="feature">
-            <div class="feature-icon">🎫</div>
-            <h3>QR Tickets</h3>
-            <p>Get digital tickets with QR codes. Scan and board.</p>
-        </div>
-        <div class="feature">
-            <div class="feature-icon">🔄</div>
-            <h3>Easy Refunds</h3>
-            <p>Cancel online and get refunds to your wallet.</p>
-        </div>
-    </div>
-</div>
-
