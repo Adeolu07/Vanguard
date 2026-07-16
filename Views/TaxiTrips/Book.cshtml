@@ -1,6 +1,6 @@
 @model _Tripfinity.Models.Tables.TaxiTrip
 @{
-    Layout = null;
+    Layout = "_Layout";
     ViewData["Title"] = "Book Taxi";
 }
 <!DOCTYPE html>
@@ -15,21 +15,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="dashboard-layout">
-        <aside class="sidebar">
-            <div>
-                <div class="brand-logo">Tripfinity</div>
-                <nav class="sidebar-nav">
-                    <a href="/Ticket/Index" class="nav-item">My Tickets</a>
-                    <a href="/TaxiTrips/Index" class="nav-item active">Book a Taxi</a>
-                    <a href="/Home/Wallet" class="nav-item">Wallet</a>
-                </nav>
-            </div>
-            <div class="user-avatar-tag" style="font-size:12px; font-weight:700; color:var(--text-muted)">
-                @ViewBag.FirstName<br><span style="font-size:10px; font-weight:400;">Verified Member</span>
-            </div>
-        </aside>
 
+    <div class="dashboard-layout">
         <main class="main-content">
             <header class="top-header">
                 <h2 style="margin:0; font-size: 22px; color: var(--primary-blue)">Passenger Dashboard</h2>

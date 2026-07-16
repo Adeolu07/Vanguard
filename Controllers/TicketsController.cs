@@ -19,35 +19,35 @@ public class TicketController : Controller
     }
 
     // GET: /Ticket/Index
-    // public async Task<IActionResult> Index()
-    // {
-    //     var userId = HttpContext.Session.GetInt32("userId");
-    //
-    //     if (userId == null)
-    //     {
-    //         return RedirectToAction("SignIn", "Auth");
-    //     }
-    //
-    //     // Load bookings for this user
-    //     var bookings = await _context.Bookings
-    //         .Include(b => b.BusTrip)
-    //         .Include(b => b.TaxiTrip)
-    //         .Include(b => b.RailwayTrip)
-    //         .Where(b => b.UserId == userId.Value)
-    //         .OrderByDescending(b => b.BookingDate)
-    //         .ToListAsync();
-    //
-    //     // Load tickets for this user
-    //     var tickets = await _context.Tickets
-    //         .Where(t => t.PassengerId == userId.Value)
-    //         .ToListAsync();
-    //
-    //     // Pass both bookings and tickets to the view
-    //     ViewBag.Tickets = tickets;
-    //     ViewBag.UserName = HttpContext.Session.GetString("Username");
-    //
-    //     return View("Ticket", bookings);
-    // }
+    public async Task<IActionResult> Index()
+    {
+        var userId = HttpContext.Session.GetInt32("userId");
+    
+        if (userId == null)
+        {
+            return RedirectToAction("SignIn", "Auth");
+        }
+    
+        // Load bookings for this user
+        var bookings = await _context.Bookings
+            .Include(b => b.BusTrip)
+            .Include(b => b.TaxiTrip)
+            .Include(b => b.RailwayTrip)
+            .Where(b => b.UserId == userId.Value)
+            .OrderByDescending(b => b.BookingDate)
+            .ToListAsync();
+    
+        // Load tickets for this user
+        var tickets = await _context.Tickets
+            .Where(t => t.PassengerId == userId.Value)
+            .ToListAsync();
+    
+        // Pass both bookings and tickets to the view
+        ViewBag.Tickets = tickets;
+        ViewBag.UserName = HttpContext.Session.GetString("Username");
+    
+        return View("Ticket", bookings);
+    }
 
     // GET: /Ticket/Details/5
     [HttpGet]

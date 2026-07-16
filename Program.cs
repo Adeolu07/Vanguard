@@ -1,9 +1,9 @@
-using System.Net.Http.Headers;
 using _Tripfinity.Interfaces;
 using _Tripfinity.Models.Data;
 using _Tripfinity.Services;
 using _Tripfinity.Utilities;
 using Microsoft.EntityFrameworkCore;
+
 
 namespace _Tripfinity;
 
@@ -12,6 +12,7 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+        
         builder.Services.AddScoped<IAuthService, AuthService>();
         builder.Services.AddScoped<IBookingService, BookingService>();
         builder.Services.AddScoped<ITicketService, TicketService>();
@@ -34,6 +35,8 @@ public class Program
 
         builder.Services.AddControllersWithViews();
         builder.Services.AddControllers();
+        
+        
         
 
         var app = builder.Build();
@@ -58,6 +61,8 @@ public class Program
             context.Response.ContentType = "text/html";
             await context.Response.SendFileAsync("wwwroot/404.html");
         });
+        
+
 
         app.Run();
     }

@@ -12,7 +12,7 @@
     <p>View all your booked tickets</p>
 </div>
 
-@if (Model != null && Model.Any())
+@if (Model.Any())
 {
     <div class="tickets-list">
         @foreach (var booking in Model)

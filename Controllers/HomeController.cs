@@ -11,14 +11,12 @@ namespace _Tripfinity.Controllers;
 public class HomeController : ParentController
 {
     private readonly AppDbContext _context;
-    private readonly IBookingService _bookingService;
     private readonly IWalletService _walletService;   
     private readonly ILogger<HomeController> _logger;
 
-    public HomeController(AppDbContext context, IBookingService bookingService, IWalletService walletService, ILogger<HomeController> logger)
+    public HomeController(AppDbContext context, IWalletService walletService, ILogger<HomeController> logger)
     {
         _context = context;
-        _bookingService = bookingService;
         _walletService = walletService;
         _logger = logger;
     }
@@ -37,7 +35,7 @@ public class HomeController : ParentController
         }
         return View("~/Views/Wallet/Index.cshtml");
     }
-
+    
     [HttpGet]
     public async Task<IActionResult> Dashboard()
     {

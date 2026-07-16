@@ -10,8 +10,12 @@
 
 <header>
     <div class="header-container">
-        <p class="brand-logo">Tripfinity</p>
-        <p class="header-action">Create an account</p>
+        <a href="/" style="text-decoration: none; color: white" >
+            <p class="brand-logo">Tripfinity</p>
+        </a>
+        <p class="header-action">
+            <a asp-controller="Auth" asp-action="DecisionLogin">Sign back in</a>
+        </p>
     </div>
 </header>
 

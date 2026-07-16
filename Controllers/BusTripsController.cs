@@ -20,7 +20,7 @@ public class BusTripsController : ParentController
         _logger = logger;
     }
 
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
         // return !isAuthenticated ? RedirectToLogin() : View();
         _logger.LogInformation("GET: /");
