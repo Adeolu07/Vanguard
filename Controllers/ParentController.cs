@@ -2,6 +2,7 @@ using _Tripfinity.Interfaces;
 using _Tripfinity.Models;
 using _Tripfinity.Models.Data.Requests;
 using _Tripfinity.Models.Data.Response;
+using _Tripfinity.Models.Tables;
 using Microsoft.AspNetCore.Mvc;
 
 namespace _Tripfinity.Controllers;

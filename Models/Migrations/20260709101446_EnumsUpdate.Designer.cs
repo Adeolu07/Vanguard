@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using _Tripfinity.Models.Data;
 
@@ -11,9 +12,11 @@ using _Tripfinity.Models.Data;
 namespace _Tripfinity.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260709101446_EnumsUpdate")]
+    partial class EnumsUpdate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -42,7 +45,7 @@ namespace _Tripfinity.Migrations
                     b.ToTable("AuthTokens");
                 });
 
-            modelBuilder.Entity("_Tripfinity.Models.Tables.Booking", b =>
+            modelBuilder.Entity("_Tripfinity.Models.Booking", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -917,7 +920,7 @@ namespace _Tripfinity.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("_Tripfinity.Models.Tables.Booking", b =>
+            modelBuilder.Entity("_Tripfinity.Models.Booking", b =>
                 {
                     b.HasOne("_Tripfinity.Models.Tables.BusTrip", "BusTrip")
                         .WithMany()
@@ -951,7 +954,7 @@ namespace _Tripfinity.Migrations
 
             modelBuilder.Entity("_Tripfinity.Models.Tables.Ticket", b =>
                 {
-                    b.HasOne("_Tripfinity.Models.Tables.Booking", "Booking")
+                    b.HasOne("_Tripfinity.Models.Booking", "Booking")
                         .WithMany()
                         .HasForeignKey("BookingId")
                         .OnDelete(DeleteBehavior.Cascade)

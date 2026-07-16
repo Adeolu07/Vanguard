@@ -66,7 +66,7 @@ public class HomeController : ParentController
         ViewBag.FirstName = user.FirstName ?? "Passenger";
 
         var balanceResponse = await _walletService.GetBalanceAsync(
-            new GetBalanceRequest { CustomerId = user.UserWalletId }
+            new GetBalanceRequest { CustomerId = user.UserWalletId! }
         );
         ViewBag.WalletBalance = balanceResponse?.Balance ?? 0m; 
 

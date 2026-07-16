@@ -38,7 +38,7 @@ public class TicketService : ITicketService
             TransportType = booking.TransportType,
             TripTime = tripTime,
             Fare = booking.TotalAmount,
-            Status = "Issued",
+            Status = TicketStatus.Issued,
             IssuedAt = DateTime.Now,
             QrCodeBase64 = qrBase64
         };
@@ -57,10 +57,10 @@ public class TicketService : ITicketService
         if (ticket == null)
             return new TicketValidationResult { Success = false, Message = "Ticket not found" };
 
-        if (ticket.Status == "Cancelled")
+        if (ticket.Status == TicketStatus.Cancelled)
             return new TicketValidationResult { Success = false, Message = "Ticket has been cancelled", Ticket = ticket };
 
-        if (ticket.Status == "Validated")
+        if (ticket.Status == TicketStatus.Validated)
             return new TicketValidationResult
             {
                 Success = false,
@@ -68,7 +68,7 @@ public class TicketService : ITicketService
                 Ticket = ticket
             };
 
-        ticket.Status = "Validated";
+        ticket.Status = TicketStatus.Validated;
         ticket.ValidatedAt = DateTime.Now;
         ticket.ValidatedByMarshalId = marshalId;
         await _context.SaveChangesAsync();

@@ -1,5 +1,6 @@
-using _Tripfinity.Models;
+using _Tripfinity.Models.Tables;
 using _Tripfinity.Models.Data.Response;
+using _Tripfinity.Services;
 
 namespace _Tripfinity.Interfaces
 {
@@ -11,7 +12,7 @@ namespace _Tripfinity.Interfaces
 
         Task<BookingResult> BookTaxiAsync(int tripId, int seats, int? userId);
 
-        Task<Booking?> GetBookingAsync(int id, string transportType);
+        Task<Booking?> GetBookingAsync(int id, TransportType transportType);
 
         Task<List<Booking>> GetRecentBookings(int userId, string transportType);
 

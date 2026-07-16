@@ -1,5 +1,6 @@
 ﻿using _Tripfinity.Models;
 using _Tripfinity.Models.Data;
+using _Tripfinity.Models.Tables;
 using _Tripfinity.Views;
 using _Tripfinity.Utilities;
 using Microsoft.AspNetCore.Mvc;

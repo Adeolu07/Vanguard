@@ -1,7 +1,6 @@
 using System.ComponentModel.DataAnnotations;
-using _Tripfinity.Models.Tables;
-
-namespace _Tripfinity.Models;
+using _Tripfinity.Services;
+namespace _Tripfinity.Models.Tables;
 
 public class Booking
 {
@@ -14,7 +13,7 @@ public class Booking
     public int? TaxiTripId { get; set; }
     public int? RailwayTripId { get; set; }
 
-    [Required] [MaxLength(20)] public string TransportType { get; set; } = string.Empty; // "Bus", "Taxi", "Railway"
+    [Required] [MaxLength(20)] public TransportType TransportType { get; set; } // "Bus", "Taxi", "Railway"
 
     [Required] public int NumberOfSeats { get; set; } = 1;
 
@@ -22,7 +21,7 @@ public class Booking
 
     [Required]
     [MaxLength(20)]
-    public string Status { get; set; } = "Pending"; // Pending, Confirmed, Cancelled, Completed
+    public BookingStatus Status { get; set; }
 
     public DateTime BookingDate { get; set; } = DateTime.Now;
 

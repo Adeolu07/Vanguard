@@ -108,7 +108,7 @@ public class AuthController : Controller
             return View(model);
         }
 
-        return RedirectToAction("MarshalConfirmation");
+        return RedirectToAction("Dashboard", "Home");
     }
 
     [HttpGet]
