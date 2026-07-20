@@ -5,7 +5,7 @@ using _Tripfinity.Models.Data;
 
 namespace _Tripfinity.Controllers;
 
-public class TicketController : Controller
+public class TicketController : ParentController
 {
     private readonly AppDbContext _context;
     private readonly ITicketService _ticketService;
