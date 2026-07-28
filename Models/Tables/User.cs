@@ -28,7 +28,7 @@ public class User
 
     [MaxLength(20)] [Phone] public string? PhoneNumber { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime CreatedAt { get; set; }
 
     [MaxLength(50)] public string? Role { get; set; } // "Passenger", "Marshal", "Admin"
 
@@ -44,7 +44,11 @@ public class User
     public DateTime? PasswordResetTokenExpiry { get; set; }
 
     // Marshal-specific fields (only populated when Role == "Marshal")
-    [MaxLength(50)] public string? VehicleType { get; set; } // Bus, Railway, Taxi
+    [MaxLength(50)] public string? VehicleType { get; set; } 
     [MaxLength(50)] public string? LicenseId { get; set; }
-    [MaxLength(50)] public string? VehicleId { get; set; } // generated, e.g. VEH-BUS-XXXXXXXX
+    [MaxLength(50)] public string? VehicleId { get; set; }
+    public ICollection<BusTrip> BusTrips { get; set; } = new List<BusTrip>();
+    public ICollection<TaxiTrip> TaxiTrips { get; set; } = new List<TaxiTrip>();
+    public ICollection<RailwayTrip> RailwayTrips { get; set; } = new List<RailwayTrip>();
+    public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
 }

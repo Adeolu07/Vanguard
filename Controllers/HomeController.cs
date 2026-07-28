@@ -8,67 +8,51 @@ using Microsoft.EntityFrameworkCore;
 
 namespace _Tripfinity.Controllers;
 
-public class HomeController : ParentController
+public class HomeController(AppDbContext context, IWalletService walletService, ILogger<HomeController> logger)
+    : ParentController
 {
-    private readonly AppDbContext _context;
-    private readonly IWalletService _walletService;   
-    private readonly ILogger<HomeController> _logger;
-
-    public HomeController(AppDbContext context, IWalletService walletService, ILogger<HomeController> logger)
-    {
-        _context = context;
-        _walletService = walletService;
-        _logger = logger;
-    }
-
     public IActionResult Index() => View();
     public IActionResult Privacy() => View();
 
     [HttpGet]
     public IActionResult Wallet()
     {
-        _logger.LogInformation("GET /Wallet");
-        if (!IsAuthenticated)
-        {
-            _logger.LogInformation("Not Authenticated");
-            return RedirectToAction("Index", "Home");
-        }
-        return View("~/Views/Wallet/Index.cshtml");
+        logger.LogInformation("GET /Wallet");
+        if (IsAuthenticated) return View("~/Views/Wallet/Index.cshtml");
+        logger.LogInformation("Not Authenticated");
+        return RedirectToAction("Index", "Home");
     }
     
     [HttpGet]
     public async Task<IActionResult> Dashboard()
     {
-        _logger.LogInformation("GET /Dashboard");
+        logger.LogInformation("GET /Dashboard");
         if (!IsAuthenticated)
         {
-            _logger.LogInformation("Not Authenticated");
+            logger.LogInformation("Not Authenticated");
             return RedirectToLogin();
         }
-
-       
-        var user = await _context.Users.FindAsync(UserId!.Value);
-
+        var user = await context.Users.FindAsync(UserId!.Value);
         if (user == null)
         {
-            _logger.LogInformation("User not found");
+            logger.LogInformation("User not found");
             return RedirectToLogin();
         }
 
         if (user.Role != "Passenger")
         {
-            _logger.LogWarning("User is not Passenger");
+            logger.LogWarning("User is not Passenger");
             return RedirectToAction("Index", "Marshal");
         }
         
-        ViewBag.FirstName = user.FirstName ?? "Passenger";
+        ViewBag.FirstName = user.FirstName;
 
-        var balanceResponse = await _walletService.GetBalanceAsync(
+        var balanceResponse = await walletService.GetBalanceAsync(
             new GetBalanceRequest { CustomerId = user.UserWalletId! }
         );
-        ViewBag.WalletBalance = balanceResponse?.Balance ?? 0m; 
+        ViewBag.WalletBalance = balanceResponse.Balance; 
 
-        var madeBookings = await _context.Bookings
+        var madeBookings = await context.Bookings
             .Include(b => b.BusTrip)
             .Include(b => b.TaxiTrip)
             .Include(b => b.RailwayTrip)

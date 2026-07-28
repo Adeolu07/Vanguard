@@ -1,0 +1,74 @@
+@model dynamic
+@{
+    ViewData["Title"] = "Trips";
+    var vehicleType = ViewBag.VehicleType as string;
+}
+
+<div class="container mt-4">
+    <h2>My @vehicleType Trips</h2>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <a href="/marshal/create/@vehicleType?.ToLower()" class="btn btn-primary mb-3">Create New Trip</a>
+
+    @if (Model == null || !((IEnumerable<object>)Model!).Any())
+    {
+        <div class="alert alert-info">No trips found.</div>
+    }
+    else
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>From</th>
+                    <th>Destination</th>
+                    <th>Price</th>
+                    <th>Seats</th>
+                    <th>Departure / Pickup</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (dynamic trip in Model!)
+                {
+                    <tr>
+                        <td>@(trip.From ?? trip.PickupLocation)</td>
+                        <td>@(trip.Destination ?? trip.DropoffLocation)</td>
+                        <td>&#8358;@trip.Price</td>
+                        <td>@(trip.AvailableSeats ?? trip.MaxPassengers) / @(trip.TotalSeats ?? trip.MaxPassengers)</td>
+                        <td>@(trip.DepartureTime?.ToString("g") ?? trip.PickupTime?.ToString("g"))</td>
+                        <td>
+                            @if (trip.IsActive)
+                            {
+                                <span class="badge bg-success">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Inactive</span>
+                            }
+                        </td>
+                        <td>
+                            @if (trip.IsActive)
+                            {
+                                <form asp-action="CancelTrip" method="post" style="display:inline">
+                                    <input type="hidden" name="transportType" value="@vehicleType" />
+                                    <input type="hidden" name="tripId" value="@trip.Id" />
+                                    <input type="text" name="reason" placeholder="Reason" class="form-control form-control-sm d-inline-block w-auto" required />
+                                    <button type="submit" class="btn btn-danger btn-sm">Cancel Trip</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

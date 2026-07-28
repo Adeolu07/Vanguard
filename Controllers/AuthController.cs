@@ -1,28 +1,25 @@
 using _Tripfinity.Interfaces;
-using _Tripfinity.Models.Data.Requests;
 using _Tripfinity.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 
 namespace _Tripfinity.Controllers;
 
-public class AuthController : Controller
+public class AuthController(IAuthService authService, IEmailService emailService, ILogger<AuthController> logger)
+    : Controller
 {
-    private readonly IAuthService _authService;
-    private readonly IEmailService _emailService;
-    private readonly ILogger _logger;
+    private readonly ILogger _logger = logger;
 
-    public AuthController(IAuthService authService, IEmailService emailService, ILogger<AuthController> logger)
+    [HttpGet]
+    public IActionResult DecisionLogin()
     {
-        _authService = authService;
-        _emailService = emailService;
-        _logger = logger;
+        return View();
     }
 
     [HttpGet]
-    public IActionResult DecisionLogin() => View();
-
-    [HttpGet]
-    public IActionResult DecisionSignup() => View();
+    public IActionResult DecisionSignup()
+    {
+        return View();
+    }
 
     [HttpGet]
     public IActionResult SignIn()
@@ -38,7 +35,7 @@ public class AuthController : Controller
         if (!ModelState.IsValid)
             return View(model);
 
-        var result = await _authService.SignInAsync(model.Email, model.Password);
+        var result = await authService.SignInAsync(model.Email, model.Password);
 
         if (!result.Success || result.User == null)
         {
@@ -46,7 +43,7 @@ public class AuthController : Controller
             return View(model);
         }
 
-        await _authService.SetUserSession(HttpContext, result.User);
+        await authService.SetUserSession(HttpContext, result.User);
         await HttpContext.Session.CommitAsync();
         return RedirectToAction("Dashboard", "Home");
     }
@@ -65,7 +62,7 @@ public class AuthController : Controller
         if (!ModelState.IsValid)
             return View(model);
 
-        var result = await _authService.SignInAsync(model.Email, model.Password);
+        var result = await authService.SignInAsync(model.Email, model.Password);
 
         if (!result.Success || result.User == null)
         {
@@ -73,7 +70,7 @@ public class AuthController : Controller
             return View(model);
         }
 
-        await _authService.SetUserSession(HttpContext, result.User);
+        await authService.SetUserSession(HttpContext, result.User);
         return RedirectToAction("Index", "Marshal");
     }
     
@@ -91,7 +88,7 @@ public class AuthController : Controller
         if (!ModelState.IsValid)
             return View(model);
 
-        var result = await _authService.RegisterMarshalAsync(model);
+        var result = await authService.RegisterMarshalAsync(model);
 
         if (!result.Success || result.User == null)
         {
@@ -125,7 +122,7 @@ public class AuthController : Controller
         if (!ModelState.IsValid)
             return View(model);
 
-        var result = await _authService.SignUpAsync(model);
+        var result = await authService.SignUpAsync(model);
 
         if (!result.Success || result.User == null)
         {
@@ -147,7 +144,7 @@ public class AuthController : Controller
 
         try
         {
-            await _emailService.SendConfirmationEmailAsync(result.User.Email, confirmationLink);
+            await emailService.SendConfirmationEmailAsync(result.User.Email, confirmationLink);
             _logger.LogInformation("Confirmation email sent to {Email}", result.User.Email);
         }
         catch (Exception ex)
@@ -164,7 +161,7 @@ public class AuthController : Controller
     [HttpGet]
     public async Task<IActionResult> ConfirmEmail([FromQuery] int userId, [FromQuery] string token)
     {
-        var result = await _authService.ConfirmationEmailAsync(userId, token);
+        var result = await authService.ConfirmationEmailAsync(userId, token);
         if (!result)
         {
             TempData["ErrorMessage"] = "Invalid or expired email confirmation token.";
@@ -187,7 +184,7 @@ public class AuthController : Controller
             return View();
         }
 
-        var result = await _authService.ForgotPasswordAsync(email);
+        var result = await authService.ForgotPasswordAsync(email);
         TempData["SuccessMessage"] = result.Message;
         return RedirectToAction("ForgotPassword");
     }
@@ -208,7 +205,7 @@ public class AuthController : Controller
         if (!ModelState.IsValid)
             return View(model);
 
-        var result = await _authService.ResetPasswordAsync(model.Email, model.Token, model.NewPassword);
+        var result = await authService.ResetPasswordAsync(model.Email, model.Token, model.NewPassword);
         if (result.Success)
         {
             TempData["SuccessMessage"] = result.Message;
@@ -221,7 +218,7 @@ public class AuthController : Controller
 
     public IActionResult Logout()
     {
-        _authService.ClearUserSession(HttpContext);
+        authService.ClearUserSession(HttpContext);
         return RedirectToAction("Index", "Home");
     }
 

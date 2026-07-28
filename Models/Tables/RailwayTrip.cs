@@ -18,7 +18,7 @@ public class RailwayTrip
 
     [Required] public DateTime DepartureTime { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime CreatedAt { get; set; }
 
     public bool IsActive { get; set; } = true;
 
@@ -27,4 +27,7 @@ public class RailwayTrip
     [Required]
     [MaxLength(50)]
     public string Route { get; set; } = string.Empty; // e.g. AKTS | Lagos-Ibadan | Warri-Itakpe
+    public int MarshalId { get; set; }
+    [Required] [MaxLength(50)] public string VehicleId { get; set; } = string.Empty;
+
 }

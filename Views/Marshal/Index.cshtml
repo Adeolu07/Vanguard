@@ -1,70 +1,50 @@
 @{
-    Layout = "_Layout";
     ViewData["Title"] = "Marshal Dashboard";
 }
 
-<div class="dashboard-container">
-    <div class="welcome-banner">
-        <h1>Welcome, @Context.Session.GetString("Username")!</h1>
-        <p class="subtitle">Vehicle: <strong>@ViewBag.VehicleId</strong> ( @ViewBag.VehicleType )</p>
-    </div>
+<div class="container mt-4">
+    <h2>Welcome, @ViewBag.FirstName</h2>
+    <p class="text-muted">Vehicle: @ViewBag.VehicleType — @ViewBag.VehicleId</p>
 
-    <div class="stats-grid">
-        <div class="stat-card">
-            <h3>Trips Assigned</h3>
-            <span class="stat-number">@ViewBag.TripsCount</span>
-        </div>
-        <div class="stat-card">
-            <h3>Tickets Scanned</h3>
-            <span class="stat-number">@ViewBag.ScannedCount</span>
-        </div>
-        <div class="stat-card">
-            <h3>Pending Validations</h3>
-            <span class="stat-number">@ViewBag.PendingCount</span>
-        </div>
-    </div>
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
 
-    <div class="action-panel">
-        <a href="/Marshal/Scan" class="btn-primary btn-lg">Scan QR Code</a>
-        <a href="/Marshal/Trips" class="btn-secondary btn-lg">View My Trips</a>
-    </div>
-
-    <div class="recent-section">
-        <h2>Recent Tickets</h2>
-        @* Placeholder for recent ticket validation list *@
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Passenger</th>
-                    <th>Route</th>
-                    <th>Time</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (ViewBag.RecentTickets != null && ViewBag.RecentTickets.Count > 0)
-                {
-                    foreach (var ticket in ViewBag.RecentTickets)
-                    {
-                        <tr>
-                            <td>@ticket.PassengerName</td>
-                            <td>@ticket.From → @ticket.To</td>
-                            <td>@ticket.DepartureTime.ToString("g")</td>
-                            <td>@ticket.Status</td>
-                        </tr>
-                    }
-                }
-                else
-                {
-                    <tr>
-                        <td colspan="4" class="text-center">No recent tickets scanned.</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+    <div class="row mt-4 g-3">
+        <div class="col-md-4">
+            <a href="/marshal/trips" class="text-decoration-none">
+                <div class="card text-white bg-primary">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">My Trips</h5>
+                        <p class="card-text">View & manage your trips</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="/marshal/scan" class="text-decoration-none">
+                <div class="card text-white bg-success">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Scan Ticket</h5>
+                        <p class="card-text">Validate passenger QR</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="/marshal/create/@ViewBag.VehicleType.ToString().ToLower()" class="text-decoration-none">
+                <div class="card text-white bg-warning">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Create Trip</h5>
+                        <p class="card-text">Add a new @ViewBag.VehicleType trip</p>
+                    </div>
+                </div>
+            </a>
+        </div>
     </div>
 </div>
-
-@section Styles {
-    <link rel="stylesheet" href="~/css/marshal-dashboard.css" />
-}
