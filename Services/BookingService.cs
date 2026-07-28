@@ -229,6 +229,28 @@ public class BookingService : IBookingService
             .ToListAsync();
     }
     
+    public async Task<object?> GetTripAsync(string type, int tripId)
+    {
+        return type.ToLower() switch
+        {
+            "bus" => await _context.BusTrips.FindAsync(tripId),
+            "railway" => await _context.RailwayTrips.FindAsync(tripId),
+            "taxi" => await _context.TaxiTrips.FindAsync(tripId),
+            _ => null
+        };
+    }
+
+    public async Task<BookingResult> BookAsync(string type, int tripId, int seats, int userId)
+    {
+        return type.ToLower() switch
+        {
+            "bus" => await BookBusAsync(tripId, seats, userId),
+            "railway" => await BookRailwayAsync(tripId, seats, userId),
+            "taxi" => await BookTaxiAsync(tripId, seats, userId),
+            _ => new BookingResult { Success = false, Message = "Invalid transport type" }
+        };
+    }
+    
     private async Task<BookingResult> ProcessBookingAsync(User user, Booking booking, Action applySeatChange)
     {
         if (string.IsNullOrEmpty(user.UserWalletId))

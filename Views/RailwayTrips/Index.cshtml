@@ -1,3 +1,4 @@
+@model _Tripfinity.Views.PaginatedList<_Tripfinity.Models.Tables.RailwayTrip>
 @{
     Layout = null;
     ViewData["Title"] = "Railway Trips";
@@ -9,6 +10,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Tripfinity</title>
     <link rel="stylesheet" href="~/css/bus-trips.css" />
+    <!-- using same CSS as BusTrips for consistency -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -39,139 +41,82 @@
                 </div>
             </header>
 
-            <section class="page-title-section" style="display: flex; justify-content: space-between; align-items: flex-end;">
-                <div>
-                    <div class="breadcrumbs">Passenger Dashboard > Book a Train</div>
-                    <h1>Available Railway Trips</h1>
-                    <p>Real-time high-speed rail transport availability.</p>
-                </div>
-                <div class="trip-filters" style="margin-bottom: 4px;">
-                    <select class="filter-select" id="sortFilter" style="padding: 8px 16px; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; font-family: inherit; font-size: 13px; font-weight: 500; color: var(--text-dark); cursor: pointer;">
-                        <option value="time">Sort by Time</option>
-                        <option value="price">Sort by Price</option>
-                    </select>
-                </div>
+            <section class="page-title-section">
+                <div class="breadcrumbs">Passenger Dashboard > Book a Train</div>
+                <h1>Available Railway Trips</h1>
+                <p>Real-time inter-city rail schedules.</p>
             </section>
 
             <div id="trips-container">
-                <p>Loading railway trips...</p>
+                @if (!Model.Any())
+                {
+                    <p>No trips available right now.</p>
+                }
+                else
+                {
+                    <div class="trip-options">
+                        @foreach (var trip in Model)
+                        {
+                            var formattedDate = trip.DepartureTime.ToString("MM/dd/yyyy");
+                            var formattedTime = trip.DepartureTime.ToString("hh:mm tt");
+                            <div class="trip-card">
+                                <div class="trip-card-icon">🚆</div>
+                                <div class="route-display">
+                                    <h2>@trip.From</h2>
+                                    <span class="route-arrow">→</span>
+                                    <h2>@trip.Destination</h2>
+                                </div>
+                                <div class="meta-grid">
+                                    <div class="meta-item">
+                                        <span class="meta-label">Departure</span>
+                                        <span class="meta-value">@formattedDate<br><span style="color:var(--text-muted); font-weight:400;">@formattedTime</span></span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <span class="meta-label">Price</span>
+                                        <span class="meta-value">₦@trip.Price.ToString("N0")</span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <span class="meta-label">Seats</span>
+                                        <span class="meta-value">@trip.AvailableSeats/@trip.TotalSeats <span class="tag-full">Available</span></span>
+                                    </div>
+                                </div>
+                                <a href="/RailwayTrips/Book?tripId=@trip.Id" class="btn-book-action">Book Now ></a>
+                            </div>
+                        }
+                    </div>
+                }
             </div>
+
+            @if (Model.TotalPages > 1)
+            {
+                <div class="pagination">
+                    @if (Model.HasPreviousPage)
+                    {
+                        <a href="/Trips/Railway?page=@(Model.PageIndex - 1)" class="page-btn">Previous</a>
+                    }
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        if (i == Model.PageIndex)
+                        {
+                            <span class="page-num active">@i</span>
+                        }
+                        else
+                        {
+                            <a href="/Trips/Railway?page=@i" class="page-num">@i</a>
+                        }
+                    }
+                    @if (Model.HasNextPage)
+                    {
+                        <a href="/Trips/Railway?page=@(Model.PageIndex + 1)" class="page-btn">Next ></a>
+                    }
+                </div>
+            }
+            
 
             <footer class="system-footer">
                 &copy; 2026 Tripfinity Ecosystem. All rights reserved.
             </footer>
         </main>
     </div>
-
-    <script>
-            let currentPage = 1;
-            let totalPages = 1;
-            let currentSort = "time";
-            let isLoading = false;
-
-            async function loadTrips(page = 1) {
-                if (isLoading) return;
-                isLoading = true;
-                document.getElementById('trips-container').innerHTML = '<p>Loading trips...</p>';
-
-                try {
-                    const response = await fetch(`/api/railwaytrips?page=${page}&pageSize=4&sort=${currentSort}`);
-                    const result = await response.json();
-
-                    if (result.success && result.data && result.data.length > 0) {
-                        displayTrips(result.data);
-                        currentPage = result.pagination.pageIndex;
-                        totalPages = result.pagination.totalPages;
-                        displayPagination(result.pagination);
-                    } else {
-                        document.getElementById('trips-container').innerHTML = `
-                            <div style="text-align:center; padding: 40px; background:#fff; border-radius:16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
-                                <div style="font-size:40px; margin-bottom:12px;">🚆</div>
-                                <h3 style="color:var(--primary-blue); margin:0 0 8px 0;">No railway trips available</h3>
-                                <p style="color:var(--text-muted); margin:0;">Check back later for train schedules</p>
-                            </div>`;
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                    document.getElementById('trips-container').innerHTML = `
-                        <div style="text-align:center; padding: 40px; background:#fff; border-radius:16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
-                            <div style="font-size:40px; margin-bottom:12px;">⚠️</div>
-                            <h3 style="color:var(--primary-blue); margin:0 0 8px 0;">Coming Soon</h3>
-                            <p style="color:var(--text-muted); margin:0;">Railway scheduling service will be online shortly</p>
-                        </div>`;
-                } finally {
-                    isLoading = false;
-                }
-            }
-
-            function displayTrips(trips) {
-                let html = '<div class="trip-options">';
-                trips.forEach(trip => {
-                    const dateObj = new Date(trip.departureTime);
-                    const formattedDate = dateObj.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
-                    const formattedTime = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-
-                    html += `
-                        <div class="trip-card">
-                            <div class="trip-card-icon" style="background: #f0fdf4;">🚆</div>
-                            <div class="route-display">
-                                <h2>${trip.from || 'Lagos'}</h2>
-                                <span class="route-arrow">→</span>
-                                <h2>${trip.destination || 'Ibadan'}</h2>
-                            </div>
-                            <div class="meta-grid">
-                                <div class="meta-item">
-                                    <div style="font-size: 10px; font-weight:700; color:var(--primary-blue); margin-bottom:2px; text-transform: uppercase; letter-spacing: 0.5px;">Train Express</div>
-                                    <span class="meta-label">Departure</span>
-                                    <span class="meta-value">${formattedDate}<br><span style="color:var(--text-muted); font-weight:400;">${formattedTime}</span></span>
-                                </div>
-                                <div class="meta-item">
-                                    <span class="meta-label">Price (${trip.trainClass || 'Standard'})</span>
-                                    <span class="meta-value">₦${trip.price?.toLocaleString() || '0'}</span>
-                                </div>
-                                <div class="meta-item">
-                                    <span class="meta-label">Seats</span>
-                                    <span class="meta-value">${trip.availableSeats || 0}/${trip.totalSeats || 0} <span class="tag-full" style="color:#10b981; background:transparent; font-weight:700;">Available</span></span>
-                                </div>
-                            </div>
-                            <button class="btn-book-action" onclick="bookTrip(${trip.id})">Book Now ></button>
-                        </div>
-                    `;
-                });
-                html += '</div>';
-                document.getElementById('trips-container').innerHTML = html;
-            }
-
-            function displayPagination(pagination) {
-                const existingPagination = document.querySelector('.pagination');
-                if (existingPagination) existingPagination.remove();
-
-                let html = '<div class="pagination">';
-                if (pagination.hasPreviousPage) {
-                    html += `<button onclick="loadTrips(${pagination.pageIndex - 1})">Previous</button>`;
-                }
-
-                html += `<div class="page-num active">${pagination.pageIndex}</div>`;
-                if (pagination.totalPages > pagination.pageIndex) {
-                    html += `<div class="page-num" style="cursor:pointer" onclick="loadTrips(${pagination.pageIndex + 1})">${pagination.pageIndex + 1}</div>`;
-                }
-
-                if (pagination.hasNextPage) {
-                    html += `<button onclick="loadTrips(${pagination.pageIndex + 1})">Next ></button>`;
-                }
-                html += '</div>';
-                document.getElementById('trips-container').insertAdjacentHTML('afterend', html);
-            }
-
-            function bookTrip(tripId) {
-                window.location.href = `/RailwayTrips/Book?tripId=${tripId}`;
-            }
-
-            document.getElementById('sortFilter').addEventListener('change', (e) => {
-                currentSort = e.target.value;
-                loadTrips(1);
-            });
-
-            loadTrips();
-    </script></body>
+</body>
 </html>

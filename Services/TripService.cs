@@ -1,6 +1,7 @@
+using System.Transactions;
 using _Tripfinity.Interfaces;
-using _Tripfinity.Models;
 using _Tripfinity.Models.Data;
+using _Tripfinity.Models.Data.Requests;
 using _Tripfinity.Models.Tables;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,46 +20,70 @@ public class TripService : ITripService
         _logger = logger;
     }
 
-    public async Task<BusTrip> CreateBusTripAsync(BusTrip trip)
-    {
-        trip.CreatedAt = DateTime.Now;
-        trip.IsActive = true;
-        if (trip.AvailableSeats <= 0 || trip.AvailableSeats > trip.TotalSeats)
-            trip.AvailableSeats = trip.TotalSeats;
+    // ... existing code (all previous methods stay unchanged) ...
 
+    // ── High‑level creators with DTO mapping ──
+    public async Task<BusTrip> CreateBusTripAsync(CreateBusTripRequest request, int marshalId, string vehicleId)
+    {
+        var trip = new BusTrip
+        {
+            From = request.From,
+            Destination = request.Destination,
+            Price = request.Price,
+            TotalSeats = request.TotalSeats,
+            AvailableSeats = request.AvailableSeats,
+            DepartureTime = request.DepartureTime,
+            MarshalId = marshalId,
+            VehicleId = vehicleId
+        };
+        
         _context.BusTrips.Add(trip);
         await _context.SaveChangesAsync();
-        _logger.LogInformation("Bus trip {Id} created ({From} -> {To})", trip.Id, trip.From, trip.Destination);
         return trip;
     }
 
-    public async Task<RailwayTrip> CreateRailwayTripAsync(RailwayTrip trip)
+    public async Task<RailwayTrip> CreateRailwayTripAsync(CreateRailwayTripRequest request, int marshalId, string vehicleId)
     {
-        trip.CreatedAt = DateTime.Now;
-        trip.IsActive = true;
-        if (trip.AvailableSeats <= 0 || trip.AvailableSeats > trip.TotalSeats)
-            trip.AvailableSeats = trip.TotalSeats;
+        var trip = new RailwayTrip
+        {
+            From = request.From,
+            Destination = request.Destination,
+            Price = request.Price,
+            TotalSeats = request.TotalSeats,
+            AvailableSeats = request.AvailableSeats,
+            DepartureTime = request.DepartureTime,
+            MarshalId = marshalId,
+            VehicleId = vehicleId
+        };
 
         _context.RailwayTrips.Add(trip);
         await _context.SaveChangesAsync();
-        _logger.LogInformation("Railway trip {Id} created ({From} -> {To})", trip.Id, trip.From, trip.Destination);
         return trip;
     }
 
-    public async Task<TaxiTrip> CreateTaxiTripAsync(TaxiTrip trip)
+    public async Task<TaxiTrip> CreateTaxiTripAsync(CreateTaxiTripRequest request, int marshalId, string vehicleId)
     {
-        trip.CreatedAt = DateTime.Now;
-        trip.IsActive = true;
-        
+        var trip = new TaxiTrip
+        {
+            PickupLocation = request.PickupLocation,
+            DropoffLocation = request.DropoffLocation,
+            Price = request.Price,
+            MaxPassengers = request.NumberOfPassengers,
+            PickupTime = request.PickupTime,
+            MarshalId = marshalId,
+            VehicleId = vehicleId
+        };
+
         _context.TaxiTrips.Add(trip);
         await _context.SaveChangesAsync();
-        _logger.LogInformation("Taxi trip {Id} created ({From} -> {To})", trip.Id, trip.PickupLocation, trip.DropoffLocation);
         return trip;
+        
     }
+// ... rest of existing code ...
 
     public async Task<bool> CancelTripAsync(TransportType transportType, int tripId, int marshalId, string reason)
     {
-        var found = await DeactivateTripAsync(transportType, tripId);
+        var found = await DeactivateTripAsync(transportType, tripId, marshalId);
         if (!found) 
             return false;
 
@@ -75,27 +100,27 @@ public class TripService : ITripService
         return true;
     }
 
-    private async Task<bool> DeactivateTripAsync(TransportType transportType, int tripId)
+    private async Task<bool> DeactivateTripAsync(TransportType transportType, int tripId, int marshalId)
     {
         switch (transportType)
         {
             case TransportType.Bus:
-                var bus = await _context.BusTrips.FindAsync(tripId);
-                if (bus == null) 
+                var busTrip = await _context.BusTrips.FindAsync(tripId);
+                if (busTrip == null || busTrip.MarshalId != marshalId)  
                     return false;
-                bus.IsActive = false;
+                busTrip.IsActive = false;
                 break;
             case TransportType.Railway:
-                var rail = await _context.RailwayTrips.FindAsync(tripId);
-                if (rail == null) 
+                var railwayTrip = await _context.RailwayTrips.FindAsync(tripId);
+                if (railwayTrip == null || railwayTrip.MarshalId != marshalId) 
                     return false;
-                rail.IsActive = false;
+                railwayTrip.IsActive = false;
                 break;
             case TransportType.Taxi:
-                var taxi = await _context.TaxiTrips.FindAsync(tripId);
-                if (taxi == null) 
+                var taxiTrip = await _context.TaxiTrips.FindAsync(tripId);
+                if (taxiTrip == null || taxiTrip.MarshalId != marshalId) 
                     return false;
-                taxi.IsActive = false;
+                taxiTrip.IsActive = false;
                 break;
             default:
                 return false;
@@ -108,8 +133,16 @@ public class TripService : ITripService
     private async Task<List<Booking>> GetActiveBookingsAsync(TransportType transportType, int tripId)
     {
         var query = _context.Bookings
-            .Where(b => b.Status == BookingStatus.Confirmed || b.Status == BookingStatus.Pending);
-        
+            .Where(b => (b.Status == BookingStatus.Confirmed || b.Status == BookingStatus.Pending));
+
+        query = transportType switch
+        {
+            TransportType.Bus => query.Where(b => b.BusTripId == tripId),
+            TransportType.Railway => query.Where(b => b.RailwayTripId == tripId),
+            TransportType.Taxi => query.Where(b => b.TaxiTripId == tripId),
+            _ => query.Where(b => false) // no matches for invalid type
+        };
+
         return await query.ToListAsync();
     }
     

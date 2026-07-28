@@ -16,9 +16,11 @@ public class TaxiTrip
 
     [Required] public DateTime PickupTime { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime CreatedAt { get; set; } 
 
     public bool IsActive { get; set; } = true;
 
     [MaxLength(50)] public string? VehicleType { get; set; } // Sedan, SUV, Luxury
+    public int MarshalId { get; set; }
+    [Required] [MaxLength(50)] public string VehicleId { get; set; } = string.Empty;
 }

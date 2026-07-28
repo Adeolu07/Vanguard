@@ -2,6 +2,6 @@ namespace _Tripfinity.Models.Data.Requests;
 
 public class AuthenticationRequest
 {
-    public string Username { get; set; }
-    public string Password { get; set; }
+    public required string Username { get; set; }
+    public required string Password { get; set; }
 }

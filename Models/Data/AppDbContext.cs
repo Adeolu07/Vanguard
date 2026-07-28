@@ -17,6 +17,7 @@ namespace _Tripfinity.Models.Data
         public DbSet<Booking> Bookings { get; set; }
         public DbSet<Ticket> Tickets { get; set; }
         public DbSet<AuthToken> AuthTokens { get; set; }
+        public new DbSet<Transaction> Transactions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -31,16 +32,22 @@ namespace _Tripfinity.Models.Data
                 .HasPrecision(18, 2);
 
             builder.Entity<BusTrip>()
-                .Property(bus => bus.Price)
-                .HasPrecision(18, 2);
-
+                .HasOne<User>()
+                .WithMany(u=>u.BusTrips)
+                .HasForeignKey(t => t.MarshalId)
+                .OnDelete(DeleteBehavior.Restrict);
+            
             builder.Entity<TaxiTrip>()
-                .Property(taxi => taxi.Price)
-                .HasPrecision(18, 2);
+                .HasOne<User>()
+                .WithMany(u=> u.TaxiTrips)
+                .HasForeignKey(t => t.MarshalId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<RailwayTrip>()
-                .Property(train => train.Price)
-                .HasPrecision(18, 2);
+                .HasOne<User>()
+                .WithMany(u=>u.RailwayTrips)
+                .HasForeignKey(t => t.MarshalId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<Booking>()
                 .HasOne(booking => booking.BusTrip)
@@ -77,6 +84,16 @@ namespace _Tripfinity.Models.Data
 
             builder.Entity<AuthToken>()
                 .Property(token => token.Token);
+
+            builder.Entity<Transaction>()
+                .HasOne(transaction => transaction.User)
+                .WithMany(user => user.Transactions)
+                .HasForeignKey(transaction => transaction.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Transaction>()
+                .Property(transaction => transaction.Amount)
+                .HasPrecision(18, 2);
 
             DataSeeding.Seed(builder);
         }

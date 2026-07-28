@@ -1,54 +1,42 @@
+@using _Tripfinity.Models.Tables
+@model string
 @{
-    ViewData["Title"] = "Scan Ticket QR";
-    Layout = "_Layout";
+    ViewData["Title"] = "Scan & Validate Ticket";
 }
 
-<h2>Scan QR Code</h2>
+<div class="container mt-4">
+    <h2>Scan Ticket</h2>
 
-<div class="scan-container">
-    <div class="form-group">
-        <label>QR Token</label>
-        <input type="text" id="qrToken" placeholder="Enter QR token manually" />
-        <button class="btn-primary" onclick="validateTicket()">Validate</button>
-    </div>
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
 
-    <div id="validationResult" class="message" style="margin-top: 20px;"></div>
+    <form asp-action="Scan" method="post" class="mb-4">
+        <div class="input-group">
+            <input type="text" name="qrToken" class="form-control" placeholder="Scan or type QR token..." autofocus />
+            <button type="submit" class="btn btn-primary">Validate</button>
+        </div>
+    </form>
+
+    @if (ViewBag.ValidatedTicket != null)
+    {
+        var ticket = (Ticket)ViewBag.ValidatedTicket;
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                Ticket Validated
+            </div>
+            <div class="card-body">
+                <p><strong>Reference:</strong> @ticket.TicketReference</p>
+                <p><strong>Transport:</strong> @ticket.TransportType</p>
+                <p><strong>Trip Time:</strong> @ticket.TripTime.ToString("g")</p>
+                <p><strong>Status:</strong> @ticket.Status</p>
+                <p><strong>Validated At:</strong> @ticket.ValidatedAt?.ToString("g")</p>
+            </div>
+        </div>
+    }
 </div>
-
-@section Scripts {
-    <script>
-        async function validateTicket() {
-            const token = document.getElementById('qrToken').value.trim();
-            if (!token) {
-                document.getElementById('validationResult').innerHTML = '<span class="error">Enter a QR token</span>';
-                return;
-            }
-
-            document.getElementById('validationResult').innerHTML = 'Processing...';
-
-            try {
-                const res = await fetch('/api/marshal/tickets/validate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ qrToken: token })
-                });
-                const data = await res.json();
-
-                if (data.success) {
-                    document.getElementById('validationResult').innerHTML = `
-                        <div class="alert alert-success">
-                            ✅ ${data.message}<br>
-                            <strong>Ticket Ref:</strong> ${data.data.ticketReference}<br>
-                            <strong>Type:</strong> ${data.data.transportType}<br>
-                            <strong>Trip Time:</strong> ${data.data.tripTime}<br>
-                            <strong>Status:</strong> ${data.data.status}
-                        </div>`;
-                } else {
-                    document.getElementById('validationResult').innerHTML = `<div class="alert alert-danger">❌ ${data.message}</div>`;
-                }
-            } catch (err) {
-                document.getElementById('validationResult').innerHTML = '<div class="alert alert-danger">Network error</div>';
-            }
-        }
-    </script>
-}

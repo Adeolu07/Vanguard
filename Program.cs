@@ -3,8 +3,6 @@ using _Tripfinity.Models.Data;
 using _Tripfinity.Services;
 using _Tripfinity.Utilities;
 using Microsoft.EntityFrameworkCore;
-
-
 namespace _Tripfinity;
 
 public class Program
@@ -12,20 +10,23 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
-        
         builder.Services.AddScoped<IAuthService, AuthService>();
         builder.Services.AddScoped<IBookingService, BookingService>();
         builder.Services.AddScoped<ITicketService, TicketService>();
         builder.Services.AddScoped<ITripService, TripService>();
         builder.Services.AddScoped<IEmailService, EmailService>();
         builder.Services.AddScoped<IWalletService, WalletService>();
+        builder.Services.AddScoped<ITripListingService, TripListingService>();
+        builder.Services.AddScoped<IMarshalService, MarshalService>();
         builder.Services.AddHttpClient<IWalletService, WalletService>(client =>
         {
             client.BaseAddress = new Uri(builder.Configuration["WalletStation:baseUrl"] ?? "");
         });
         builder.Services.AddMemoryCache();
-        builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer
-            (builder.Configuration.GetConnectionString("DefaultConnection")));
+        builder.Services.AddDbContext<AppDbContext>(options =>
+        {
+            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+        });
         builder.Services.AddSession(options =>
         {
             options.IdleTimeout = TimeSpan.FromMinutes(30);

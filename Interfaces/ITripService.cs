@@ -1,4 +1,4 @@
-using _Tripfinity.Models;
+using _Tripfinity.Models.Data.Requests;
 using _Tripfinity.Models.Tables;
 using _Tripfinity.Services;
 
@@ -6,11 +6,9 @@ namespace _Tripfinity.Interfaces;
 
 public interface ITripService
 {
-    Task<BusTrip> CreateBusTripAsync(BusTrip trip);
-    Task<RailwayTrip> CreateRailwayTripAsync(RailwayTrip trip);
-    Task<TaxiTrip> CreateTaxiTripAsync(TaxiTrip trip);
+    Task<BusTrip> CreateBusTripAsync(CreateBusTripRequest request, int marshalId, string vehicleId);
+    Task<RailwayTrip> CreateRailwayTripAsync(CreateRailwayTripRequest request, int marshalId, string vehicleId);
+    Task<TaxiTrip> CreateTaxiTripAsync(CreateTaxiTripRequest request, int marshalId, string vehicleId);
 
-    // Deactivates a trip and cancels/refunds any active bookings on it.
-    // Returns false if the trip was not found.
     Task<bool> CancelTripAsync(TransportType transportType, int tripId, int marshalId, string reason);
 }
