@@ -1,77 +1,52 @@
 @{
-    ViewBag.Title = "Wallet";
-    Layout = "_Layout";
+    ViewData["Title"] = "Wallet";
+    Layout = "_DashboardLayout";
+    ViewData["ActiveNav"] = "Wallet";
 }
-@section Styles
-{
-    <link rel="stylesheet" href="~/css/wallet.css"/>
+@section Styles {
+    <link rel="stylesheet" href="~/css/wallet.css" />
 }
 
-<div class="wallet-container">
-    <h2>My Wallet</h2>
-    <div class="balance-card">
-        <h3>Current Balance</h3>
-        <span id="balanceAmount" class="balance">Loading...</span>
-    </div>
+<header class="top-header">
+    <h2>Wallet</h2>
+    <a href="/Auth/Logout" class="btn-signout">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>
+        Sign Out
+    </a>
+</header>
 
-    <div class="fund-wallet">
-        <h4>Add Funds</h4>
-        <div class="fund-form">
-            <input type="number" id="fundAmount" placeholder="Amount (₦)" min="1" step="100" />
-            <input type="text" id="fundDescription" placeholder="Description (optional)" />
-            <button id="fundButton" class="btn-primary">Add Funds</button>
-        </div>
-        <div id="fundMessage" class="message"></div>
+<section class="welcome-section">
+    <span class="sub-brand">FINANCE</span>
+    <h1>My Wallet</h1>
+    <p>Check your balance and add funds.</p>
+</section>
+
+<section class="balance-banner">
+    <span class="balance-label">CURRENT BALANCE</span>
+    <div class="balance-wrapper">
+        <h1 id="walletBalance">Loading...</h1>
     </div>
+    <div class="status-badge">
+        <span class="dot"></span> Active & Secure
+    </div>
+</section>
+
+<div class="fund-wallet">
+    <h4>Add Funds</h4>
+    <div class="fund-form">
+        <input type="number" id="fundAmount" placeholder="Amount (₦)" min="1" step="100" />
+        <input type="text" id="fundDescription" placeholder="Description (optional)" />
+        <button id="fundButton">Add Funds</button>
+    </div>
+    <div id="fundMessage" class="message"></div>
 </div>
 
+<input type="hidden" id="walletId" value="@ViewBag.WalletId" />
+
+<footer class="dashboard-footer-text">
+    &copy; 2026 Tripfinity Ecosystem. All rights reserved.
+</footer>
 
 @section Scripts {
-    <script>
-        async function loadBalance() {
-            try {
-                const res = await fetch('/api/wallet/my-balance');
-                const data = await res.json();
-                if (data.success) {
-                    document.getElementById('balanceAmount').textContent = `₦${data.balance.toLocaleString()}`;
-                } else {
-                    document.getElementById('balanceAmount').textContent = 'Error loading balance';
-                }
-            } catch (err) {
-                document.getElementById('balanceAmount').textContent = err;
-            }
-        }
-
-        document.getElementById('fundButton').addEventListener('click', async () => {
-            const amount = parseFloat(document.getElementById('fundAmount').value);
-            if (isNaN(amount) || amount <= 0) {
-                document.getElementById('fundMessage').innerHTML = '<span class="error">Enter a valid amount</span>';
-                return;
-            }
-            const desc = document.getElementById('fundDescription').value;
-            document.getElementById('fundButton').disabled = true;
-            document.getElementById('fundMessage').innerHTML = 'Funding...';
-
-            try {
-                const res = await fetch('/api/wallet/my-fund', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ amount: amount, description: desc })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    document.getElementById('fundMessage').innerHTML = `<span class="success">✅ ${data.message} – New balance: ₦${data.balance.toLocaleString()}</span>`;
-                    await loadBalance(); // refresh
-                } else {
-                    document.getElementById('fundMessage').innerHTML = `<span class="error">❌ ${data.message || 'Unknown error'}</span>`;
-                }
-            } catch (err) {
-                document.getElementById('fundMessage').innerHTML = '<span class="error">Network error</span>';
-            } finally {
-                document.getElementById('fundButton').disabled = false;
-            }
-        });
-
-        loadBalance();
-    </script>
+    <script src="~/js/site.js"></script>
 }

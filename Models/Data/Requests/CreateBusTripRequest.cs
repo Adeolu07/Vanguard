@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using _Tripfinity.Utilities;
 
 namespace _Tripfinity.Models.Data.Requests;
 
@@ -9,5 +10,5 @@ public class CreateBusTripRequest
     [Required, Range(100,50000)] public decimal Price { get; set; }
     [Required, Range(1,50)] public int TotalSeats { get; set; }
     [Required, Range(1,50)] public int AvailableSeats { get; set; }
-    [Required] public DateTime DepartureTime { get; set; }
+    [Required, FutureTime(60)] public DateTime DepartureTime { get; set; }
 }

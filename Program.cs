@@ -18,6 +18,7 @@ public class Program
         builder.Services.AddScoped<IWalletService, WalletService>();
         builder.Services.AddScoped<ITripListingService, TripListingService>();
         builder.Services.AddScoped<IMarshalService, MarshalService>();
+        builder.Services.AddScoped<IPassengerService, PassengerService>();
         builder.Services.AddHttpClient<IWalletService, WalletService>(client =>
         {
             client.BaseAddress = new Uri(builder.Configuration["WalletStation:baseUrl"] ?? "");

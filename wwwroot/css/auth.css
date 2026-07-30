@@ -56,6 +56,7 @@ h1 {
     transition: border-color 0.3s;
 }
 
+
 .form-group input:focus {
     outline: none;
     border-color: #667eea;

@@ -1,74 +1,60 @@
 using System.Diagnostics;
 using _Tripfinity.Interfaces;
 using _Tripfinity.Models.ViewModels;
-using _Tripfinity.Models.Data;
-using _Tripfinity.Models.Data.Requests;   
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace _Tripfinity.Controllers;
 
-public class HomeController(AppDbContext context, IWalletService walletService, ILogger<HomeController> logger)
-    : ParentController
+public class HomeController : ParentController
 {
-    public IActionResult Index() => View();
+    private readonly IPassengerService _passenger;
+    private readonly ILogger<HomeController> _logger;
+
+    public HomeController(IPassengerService passenger, ILogger<HomeController> logger)
+    {
+        _passenger = passenger;
+        _logger = logger;
+    }
+
+    public IActionResult Index()
+    {
+        if (IsAuthenticated)
+            return RedirectToAction("Dashboard");
+        return View();
+    }
     public IActionResult Privacy() => View();
 
     [HttpGet]
-    public IActionResult Wallet()
+    public async Task<IActionResult> Wallet()
     {
-        logger.LogInformation("GET /Wallet");
-        if (IsAuthenticated) return View("~/Views/Wallet/Index.cshtml");
-        logger.LogInformation("Not Authenticated");
-        return RedirectToAction("Index", "Home");
+        _logger.LogInformation("GET /Wallet");
+        if (!IsAuthenticated)
+            return RedirectToAction("Index", "Home");
+
+        var user = await _passenger.GetPassengerAsync(UserId!.Value);
+        ViewBag.WalletId = user!.UserWalletId;
+
+        return View("~/Views/Wallet/Index.cshtml");
     }
-    
+
     [HttpGet]
     public async Task<IActionResult> Dashboard()
     {
-        logger.LogInformation("GET /Dashboard");
-        if (!IsAuthenticated)
-        {
-            logger.LogInformation("Not Authenticated");
+        if (!IsAuthenticated) 
             return RedirectToLogin();
-        }
-        var user = await context.Users.FindAsync(UserId!.Value);
-        if (user == null)
-        {
-            logger.LogInformation("User not found");
-            return RedirectToLogin();
-        }
 
-        if (user.Role != "Passenger")
-        {
-            logger.LogWarning("User is not Passenger");
-            return RedirectToAction("Index", "Marshal");
-        }
-        
+        var user = await _passenger.GetPassengerAsync(UserId!.Value);
+        if (user is null) 
+            return RedirectToLogin();
+
         ViewBag.FirstName = user.FirstName;
-
-        var balanceResponse = await walletService.GetBalanceAsync(
-            new GetBalanceRequest { CustomerId = user.UserWalletId! }
-        );
-        ViewBag.WalletBalance = balanceResponse.Balance; 
-
-        var madeBookings = await context.Bookings
-            .Include(b => b.BusTrip)
-            .Include(b => b.TaxiTrip)
-            .Include(b => b.RailwayTrip)
-            .Where(b => b.UserId == UserId.Value && b.BookingDate > DateTime.Now)
-            .OrderByDescending(b => b.BookingDate)
-            .Take(10)
-            .ToListAsync();
-
-        return View(madeBookings);
+        ViewBag.WalletBalance = await _passenger.GetWalletBalanceAsync(user.UserWalletId);
+        
+        
+        var bookings = await _passenger.GetUpcomingBookingsAsync(user.Id);
+        return View(bookings);
     }
 
-    public IActionResult Error()
-    {
-        return View(new ErrorViewModel
-        {
-            RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
-        });
-    }
+    public IActionResult Error() =>
+        View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
 }

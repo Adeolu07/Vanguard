@@ -1,10 +1,12 @@
 using _Tripfinity.Interfaces;
 using _Tripfinity.Services;
+using _Tripfinity.Utilities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace _Tripfinity.Controllers;
 
 [Route("Trips/{type}")]
+[RequireAuth]
 public class TripsController : ParentController
 {
     private readonly ITripListingService _listingService;
@@ -24,14 +26,9 @@ public class TripsController : ParentController
         _logger = logger;
     }
 
-    private IActionResult AuthCheck() => IsAuthenticated ? new EmptyResult() : RedirectToLogin();
-
     // GET /Trips/{type}
     public async Task<IActionResult> Index(string type, int page = 1, int pageSize = 4)
     {
-        var auth = AuthCheck();
-        if (auth is not EmptyResult) return auth;
-
         object? model = type.ToLower() switch
         {
             "bus"     => await _listingService.GetActiveBusTripsAsync(page, pageSize),
@@ -40,23 +37,19 @@ public class TripsController : ParentController
             _         => null
         };
         if (model is null) return NotFound();
-        return View($"~/Views/{type}Trips/Index.cshtml",model);
+        return View($"~/Views/{type}Trips/Index.cshtml", model);
     }
 
     // GET /Trips/{type}/{tripId}/Book
     [HttpGet("{tripId}/Book")]
     public async Task<IActionResult> Book(string type, int tripId)
     {
-        var auth = AuthCheck();
-        if (auth is not EmptyResult) return auth;
-
         var trip = await _bookingService.GetTripAsync(type, tripId);
-        if (trip == null) 
-            return NotFound();
+        if (trip == null) return NotFound();
 
         ViewBag.Trip = trip;
         ViewBag.UserId = UserId;
-        return View(type, trip);
+        return View($"~/Views/{type}Trips/Book.cshtml", trip);
     }
 
     // POST /Trips/{type}/{tripId}/Book
@@ -64,8 +57,6 @@ public class TripsController : ParentController
     public async Task<IActionResult> Book(string type, int tripId, int seats)
     {
         _logger.LogInformation("POST: /Trips/{Type}/Book", type);
-        var auth = AuthCheck();
-        if (auth is not EmptyResult) return auth;
 
         var result = await _bookingService.BookAsync(type, tripId, seats, UserId!.Value);
         if (!result.Success)
@@ -82,14 +73,11 @@ public class TripsController : ParentController
     [HttpGet("{id}/Confirmation")]
     public async Task<IActionResult> Confirmation(string type, int id)
     {
-        var auth = AuthCheck();
-        if (auth is not EmptyResult) return auth;
-
         var transport = Enum.Parse<TransportType>(type, true);
         var booking = await _bookingService.GetBookingAsync(id, transport);
         if (booking == null) return NotFound();
 
         ViewBag.PaymentTransaction = await FetchTransaction(_walletService, booking);
-        return View(type, booking);
+        return View(booking);
     }
 }

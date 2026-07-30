@@ -1,120 +1,92 @@
 @{
 @model _Tripfinity.Views.PaginatedList<_Tripfinity.Models.Tables.TaxiTrip>
-    Layout = null;
+    Layout = "_DashboardLayout";
     ViewData["Title"] = "Taxi Trips";
 }
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Tripfinity</title>
+@section Styles {
     <link rel="stylesheet" href="~/css/bus-trips.css" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-</head>
-<body>
-    <div class="dashboard-layout">
-        <aside class="sidebar">
-            <div>
-                <div class="brand-logo">Tripfinity</div>
-                <nav class="sidebar-nav">
-                    <a href="/Home/Dashboard" class="nav-item">Dashboard</a>
-                    <a href="/Ticket/Index" class="nav-item">My Tickets</a>
-                    <a href="/Home/Wallet" class="nav-item">Wallet</a>
-                </nav>
-            </div>
-            <div class="user-avatar-tag" style="font-size:12px; font-weight:700; color:var(--text-muted)">
-                @ViewBag.FirstName<br><span style="font-size:10px; font-weight:400;">VERIFIED MEMBER</span>
-            </div>
-        </aside>
+}
 
-        <main class="main-content">
-            <header class="top-header">
-                <div></div>
-                <div class="header-meta">
-                    <a href="/Home/Dashboard" class="btn-back">← Back to Dashboard</a>
-                    <span>Hello, @ViewBag.FirstName</span>
-                    <a href="/Auth/Logout" class="btn-signout">Sign Out</a>
-                </div>
-            </header>
+<header class="top-header">
+    <div></div>
+    <div class="header-meta">
+        <a href="/Home/Dashboard" class="btn-back">← Back to Dashboard</a>
+        <span>Hello, @Context.Session.GetString("FirstName")</span>
+        <a href="/Auth/Logout" class="btn-signout">Sign Out</a>
+    </div>
+</header>
 
-            <section class="page-title-section">
-                <div class="breadcrumbs">Passenger Dashboard > Book a Taxi</div>
-                <h1>Available Taxi Rides</h1>
-                <p>Real-time taxi availability.</p>
-            </section>
+<section class="page-title-section">
+    <div class="breadcrumbs">Passenger Dashboard > Book a Taxi</div>
+    <h1>Available Taxi Rides</h1>
+    <p>Real-time taxi availability.</p>
+</section>
 
-            <div id="trips-container">
-                @if (!Model.Any())
-                {
-                    <p>No rides available right now.</p>
-                }
-                else
-                {
-                    <div class="trip-options">
-                        @foreach (var trip in Model)
-                        {
-                            var formattedDate = trip.PickupTime.ToString("MM/dd/yyyy");
-                            var formattedTime = trip.PickupTime.ToString("hh:mm tt");
-                            <div class="trip-card">
-                                <div class="trip-card-icon">🚕</div>
-                                <div class="route-display">
-                                    <h2>@trip.PickupLocation</h2>
-                                    <span class="route-arrow">→</span>
-                                    <h2>@trip.DropoffLocation</h2>
-                                </div>
-                                <div class="meta-grid">
-                                    <div class="meta-item">
-                                        <span class="meta-label">Pickup</span>
-                                        <span class="meta-value">@formattedDate<br><span style="color:var(--text-muted); font-weight:400;">@formattedTime</span></span>
-                                    </div>
-                                    <div class="meta-item">
-                                        <span class="meta-label">Price</span>
-                                        <span class="meta-value">₦@trip.Price.ToString("N0")</span>
-                                    </div>
-                                    <div class="meta-item">
-                                        <span class="meta-label">Passengers</span>
-                                        <span class="meta-value">@trip.MaxPassengers max</span>
-                                    </div>
-                                </div>
-                                <a href="/TaxiTrips/Book?tripId=@trip.Id" class="btn-book-action">Book Now ></a>
-                            </div>
-                        }
-                    </div>
-                }
-            </div>
-
-            @if (Model.TotalPages > 1)
+<div id="trips-container">
+    @if (!Model.Any())
+    {
+        <p>No rides available right now.</p>
+    }
+    else
+    {
+        <div class="trip-options">
+            @foreach (var trip in Model)
             {
-                <div class="pagination">
-                    @if (Model.HasPreviousPage)
-                    {
-                        <a href="/Trips/Taxi?page=@(Model.PageIndex - 1)" class="page-btn">Previous</a>
-                    }
-                    @for (int i = 1; i <= Model.TotalPages; i++)
-                    {
-                        if (i == Model.PageIndex)
-                        {
-                            <span class="page-num active">@i</span>
-                        }
-                        else
-                        {
-                            <a href="/Trips/Taxi?page=@i" class="page-num">@i</a>
-                        }
-                    }
-                    @if (Model.HasNextPage)
-                    {
-                        <a href="/Trips/Taxi?page=@(Model.PageIndex + 1)" class="page-btn">Next ></a>
-                    }
+                var formattedDate = trip.PickupTime.ToString("MM/dd/yyyy");
+                var formattedTime = trip.PickupTime.ToString("hh:mm tt");
+                <div class="trip-card">
+                    <div class="trip-card-icon">🚕</div>
+                    <div class="route-display">
+                        <h2>@trip.PickupLocation</h2>
+                        <span class="route-arrow">→</span>
+                        <h2>@trip.DropoffLocation</h2>
+                    </div>
+                    <div class="meta-grid">
+                        <div class="meta-item">
+                            <span class="meta-label">Pickup</span>
+                            <span class="meta-value">@formattedDate<br><span style="color:var(--text-muted); font-weight:400;">@formattedTime</span></span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Price</span>
+                            <span class="meta-value">₦@trip.Price.ToString("N0")</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Passengers</span>
+                            <span class="meta-value">@trip.MaxPassengers max</span>
+                        </div>
+                    </div>
+                    <a href="/Trips/Taxi/@trip.Id/Book" class="btn-book-action">Book Now ></a>
                 </div>
             }
+        </div>
+    }
+</div>
 
-            <footer class="system-footer">
-                &copy; 2026 Tripfinity Ecosystem. All rights reserved.
-            </footer>
-        </main>
+@if (Model.TotalPages > 1)
+{
+    <div class="pagination">
+        @if (Model.HasPreviousPage)
+        {
+            <a href="/Trips/Taxi?page=@(Model.PageIndex - 1)" class="page-btn">Previous</a>
+        }
+        @for (int i = 1; i <= Model.TotalPages; i++)
+        {
+            if (i == Model.PageIndex)
+            {
+                <span class="page-num active">@i</span>
+            }
+            else
+            {
+                <a href="/Trips/Taxi?page=@i" class="page-num">@i</a>
+            }
+        }
+        @if (Model.HasNextPage)
+        {
+            <a href="/Trips/Taxi?page=@(Model.PageIndex + 1)" class="page-btn">Next ></a>
+        }
     </div>
-</body>
-</html>
+}
+
+<footer class="system-footer">
+    &copy; 2026 Tripfinity Ecosystem. All rights reserved.
+</footer>

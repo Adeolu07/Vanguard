@@ -7,8 +7,8 @@ namespace _Tripfinity.Interfaces;
 public interface IWalletService
 {
     Task<CreateWalletResponse> CreateWalletAsync(CreateWalletRequest createWallet);
-    Task<CreditWalletResponse> CreditWalletAsync(CreditWalletRequest creditWallet);
-    Task<DebitWalletResponse> DebitWalletAsync(DebitWalletRequest debitWallet);
+    Task<WalletTransaction> CreditWalletAsync(CreditWalletRequest creditWallet);
+    Task<WalletTransaction> DebitWalletAsync(DebitWalletRequest debitWallet);
     Task<GetBalanceResponse> GetBalanceAsync(GetBalanceRequest getBalance);
     Task<GetTransactionResponse> GetTransactionAsync(GetTransactionRequest getTransaction);
     Task<RefundResponse> RefundAsync(RefundRequest refund);
