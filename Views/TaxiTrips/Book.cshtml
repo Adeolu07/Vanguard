@@ -75,7 +75,7 @@
                 <div class="checkout-panel">
                     <h3>Select Your Seats</h3>
 
-                    <form method="post" action="/TaxiTrips/Book">
+                    <form method="post" asp-controller="Trips" asp-action="Book">
                         <input type="hidden" name="tripId" value="@ViewBag.Trip.Id" />
 
                         <div class="form-input-wrapper">

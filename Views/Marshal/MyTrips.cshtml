@@ -1,11 +1,19 @@
-@model dynamic
+@model IEnumerable<object>
+@using _Tripfinity.Models.Tables
 @{
-    ViewData["Title"] = "Trips";
-    var vehicleType = ViewBag.VehicleType as string;
+    Layout = "_Layout";
+    ViewData["Title"] = "My Trips";
+    var vehicleType = ViewBag.VehicleType as string ?? "";
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/marshal-portal.css" />
 }
 
-<div class="container mt-4">
-    <h2>My @vehicleType Trips</h2>
+<div class="marshal-trips">
+    <header class="page-header">
+        <h2>My @vehicleType Trips</h2>
+        <a href="/marshal/create/@vehicleType.ToLower()" class="btn-primary">+ New Trip</a>
+    </header>
 
     @if (TempData["Success"] != null)
     {
@@ -16,59 +24,70 @@
         <div class="alert alert-danger">@TempData["Error"]</div>
     }
 
-    <a href="/marshal/create/@vehicleType?.ToLower()" class="btn btn-primary mb-3">Create New Trip</a>
-
-    @if (Model == null || !((IEnumerable<object>)Model!).Any())
+    @if (!Model.Any())
     {
-        <div class="alert alert-info">No trips found.</div>
+        <div class="empty-state">
+            <div class="empty-icon">🗺️</div>
+            <h3>No trips yet</h3>
+            <p>Create your first trip to get started.</p>
+            <a href="/marshal/create/@vehicleType.ToLower()" class="btn-primary">Create Trip</a>
+        </div>
     }
     else
     {
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>From</th>
-                    <th>Destination</th>
-                    <th>Price</th>
-                    <th>Seats</th>
-                    <th>Departure / Pickup</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (dynamic trip in Model!)
+        <div class="trips-grid">
+            @if (string.Equals(vehicleType, "Taxi", StringComparison.OrdinalIgnoreCase))
+            {
+                @foreach (var trip in Model.Cast<TaxiTrip>())
                 {
-                    <tr>
-                        <td>@(trip.From ?? trip.PickupLocation)</td>
-                        <td>@(trip.Destination ?? trip.DropoffLocation)</td>
-                        <td>&#8358;@trip.Price</td>
-                        <td>@(trip.AvailableSeats ?? trip.MaxPassengers) / @(trip.TotalSeats ?? trip.MaxPassengers)</td>
-                        <td>@(trip.DepartureTime?.ToString("g") ?? trip.PickupTime?.ToString("g"))</td>
-                        <td>
-                            @if (trip.IsActive)
-                            {
-                                <span class="badge bg-success">Active</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-secondary">Inactive</span>
-                            }
-                        </td>
-                        <td>
-                            @if (trip.IsActive)
-                            {
-                                <form asp-action="CancelTrip" method="post" style="display:inline">
-                                    <input type="hidden" name="transportType" value="@vehicleType" />
-                                    <input type="hidden" name="tripId" value="@trip.Id" />
-                                    <input type="text" name="reason" placeholder="Reason" class="form-control form-control-sm d-inline-block w-auto" required />
-                                    <button type="submit" class="btn btn-danger btn-sm">Cancel Trip</button>
-                                </form>
-                            }
-                        </td>
-                    </tr>
+                    <div class="trip-card">
+                        <div class="trip-route">@trip.PickupLocation <span>→</span> @trip.DropoffLocation</div>
+                        <div class="trip-meta">
+                            <span>🕒 @trip.PickupTime.ToString("g")</span>
+                            <span>👥 @trip.MaxPassengers max</span>
+                            <span>₦@trip.Price.ToString("N0")</span>
+                        </div>
+                        <div class="trip-status @(trip.IsActive ? "active" : "inactive")">
+                            @(trip.IsActive ? "Active" : "Inactive")
+                        </div>
+                        @if (trip.IsActive)
+                        {
+                            <form asp-action="CancelTrip" method="post" class="cancel-form">
+                                <input type="hidden" name="transportType" value="Taxi" />
+                                <input type="hidden" name="tripId" value="@trip.Id" />
+                                <input type="text" name="reason" placeholder="Reason" required />
+                                <button type="submit" class="btn-danger">Cancel</button>
+                            </form>
+                        }
+                    </div>
                 }
-            </tbody>
-        </table>
+            }
+            else
+            {
+                @foreach (dynamic trip in Model)
+                {
+                    <div class="trip-card">
+                        <div class="trip-route">@trip.From <span>→</span> @trip.Destination</div>
+                        <div class="trip-meta">
+                            <span>🕒 @trip.DepartureTime.ToString("g")</span>
+                            <span>💺 @trip.AvailableSeats / @trip.TotalSeats</span>
+                            <span>₦@trip.Price.ToString("N0")</span>
+                        </div>
+                        <div class="trip-status @(trip.IsActive ? "active" : "inactive")">
+                            @(trip.IsActive ? "Active" : "Inactive")
+                        </div>
+                        @if (trip.IsActive)
+                        {
+                            <form asp-action="CancelTrip" method="post" class="cancel-form">
+                                <input type="hidden" name="transportType" value="@vehicleType" />
+                                <input type="hidden" name="tripId" value="@trip.Id" />
+                                <input type="text" name="reason" placeholder="Reason" required />
+                                <button type="submit" class="btn-danger">Cancel</button>
+                            </form>
+                        }
+                    </div>
+                }
+            }
+        </div>
     }
 </div>

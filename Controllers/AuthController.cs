@@ -4,46 +4,47 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace _Tripfinity.Controllers;
 
-public class AuthController(IAuthService authService, IEmailService emailService, ILogger<AuthController> logger)
-    : Controller
+public class AuthController : Controller
 {
-    private readonly ILogger _logger = logger;
+    private readonly IAuthService _authService;
+    private readonly IEmailService _emailService;
+    private readonly ILogger<AuthController> _logger;
 
-    [HttpGet]
-    public IActionResult DecisionLogin()
+    public AuthController(IAuthService authService, IEmailService emailService, ILogger<AuthController> logger)
     {
-        return View();
+        _authService = authService;
+        _emailService = emailService;
+        _logger = logger;
     }
 
-    [HttpGet]
-    public IActionResult DecisionSignup()
-    {
-        return View();
-    }
+    [HttpGet] public IActionResult DecisionLogin() => View();
+    [HttpGet] public IActionResult DecisionSignup() => View();
 
     [HttpGet]
     public IActionResult SignIn()
     {
         if (HttpContext.Session.GetInt32("userId") != null)
-            return RedirectToAction("Dashboard", "Home");
+        {
+            var role = HttpContext.Session.GetString("Role");
+            return role == "Marshal" ? RedirectToAction("Index", "Marshal") : RedirectToAction("Dashboard", "Home");
+        }
         return View();
     }
 
     [HttpPost]
     public async Task<IActionResult> SignIn(LoginViewModel model)
     {
-        if (!ModelState.IsValid)
-            return View(model);
+        if (!ModelState.IsValid) return View(model);
 
-        var result = await authService.SignInAsync(model.Email, model.Password);
-
+        var result = await _authService.SignInAsync(model.Email, model.Password);
         if (!result.Success || result.User == null)
         {
-            ModelState.AddModelError("", result.Message);
+            ModelState.AddModelError("", "Unable to log in");
             return View(model);
         }
 
-        await authService.SetUserSession(HttpContext, result.User);
+        HttpContext.Session.SetString("FirstName", result.User.FirstName);
+        await _authService.SetUserSession(HttpContext, result.User);
         await HttpContext.Session.CommitAsync();
         return RedirectToAction("Dashboard", "Home");
     }
@@ -51,117 +52,79 @@ public class AuthController(IAuthService authService, IEmailService emailService
     [HttpGet]
     public IActionResult MarshalSignIn()
     {
-        if (HttpContext.Session.GetInt32("userId") != null)
-            return RedirectToAction("Index", "Home");
-        return View();
+        return HttpContext.Session.GetInt32("userId") != null ? RedirectToAction("Index", "Home") : View();
     }
 
     [HttpPost]
     public async Task<IActionResult> MarshalSignIn(LoginViewModel model)
     {
-        if (!ModelState.IsValid)
+        if (!ModelState.IsValid) 
             return View(model);
 
-        var result = await authService.SignInAsync(model.Email, model.Password);
-
+        var result = await _authService.SignInAsync(model.Email, model.Password);
         if (!result.Success || result.User == null)
         {
-            ModelState.AddModelError("", result.Message);
+            ModelState.AddModelError("", "Unable to log in");
             return View(model);
         }
 
-        await authService.SetUserSession(HttpContext, result.User);
+        await _authService.SetUserSession(HttpContext, result.User);
         return RedirectToAction("Index", "Marshal");
     }
-    
+
     [HttpGet]
     public IActionResult MarshalSignUp()
     {
-        if (HttpContext.Session.GetInt32("userId") != null)
-            return RedirectToAction("Index", "Home");
-        return View();
+        return HttpContext.Session.GetInt32("userId") != null ? RedirectToAction("Index", "Home") : View();
     }
 
     [HttpPost]
     public async Task<IActionResult> MarshalSignUp(MarshalRegisterViewModel model)
     {
-        if (!ModelState.IsValid)
-            return View(model);
+        if (!ModelState.IsValid) return View(model);
 
-        var result = await authService.RegisterMarshalAsync(model);
-
+        var result = await _authService.RegisterMarshalAsync(model);
         if (!result.Success || result.User == null)
         {
-            ModelState.AddModelError("", result.Message);
+            ModelState.AddModelError("", "Unable to sign up");
             return View(model);
         }
 
-        _logger.LogInformation("Marshal Signup for {result.User.Email}",  result.User.Email);
-
-        if (string.IsNullOrWhiteSpace(result.User.Email))
-        {
-            _logger.LogError("Email is missing for marshal ID {UserId}", result.User.Id);
-            ModelState.AddModelError("", "Email address missing, cannot send confirmation.");
-            return View(model);
-        }
-
+        _logger.LogInformation("Marshal Signup for {Email}", result.User.Email);
         return RedirectToAction("Dashboard", "Home");
     }
 
     [HttpGet]
     public IActionResult SignUp()
     {
-        if (HttpContext.Session.GetInt32("userId") != null)
-            return RedirectToAction("Index", "Home");
-        return View();
+        return HttpContext.Session.GetInt32("userId") != null ? RedirectToAction("Index", "Home") : View();
     }
 
     [HttpPost]
     public async Task<IActionResult> SignUp(RegisterViewModel model)
     {
-        if (!ModelState.IsValid)
-            return View(model);
+        if (!ModelState.IsValid) return View(model);
 
-        var result = await authService.SignUpAsync(model);
-
+        var result = await _authService.SignUpAsync(model);
         if (!result.Success || result.User == null)
         {
-            ModelState.AddModelError("", result.Message);
+            ModelState.AddModelError("", "Unable to sign up");
             return View(model);
         }
 
-        _logger.LogInformation($"Passenger Signup for {result.User.Email}");
+        _logger.LogInformation("Passenger Signup for {Email}", result.User.Email);
 
-        if (string.IsNullOrWhiteSpace(result.User.Email))
-        {
-            _logger.LogError("Email is missing for user ID {UserId}", result.User.Id);
-            ModelState.AddModelError("", "Email address missing, cannot send confirmation.");
-            return View(model);
-        }
-
-        var confirmationLink = $"{Request.Scheme}://{Request.Host}/auth/ConfirmEmail?" +
-                               $"userId={result.User.Id}&token={result.User.EmailConfirmationToken}";
-
-        try
-        {
-            await emailService.SendConfirmationEmailAsync(result.User.Email, confirmationLink);
-            _logger.LogInformation("Confirmation email sent to {Email}", result.User.Email);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to send confirmation email to {Email}", result.User.Email);
-            TempData["ErrorMessage"] = "Account created, but failed to send confirmation email.";
-        }
+        var confirmationLink = $"{Request.Scheme}://{Request.Host}/auth/ConfirmEmail?userId={result.User.Id}&token={result.User.EmailConfirmationToken}";
+        await _emailService.SendConfirmationEmailAsync(result.User.Email, confirmationLink);
+        _logger.LogInformation("Confirmation email sent to {Email}", result.User.Email);
 
         return RedirectToAction("PassengerConfirmation");
     }
 
-    
-
     [HttpGet]
     public async Task<IActionResult> ConfirmEmail([FromQuery] int userId, [FromQuery] string token)
     {
-        var result = await authService.ConfirmationEmailAsync(userId, token);
+        var result = await _authService.ConfirmationEmailAsync(userId, token);
         if (!result)
         {
             TempData["ErrorMessage"] = "Invalid or expired email confirmation token.";
@@ -172,8 +135,7 @@ public class AuthController(IAuthService authService, IEmailService emailService
         return RedirectToAction("Dashboard", "Home");
     }
 
-    [HttpGet]
-    public IActionResult ForgotPassword() => View();
+    [HttpGet] public IActionResult ForgotPassword() => View();
 
     [HttpPost]
     public async Task<IActionResult> ForgotPassword(string email)
@@ -184,7 +146,7 @@ public class AuthController(IAuthService authService, IEmailService emailService
             return View();
         }
 
-        var result = await authService.ForgotPasswordAsync(email);
+        var result = await _authService.ForgotPasswordAsync(email);
         TempData["SuccessMessage"] = result.Message;
         return RedirectToAction("ForgotPassword");
     }
@@ -192,20 +154,16 @@ public class AuthController(IAuthService authService, IEmailService emailService
     [HttpGet]
     public IActionResult ResetPassword(string email, string token)
     {
-        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(token))
-            return BadRequest("Invalid request.");
-
-        var model = new ResetPasswordViewModel { Email = email, Token = token };
-        return View(model);
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(token)) return BadRequest("Invalid request.");
+        return View(new ResetPasswordViewModel { Email = email, Token = token });
     }
 
     [HttpPost]
     public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
     {
-        if (!ModelState.IsValid)
-            return View(model);
+        if (!ModelState.IsValid) return View(model);
 
-        var result = await authService.ResetPasswordAsync(model.Email, model.Token, model.NewPassword);
+        var result = await _authService.ResetPasswordAsync(model.Email, model.Token, model.NewPassword);
         if (result.Success)
         {
             TempData["SuccessMessage"] = result.Message;
@@ -218,13 +176,10 @@ public class AuthController(IAuthService authService, IEmailService emailService
 
     public IActionResult Logout()
     {
-        authService.ClearUserSession(HttpContext);
+        _authService.ClearUserSession(HttpContext);
         return RedirectToAction("Index", "Home");
     }
 
-    [HttpGet]
-    public IActionResult PassengerConfirmation() => View();
-
-    [HttpGet]
-    public IActionResult MarshalConfirmation() => View();
+    [HttpGet] public IActionResult PassengerConfirmation() => View();
+    [HttpGet] public IActionResult MarshalConfirmation() => View();
 }

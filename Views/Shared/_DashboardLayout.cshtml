@@ -1,0 +1,55 @@
+@{
+    var firstName = Context.Session.GetString("FirstName") ?? "User";
+    var active = ViewData["ActiveNav"] as string ?? "Dashboard";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Tripfinity</title>
+    <link rel="stylesheet" href="~/css/dashboard.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    @RenderSection("Styles", required: false)
+</head>
+<body>
+    <div class="dashboard-layout">
+        <aside class="sidebar">
+            <div class="brand-logo">
+                <div class="logo-icon"></div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/Home/Dashboard" class="nav-item @(active == "Dashboard" ? "active" : "")">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M4 13h6c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1zm0 8h6c.55 0 1-.45 1-1v-4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v4c0 .55.45 1 1 1zm10 0h6c.55 0 1-.45 1-1v-8c0-.55-.45-1-1-1h-6c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1zm0-18v4c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1h-6c-.55 0-1 .45-1 1z" /></svg>
+                    My Dashboard
+                </a>
+                <a href="/Ticket/Index" class="nav-item @(active == "Tickets" ? "active" : "")">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v2z" /></svg>
+                    My Tickets
+                </a>
+                <a href="/Home/Wallet" class="nav-item @(active == "Wallet" ? "active" : "")">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2" ry="2" /><line x1="2" y1="10" x2="22" y2="10" /></svg>
+                    Wallet
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-avatar">
+                    <span>@(string.IsNullOrEmpty(firstName) ? "P" : firstName.Substring(0, 1))</span>
+                </div>
+                <div class="user-info-text">
+                    <div class="user-name">@firstName</div>
+                    <div class="user-status">VERIFIED MEMBER</div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            @RenderBody()
+        </main>
+    </div>
+
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

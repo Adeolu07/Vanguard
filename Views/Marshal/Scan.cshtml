@@ -1,11 +1,16 @@
-@using _Tripfinity.Models.Tables
-@model string
 @{
+    Layout = "_Layout";
     ViewData["Title"] = "Scan & Validate Ticket";
 }
+@section Styles {
+    <link rel="stylesheet" href="~/css/marshal-portal.css" />
+}
 
-<div class="container mt-4">
-    <h2>Scan Ticket</h2>
+<div class="marshal-scan">
+    <header class="page-header">
+        <h2>Scan Ticket</h2>
+        <p>Enter the QR token from the passenger's ticket to validate it.</p>
+    </header>
 
     @if (TempData["Success"] != null)
     {
@@ -16,26 +21,25 @@
         <div class="alert alert-danger">@TempData["Error"]</div>
     }
 
-    <form asp-action="Scan" method="post" class="mb-4">
-        <div class="input-group">
-            <input type="text" name="qrToken" class="form-control" placeholder="Scan or type QR token..." autofocus />
-            <button type="submit" class="btn btn-primary">Validate</button>
-        </div>
+    <form asp-action="Scan" method="post" class="scan-form">
+        <input type="text" name="qrToken" placeholder="Enter QR token..." autofocus required />
+        <button type="submit" class="btn-primary">Validate</button>
     </form>
 
     @if (ViewBag.ValidatedTicket != null)
     {
-        var ticket = (Ticket)ViewBag.ValidatedTicket;
-        <div class="card">
-            <div class="card-header bg-success text-white">
-                Ticket Validated
-            </div>
-            <div class="card-body">
-                <p><strong>Reference:</strong> @ticket.TicketReference</p>
-                <p><strong>Transport:</strong> @ticket.TransportType</p>
-                <p><strong>Trip Time:</strong> @ticket.TripTime.ToString("g")</p>
-                <p><strong>Status:</strong> @ticket.Status</p>
-                <p><strong>Validated At:</strong> @ticket.ValidatedAt?.ToString("g")</p>
+        var ticket = (_Tripfinity.Models.Tables.Ticket)ViewBag.ValidatedTicket;
+        <div class="validated-ticket">
+            <div class="ticket-confirmed">✓ Ticket Validated</div>
+            <div class="ticket-details">
+                <div><strong>Reference:</strong> @ticket.TicketReference</div>
+                <div><strong>Transport:</strong> @ticket.TransportType</div>
+                <div><strong>Trip Time:</strong> @ticket.TripTime.ToString("g")</div>
+                <div><strong>Status:</strong> @ticket.Status</div>
+                @if (ticket.ValidatedAt.HasValue)
+                {
+                    <div><strong>Validated At:</strong> @ticket.ValidatedAt.Value.ToString("g")</div>
+                }
             </div>
         </div>
     }

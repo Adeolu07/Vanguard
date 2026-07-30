@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace _Tripfinity.Controllers;
 
 public class ParentController : Controller
-{
+{ 
     protected int? UserId => HttpContext.Session.GetInt32("userId");
     protected bool IsAuthenticated => HttpContext.Session.GetInt32("userId") != null;
     

@@ -1,177 +1,116 @@
 @model IEnumerable<object>
 @{
+    Layout = "_DashboardLayout";
     ViewData["Title"] = "Dashboard";
-    Layout = null;
+    ViewData["ActiveNav"] = "Dashboard";
 }
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Tripfinity</title>
+@section Styles {
     <link rel="stylesheet" href="~/css/dashboard.css" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-</head>
-<body>
-    <div class="dashboard-layout">
-        <aside class="sidebar">
-            <div class="brand-logo">
-                <div class="logo-icon"></div>
-            </div>
+}
 
-            <nav class="sidebar-nav">
-                <a href="/Home/Dashboard" class="nav-item active">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M4 13h6c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1zm0 8h6c.55 0 1-.45 1-1v-4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v4c0 .55.45 1 1 1zm10 0h6c.55 0 1-.45 1-1v-8c0-.55-.45-1-1-1h-6c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1zm0-18v4c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1h-6c-.55 0-1 .45-1 1z" /></svg>
-                    Passenger Dashboard
-                </a>
-                <a href="/Ticket/Index" class="nav-item">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v2z" /></svg>
-                    My Tickets
-                </a>
-                <a href="/Home/Wallet" class="nav-item">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2" ry="2" /><line x1="2" y1="10" x2="22" y2="10" /></svg>
-                    Wallet
-                </a>
-            </nav>
+<header class="top-header">
+    <h2>Dashboard</h2>
+    <a href="/Auth/Logout" class="btn-signout">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>
+        Sign Out
+    </a>
+</header>
 
-            <div class="sidebar-footer">
-                <div class="user-avatar">
-                    <span>@(string.IsNullOrEmpty(ViewBag.FirstName) ? "P" : ViewBag.FirstName.Substring(0, 1))</span>
-                </div>
-                <div class="user-info-text">
-                    <div class="user-name">@ViewBag.FirstName</div>
-                    <div class="user-status">VERIFIED MEMBER</div>
-                </div>
-            </div>
-        </aside>
+<section class="welcome-section">
+    <span class="sub-brand">PASSENGER DASHBOARD</span>
+    <h1>Welcome back, @ViewBag.FirstName!</h1>
+    <p>Ready for your next trip through the Tripfinity ecosystem?</p>
+</section>
 
-        <main class="main-content">
-            <header class="top-header">
-                <h2>Dashboard</h2>
-                <a href="/Auth/Logout" class="btn-signout">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>
-                    Sign Out
-                </a>
-            </header>
+<section class="balance-banner">
+    <span class="balance-label">CURRENT BALANCE</span>
+    <div class="balance-wrapper">
+        <h1 id="walletBalance">₦@(((decimal)ViewBag.WalletBalance).ToString("N2"))</h1>
+        <button id="toggleBalance" class="eye-btn" type="button">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+            </svg>
+        </button>
+    </div>
+    <div class="status-badge">
+        <span class="dot"></span> Active & Secure
+    </div>
+</section>
 
-            <section class="welcome-section">
-                <span class="sub-brand">PASSENGER DASHBOARD</span>
-                <h1>Welcome back, @ViewBag.FirstName!</h1>
-                <p>Ready for your next trip through the Tripfinity ecosystem?</p>
-            </section>
+<section class="quick-actions-grid">
+    <a href="/Trips/Bus" class="action-card">
+        <div class="card-icon-wrapper">🚌</div>
+        <div class="card-text">
+            <h3>Book a Bus</h3>
+            <p>Intercity routes</p>
+        </div>
+    </a>
+    <a href="/Trips/Taxi" class="action-card">
+        <div class="card-icon-wrapper">🚕</div>
+        <div class="card-text">
+            <h3>Book a Taxi</h3>
+            <p>Private rides</p>
+        </div>
+    </a>
+    <a href="/Trips/Railway" class="action-card">
+        <div class="card-icon-wrapper">🚆</div>
+        <div class="card-text">
+            <h3>Book a Train</h3>
+            <p>High-speed rail</p>
+        </div>
+    </a>
+</section>
 
-            <section class="balance-banner">
-                <span class="balance-label">CURRENT BALANCE</span>
-                <div class="balance-wrapper">
-                    <h1 id="walletBalance">₦@(((decimal)ViewBag.WalletBalance).ToString("N2"))</h1>
-                    <button id="toggleBalance" class="eye-btn" type="button">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                            <circle cx="12" cy="12" r="3" />
-                        </svg>
-                    </button>
-                </div>
-                <div class="status-badge">
-                    <span class="dot"></span> Active & Secure
-                </div>
-            </section>
-
-            <section class="quick-actions-grid">
-                <a href="/Trips/Bus" class="action-card">
-                    <div class="card-icon-wrapper">🚌</div>
-                    <div class="card-text">
-                        <h3>Book a Bus</h3>
-                        <p>Intercity routes</p>
-                    </div>
-                </a>
-                <a href="/Trips/Taxi" class="action-card">
-                    <div class="card-icon-wrapper">🚕</div>
-                    <div class="card-text">
-                        <h3>Book a Taxi</h3>
-                        <p>Private rides</p>
-                    </div>
-                </a>
-                <a href="/Trips/Railway" class="action-card">
-                    <div class="card-icon-wrapper">🚆</div>
-                    <div class="card-text">
-                        <h3>Book a Train</h3>
-                        <p>High-speed rail</p>
-                    </div>
-                </a>
-            </section>
-
-            <section class="trips-section">
-                <h2>Upcoming Trips</h2>
-
-                @if (Model.Any())
-                {
-                    <div class="bookings-list">
-                        @foreach (dynamic booking in Model)
+<section class="trips-section">
+    <h2>Upcoming Trips</h2>
+    @if (Model.Any())
+    {
+        <div class="bookings-list">
+            @foreach (dynamic booking in Model)
+            {
+                <div class="booking-row-item">
+                    <div class="booking-route-info">
+                        @if (booking.BusTrip != null)
                         {
-                            <div class="booking-row-item">
-                                <div class="booking-route-info">
-                                    @if (booking.BusTrip != null)
-                                    {
-                                        <span class="type-tag">Bus</span> <strong>@booking.BusTrip.From → @booking.BusTrip.Destination</strong>
-                                    }
-                                    else if (booking.TaxiTrip != null)
-                                    {
-                                        <span class="type-tag">Taxi</span> <strong>@booking.TaxiTrip.PickupLocation → @booking.TaxiTrip.DropoffLocation</strong>
-                                    }
-                                    else if (booking.RailwayTrip != null)
-                                    {
-                                        <span class="type-tag">Train</span> <strong>@booking.RailwayTrip.From → @booking.RailwayTrip.Destination</strong>
-                                    }
-                                    else
-                                    {
-                                        <span class="type-tag">Trip</span> <strong>Ticket Booking</strong>
-                                    }
-                                </div>
-                                <div class="booking-meta-info">
-                                    <span>📅 @booking.BookingDate.ToString("MMM dd, yyyy")</span>
-                                    <span>₦@booking.TotalAmount.ToString("N0")</span>
-                                </div>
-                                <a href="/Ticket/Details/@booking.Id" class="btn-view">View</a>
-                            </div>
+                            <span class="type-tag">Bus</span> <strong>@booking.BusTrip.From → @booking.BusTrip.Destination</strong>
+                        }
+                        else if (booking.TaxiTrip != null)
+                        {
+                            <span class="type-tag">Taxi</span> <strong>@booking.TaxiTrip.PickupLocation → @booking.TaxiTrip.DropoffLocation</strong>
+                        }
+                        else if (booking.RailwayTrip != null)
+                        {
+                            <span class="type-tag">Train</span> <strong>@booking.RailwayTrip.From → @booking.RailwayTrip.Destination</strong>
+                        }
+                        else
+                        {
+                            <span class="type-tag">Trip</span> <strong>Ticket Booking</strong>
                         }
                     </div>
-                }
-                else
-                {
-                    <div class="empty-state-box">
-                        <h3>No trips yet</h3>
-                        <p>You haven't made any bookings. Start your first journey with Tripfinity today!</p>
-                        <a href="/BusTrips/Index" class="btn-action-primary">Book a Trip</a>
+                    <div class="booking-meta-info">
+                        <span>📅 @booking.BookingDate.ToString("MMM dd, yyyy")</span>
+                        <span>₦@booking.TotalAmount.ToString("N0")</span>
                     </div>
-                }
-            </section>
+                    <a href="/Ticket/Details/@booking.Id" class="btn-view">View</a>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="empty-state-box">
+            <h3>No trips yet</h3>
+            <p>You haven't made any bookings. Start your first journey with Tripfinity today!</p>
+            <a href="/Trips/Bus" class="btn-action-primary">Book a Trip</a>
+        </div>
+    }
+</section>
 
-            <footer class="dashboard-footer-text">
-                &copy; 2026 Tripfinity Ecosystem. All rights reserved.
-            </footer>
-        </main>
-    </div>
+<footer class="dashboard-footer-text">
+    &copy; 2026 Tripfinity Ecosystem. All rights reserved.
+</footer>
 
-    <script>
-            document.addEventListener("DOMContentLoaded", () => {
-                const toggleBtn = document.getElementById("toggleBalance");
-                const balance = document.getElementById("walletBalance");
-                let isHidden = false;
-
-                const realBalance = "N@(((decimal)ViewBag.WalletBalance).ToString("N2"))";
-
-                toggleBtn.addEventListener("click", () => {
-                    if (!isHidden) {
-                        balance.textContent = " ••••••";
-                        isHidden = true;
-                    } else {
-                        balance.textContent = realBalance;
-                        isHidden = false;
-                    }
-                });
-            });
-    </script>
-</body>
-</html>
+@section Scripts {
+    <script src="~/js/dashboard-balance.js"></script>
+}

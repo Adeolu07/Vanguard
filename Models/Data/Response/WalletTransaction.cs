@@ -1,6 +1,6 @@
 namespace _Tripfinity.Models.Data.Response;
 
-public class DebitWalletResponse
+public class WalletTransaction
 {
     public required ResponseHeader ResponseHeader { get; set; }
     public required decimal Amount { get; set; }

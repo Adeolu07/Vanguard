@@ -1,74 +1,52 @@
 @{
-    Layout = "_Layout";
+    Layout = "_DashboardLayout";
     bool success = ViewBag.Success == true;
     bool pending = ViewBag.Pending == true;
     decimal amount = ViewBag.Amount ?? 0;
     ViewData["Title"] = pending ? "Payment Pending" : success ? "Payment Successful" : "Payment Failed";
 }
+@section Styles {
+    <link rel="stylesheet" href="~/css/payment-result.css" />
+}
 
-<div class="container d-flex justify-content-center align-items-center my-5" style="min-height: 60vh;">
-    <div class="card p-5 text-center shadow-sm border rounded-4" style="max-width: 460px; width: 100%; background: #ffffff;">
+<header class="top-header">
+    <h2>Wallet</h2>
+    <a href="/Auth/Logout" class="btn-signout">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>
+        Sign Out
+    </a>
+</header>
 
-        @if (pending)
-        {
-            <div class="mb-4">
-                <span style="font-size: 5rem;">⏳</span>
-            </div>
-            <h2 class="fw-bold text-warning mb-2">Processing Payment</h2>
-            <p class="text-muted mb-1">Processing your payment of</p>
-            <h1 class="display-5 fw-bold mb-4" style="color: #212529;">₦@amount.ToString("N2")</h1>
-            <p class="text-muted small mb-4">Please wait while we confirm your transaction...</p>
-            <div class="spinner-border text-warning mb-3" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
-            <div id="statusMsg" class="text-muted small"></div>
-        }
-        else if (success)
-        {
-            <div class="mb-4">
-                <span style="font-size: 5rem;">✅</span>
-            </div>
-            <h2 class="fw-bold text-success mb-2">Payment Successful</h2>
-            <p class="text-muted mb-1">Your wallet has been funded with</p>
-            <h1 class="display-5 fw-bold mb-4" style="color: #212529;">₦@amount.ToString("N2")</h1>
-            <p class="text-muted small mb-4">Your balance has been updated. You can now use your wallet to book trips.</p>
-            <a href="/Wallet" class="btn btn-dark w-100 rounded-pill py-3 fw-bold mb-2">Back to Wallet</a>
-            <a href="/" class="btn btn-outline-secondary w-100 rounded-pill py-2">Go Home</a>
-        }
-        else
-        {
-            <div class="mb-4">
-                <span style="font-size: 5rem;">❌</span>
-            </div>
-            <h2 class="fw-bold text-danger mb-2">Payment Failed</h2>
-            <p class="text-muted mb-4">We were unable to fund your wallet. Please try again.</p>
-            <a href="/Wallet" class="btn btn-dark w-100 rounded-pill py-3 fw-bold mb-2">Try Again</a>
-            <a href="/" class="btn btn-outline-secondary w-100 rounded-pill py-2">Go Home</a>
-        }
-
-    </div>
+<div class="result-card">
+    @if (pending)
+    {
+        <div class="result-icon">⏳</div>
+        <h2 class="text-warning">Processing Payment</h2>
+        <p>Processing your payment of</p>
+        <h1>₦@amount.ToString("N2")</h1>
+        <p style="font-size:13px; color:#94a3b8;">Please wait while we confirm your transaction...</p>
+        <div id="statusMsg" style="margin-top:16px; color:#94a3b8; font-size:13px;"></div>
+    }
+    else if (success)
+    {
+        <div class="result-icon">✅</div>
+        <h2 class="text-success">Payment Successful</h2>
+        <p>Your wallet has been funded with</p>
+        <h1>₦@amount.ToString("N2")</h1>
+        <p>Your balance has been updated.</p>
+        <a href="/Home/Wallet">Back to Wallet</a>
+        <a href="/" class="outline">Go Home</a>
+    }
+    else
+    {
+        <div class="result-icon">❌</div>
+        <h2 class="text-danger">Payment Failed</h2>
+        <p>We were unable to fund your wallet.</p>
+        <a href="/Home/Wallet">Try Again</a>
+        <a href="/" class="outline">Go Home</a>
+    }
 </div>
 
-@if (ViewBag.Pending == true)
-{
-    @section Scripts {
-        <script>
-            setTimeout(async () => {
-                document.getElementById('statusMsg').textContent = 'Confirming transaction...';
-
-                try {
-                    const res = await fetch('/Wallet/VerifyPayment');
-                    const data = await res.json();
-
-                    if (data.success) {
-                        window.location.href = '/Wallet/PaymentResult?success=true&amount=' + data.amount;
-                    } else {
-                        window.location.href = '/Wallet/PaymentResult?success=false&amount=' + data.amount;
-                    }
-                } catch {
-                    window.location.href = '/Wallet/PaymentResult?success=false&amount=0';
-                }
-            }, 2000);
-        </script>
-    }
+@section Scripts {
+    <script src="~/js/payment-result.js"></script>
 }

@@ -1,0 +1,80 @@
+@model _Tripfinity.Models.ViewModels.TicketIndexViewModel
+@using _Tripfinity.Models.Tables
+@{
+    Layout = "_DashboardLayout";
+    ViewData["Title"] = "My Tickets";
+    ViewData["ActiveNav"] = "Tickets";
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/ticket-list.css" />
+}
+
+<header class="top-header">
+    <h2>My Tickets</h2>
+    <a href="/Auth/Logout" class="btn-signout">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>
+        Sign Out
+    </a>
+</header>
+
+<section class="welcome-section">
+    <span class="sub-brand">TRAVEL HISTORY</span>
+    <h1>My Tickets</h1>
+    <p>All your booked trips in one place.</p>
+</section>
+
+@if (Model.Bookings != null && Model.Bookings.Any())
+{
+    <div class="tickets-list">
+        @foreach (var booking in Model.Bookings)
+        {
+            <div class="ticket-row">
+                <div class="ticket-row-left">
+                    <div class="ticket-type-icon">
+                        @if (booking.BusTrip != null)
+                        {<span>🚌</span>}
+                        else if (booking.TaxiTrip != null)
+                        {<span>🚕</span>}
+                        else if (booking.RailwayTrip != null)
+                        {<span>🚆</span>}
+                    </div>
+                    <div class="ticket-route-info">
+                        @if (booking.BusTrip != null)
+                        {
+                            <strong>@booking.BusTrip.From → @booking.BusTrip.Destination</strong>
+                            <div class="ticket-meta">📅 @booking.BusTrip.DepartureTime.ToString("MMM dd, yyyy - hh:mm tt")</div>
+                        }
+                        else if (booking.TaxiTrip != null)
+                        {
+                            <strong>@booking.TaxiTrip.PickupLocation → @booking.TaxiTrip.DropoffLocation</strong>
+                            <div class="ticket-meta">📅 @booking.TaxiTrip.PickupTime.ToString("MMM dd, yyyy - hh:mm tt")</div>
+                        }
+                        else if (booking.RailwayTrip != null)
+                        {
+                            <strong>@booking.RailwayTrip.From → @booking.RailwayTrip.Destination</strong>
+                            <div class="ticket-meta">📅 @booking.RailwayTrip.DepartureTime.ToString("MMM dd, yyyy - hh:mm tt") | @booking.RailwayTrip.TrainClass</div>
+                        }
+                    </div>
+                </div>
+                <div class="ticket-row-right">
+                    <span class="ticket-status @booking.Status.ToString().ToLower()">@booking.Status</span>
+                    <span class="ticket-seats">🎫 @booking.NumberOfSeats</span>
+                    <span class="ticket-price">₦@booking.TotalAmount.ToString("N0")</span>
+                    <a href="/Ticket/Details/@booking.Id" class="btn-view">View →</a>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="empty-state-box">
+        <h3>No tickets yet</h3>
+        <p>You haven't booked any trips. Start your first journey!</p>
+        <a href="/BusTrips/Index" class="btn-action-primary">Book a Trip</a>
+    </div>
+}
+
+<footer class="dashboard-footer-text">
+    &copy; 2026 Tripfinity Ecosystem. All rights reserved.
+</footer>

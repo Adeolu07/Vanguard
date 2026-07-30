@@ -9,6 +9,16 @@
 @section Styles {
     <link rel="stylesheet" href="~/css/SignIn.css" />
 }
+<script>
+    const animBtn = document.getElementById("submit");
+
+    animBtn.addEventListener('click', () => {
+        animBtn.classList.add("loading");
+        //The following is used for demo purposes only//
+        setTimeout(() => animBtn.classList.remove("loading"), 5000);
+    });
+
+</script>
 
 <header>
     <div class="nav-container">
@@ -48,7 +58,7 @@
             </div>
 
             <div class="action-container">
-                <button type="submit" class="btn-continue">Continue</button>
+                <button type="submit" class="btn-continue" id="submit">Continue</button>
                 <div class="signup-redirect">
                     <span>Don't have an account? <a href="/Auth/DecisionSignup">→ Sign up</a></span>
                 </div>
@@ -61,3 +71,4 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+
