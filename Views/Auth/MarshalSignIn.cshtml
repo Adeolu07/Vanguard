@@ -2,67 +2,81 @@
 
 @{
     ViewData["Title"] = "Marshal Sign In";
-    ViewData["FullPage"] = true;
-    Layout = "_AuthLayout";
-}
-@section Styles {
-    <link rel="stylesheet" href="~/css/MarshalSignIn.css" />
-}
-@{
-    ViewData["HideNavbar"] = true;
+    Layout = null;
 }
 
-<header>
-    <div class="nav-container">
-        <p>Tripfinity</p>
-    </div>
-</header>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Tripfinity</title>
 
-<main class="page-container">
-    <section class="graphic-side left-banner"></section>
+    <link rel="stylesheet" href="~/css/MarshalSignIn.css" asp-append-version="true" />
+</head>
+<body>
 
-    <section class="form-section">
-        <h1 class="page-title">Log in</h1>
+    <div class="viewport-outer-container">
+        <!-- Fullscreen Layout Canvas -->
+        <div class="mockup-card">
 
-        @if (TempData["ErrorMessage"] != null)
-        {
-            <div class="error-message">⚠️ @TempData["ErrorMessage"]</div>
-        }
+            <!-- Logo -->
+            <div class="card-logo">Tripfinity</div>
 
-        @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
-        {
-            <div class="validation-summary">
-                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            <!-- Asymmetric Navy Side Banners (Viewport Anchored) -->
+            <div class="navy-block-left"></div>
+            <div class="navy-block-right"></div>
+
+            <!-- Centered Form Area -->
+            <main class="form-wrapper">
+                <h1 class="form-heading">Sign In</h1>
+
+                @* TempData & ModelState Error Handling *@
+                @if (TempData["ErrorMessage"] != null)
                 {
-                    <div>⚠️ @error.ErrorMessage</div>
+                    <div class="alert-summary">⚠️ @TempData["ErrorMessage"]</div>
                 }
-            </div>
-        }
 
-        <form asp-action="MarshalSignIn" method="post" class="login-form">
-            <div class="form-group">
-                <input asp-for="Email" type="text" placeholder="Enter email or phone number" />
-                <span asp-validation-for="Email" class="error"></span>
-            </div>
+                @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
+                {
+                    <div class="alert-summary">
+                        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                        {
+                            <div>⚠️ @error.ErrorMessage</div>
+                        }
+                    </div>
+                }
 
-            <div class="form-group">
-                <input asp-for="Password" type="password" placeholder="Enter password" />
-                <span asp-validation-for="Password" class="error"></span>
-            </div>
+                <form asp-action="MarshalSignIn" method="post" class="login-form-custom">
+                    <div class="form-field-group">
+                        <input asp-for="Email" class="input-field-custom" type="text" placeholder="Enter email or phone number" />
+                        <span asp-validation-for="Email" class="error-text"></span>
+                    </div>
 
-            <div class="action-container">
-                <button type="submit" class="btn-continue">Continue</button>
-                <div class="signup-redirect">
-                    <span>Don't have an account? <a href="/Auth/DecisionSignup">→ Sign up</a></span>
-                </div>
-            </div>
-        </form>
-    </section>
+                    <div class="form-field-group">
+                        <input asp-for="Password" class="input-field-custom" type="password" placeholder="Enter password" />
+                        <span asp-validation-for="Password" class="error-text"></span>
+                    </div>
 
-    <section class="graphic-side right-banner"></section>
-</main>
+                    <button type="submit" class="btn-continue">Continue</button>
 
-<!-- Validation scripts -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+                    <div class="signup-text-wrapper">
+                        <span class="signup-prompt">Don't have an account?</span>
+                        <a href="/Auth/DecisionSignup" class="signup-link-custom">Sign up</a>
+                    </div>
+                </form>
+            </main>
+
+            <!-- Footer -->
+            <p class="card-copyright">&copy; 2026 Tripfinity Ecosystem. All rights reserved.</p>
+
+        </div>
+    </div>
+
+    <!-- Validation Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+
+</body>
+</html>

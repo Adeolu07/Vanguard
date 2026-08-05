@@ -2,99 +2,137 @@
 
 @{
     ViewData["Title"] = "Marshal Sign Up";
-    ViewData["FullPage"] = true;
     Layout = "_AuthLayout";
 }
+
 @section Styles {
     <link rel="stylesheet" href="~/css/MarshalSignUp.css" />
 }
+
 @{
     ViewData["HideNavbar"] = true;
 }
 
-<header>
-    <div class="nav-container">
-        <p>Tripfinity</p>
+<!-- Top Header Navigation -->
+<header class="top-nav">
+    <div class="nav-brand">
+        <span class="logo-text">Tripfinity</span>
+    </div>
+    <div class="nav-actions">
+        <a asp-controller="Auth" asp-action="MarshalSignIn" class="btn-link">Sign In</a>
     </div>
 </header>
 
-<main class="page-container">
-    <section class="form-section">
-        <h1 class="page-title">Sign up as Marshal</h1>
-
-        @if (TempData["Success"] != null)
-        {
-            <div class="alert alert-success">✅ @TempData["Success"]</div>
-        }
-
-        @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
-        {
-            <div class="validation-summary">
-                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
-                {
-                    <div>⚠️ @error.ErrorMessage</div>
-                }
-            </div>
-        }
-
-        <form asp-action="MarshalSignUp" method="post" class="signup-grid">
-            <div class="form-group">
-                <input asp-for="FirstName" placeholder="First Name" />
-                <span asp-validation-for="FirstName" class="error"></span>
+<!-- Main Workspace Body -->
+<div class="main-wrapper">
+    <main class="auth-card">
+        <!-- Left Side: Form Content -->
+        <section class="form-section">
+            <div class="form-header">
+                <h1 class="page-title">Sign up as Marshal</h1>
+                <p class="subtitle">Join our elite network of transit marshals. Verify your vehicle and start ensuring urban mobility today.</p>
             </div>
 
-            <div class="form-group">
-                <input asp-for="LastName" placeholder="Last Name" />
-                <span asp-validation-for="LastName" class="error"></span>
-            </div>
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success">✅ @TempData["Success"]</div>
+            }
 
-            <div class="form-group">
-                <input asp-for="Email" type="email" placeholder="Email Address" />
-                <span asp-validation-for="Email" class="error"></span>
-            </div>
-
-            <div class="form-group">
-                <input asp-for="PhoneNumber" type="tel" placeholder="Phone Number" />
-                <span asp-validation-for="PhoneNumber" class="error"></span>
-            </div>
-
-            <div class="form-group">
-                <input asp-for="Password" type="password" placeholder="Password" />
-                <span asp-validation-for="Password" class="error"></span>
-            </div>
-
-            <div class="form-group">
-                <input asp-for="ConfirmPassword" type="password" placeholder="Confirm Password" />
-                <span asp-validation-for="ConfirmPassword" class="error"></span>
-            </div>
-
-            <!-- Marshal‑specific fields -->
-            <div class="form-group">
-                <select asp-for="VehicleType" class="form-select">
-                    <option value="">-- Select Vehicle Type --</option>
-                    <option value="Bus">Bus</option>
-                    <option value="Railway">Railway</option>
-                    <option value="Taxi">Taxi</option>
-                </select>
-                <span asp-validation-for="VehicleType" class="error"></span>
-            </div>
-
-            <div class="form-group">
-                <input asp-for="LicenseId" placeholder="License ID" />
-                <span asp-validation-for="LicenseId" class="error"></span>
-            </div>
-
-            <div class="action-container">
-                <button type="submit" class="btn-next">Create Marshal Account</button>
-                <div class="login-redirect">
-                    <span>Existing user? <a href="/Auth/DecisionLogin">→ Log in</a></span>
+            @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
+            {
+                <div class="validation-summary">
+                    @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        <div>⚠️ @error.ErrorMessage</div>
+                    }
                 </div>
-            </div>
-        </form>
-    </section>
+            }
 
-    <section class="graphic-side"></section>
-</main>
+            <form asp-action="MarshalSignUp" method="post" class="signup-grid">
+                <div class="form-group">
+                    <label asp-for="FirstName">First Name</label>
+                    <input asp-for="FirstName" placeholder="e.g. Alexander" />
+                    <span asp-validation-for="FirstName" class="error"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="LastName">Last Name</label>
+                    <input asp-for="LastName" placeholder="e.g. Sterling" />
+                    <span asp-validation-for="LastName" class="error"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Email">Email Address</label>
+                    <input asp-for="Email" type="email" placeholder="alex.s@tripfinity.com" />
+                    <span asp-validation-for="Email" class="error"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="PhoneNumber">Phone Number</label>
+                    <input asp-for="PhoneNumber" type="tel" placeholder="+234 (0) 800 000 0000" />
+                    <span asp-validation-for="PhoneNumber" class="error"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Password">Password</label>
+                    <input asp-for="Password" type="password" placeholder="••••••••" />
+                    <span asp-validation-for="Password" class="error"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="ConfirmPassword">Confirm Password</label>
+                    <input asp-for="ConfirmPassword" type="password" placeholder="••••••••" />
+                    <span asp-validation-for="ConfirmPassword" class="error"></span>
+                </div>
+
+                <!-- Marshal-specific fields -->
+                <div class="form-group">
+                    <label asp-for="VehicleType">Vehicle Type</label>
+                    <select asp-for="VehicleType" class="form-select">
+                        <option value="">-- Select Vehicle Type --</option>
+                        <option value="Bus">Bus</option>
+                        <option value="Railway">Railway</option>
+                        <option value="Taxi">Taxi</option>
+                    </select>
+                    <span asp-validation-for="VehicleType" class="error"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="LicenseId">License ID</label>
+                    <input asp-for="LicenseId" placeholder="TX-992-004-B" />
+                    <span asp-validation-for="LicenseId" class="error"></span>
+                </div>
+
+                <div class="action-container">
+                    <button type="submit" class="btn-submit">Create Marshal Account</button>
+                    <div class="signin-prompt">
+                        <span>Existing user?</span>
+                        <a href="/Auth/DecisionLogin" class="signin-link">Log in &rarr;</a>
+                    </div>
+                </div>
+            </form>
+        </section>
+
+        <!-- Right Side: Dark Navy Banner Card -->
+        <section class="graphic-side">
+            <div class="graphic-card">
+                <h2 class="graphic-title">Empowering Smart Transit</h2>
+                <p class="graphic-description">
+                    Marshals are the backbone of Tripfinity, ensuring every journey is safe, efficient, and exceptionally smooth.
+                </p>
+            </div>
+        </section>
+    </main>
+</div>
+
+<!-- Footer Section -->
+<footer class="footer">
+    <div class="footer-content">
+        <h3 class="footer-brand">Tripfinity</h3>
+        <p class="footer-copyright">&copy; 2026 Tripfinity Ecosystem. All rights reserved.</p>
+    </div>
+</footer>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
