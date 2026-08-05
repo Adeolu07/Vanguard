@@ -1,177 +1,211 @@
-﻿/* ===== General Resets ===== */
+﻿/* ===== RESET & BASE LAYOUT ===== */
 * {
-    box-sizing: border-box;
+    box-sizing: border-box !important;
     margin: 0;
     padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
 }
 
-body {
-    background-color: #ffffff;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+html, body {
+    width: 100% !important;
+    height: 100% !important;
+    background-color: #ffffff !important;
+    overflow: hidden !important;
 }
 
-/* ===== Header Bar (Solid Black) ===== */
-header {
-    background-color: #000000;
-    color: #fff;
-    padding: 20px 40px;
-    width: 100%;
+/* Outer Fullscreen Grid (Split Screen) */
+.passenger-page-container {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background-color: #ffffff !important;
 }
 
-.nav-container p {
-    font-size: 18px;
-    font-weight: bold;
-    letter-spacing: 0.5px;
+/* ===== LEFT CONTENT SECTION ===== */
+.left-content-area {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    padding: 48px 64px 32px 80px !important;
+    height: 100% !important;
+    position: relative !important;
+    z-index: 2 !important;
 }
 
-/* ===== Desktop 3-Column Splitter ===== */
-.page-container {
-    display: grid;
-    grid-template-columns: 1fr 1.2fr 1fr; 
-    flex: 1;
-    min-height: calc(100vh - 61px);
-    align-items: stretch; 
-    gap: 60px;
-    padding: 40px 60px;
+/* Brand Logo (Top Left) */
+.brand-logo {
+    font-size: 16px !important;
+    font-weight: 800 !important;
+    color: #0b1f3a !important;
 }
 
-/* ===== Center Form Panel Styling ===== */
+/* Center Form Area */
 .form-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    width: 100%;
-    max-width: 440px;
-    margin: 0 auto;
+    width: 100% !important;
+    max-width: 380px !important;
+    margin-top: auto !important;
+    margin-bottom: auto !important;
 }
 
+/* Headline */
 .page-title {
-    font-size: 32px;
-    font-weight: 500;
-    margin-bottom: 36px;
-    color: #000000;
-    line-height: 1.3;
+    font-size: 34px !important;
+    font-weight: 800 !important;
+    color: #000000 !important;
+    line-height: 1.15 !important;
+    margin-bottom: 36px !important;
+    letter-spacing: -0.5px !important;
+    text-align: left !important;
 }
 
-/* Stacked Form Fields Layout */
+/* Form Layout */
 .login-form {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    width: 100%;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+    width: 100% !important;
 }
 
 .form-group {
-    width: 100%;
+    width: 100% !important;
 }
 
-    /* Gray Rounded Pill Inputs */
-    .form-group input {
-        width: 100%;
-        padding: 18px 24px;
-        background-color: #e0e0e0;
-        border: none;
-        border-radius: 12px;
-        font-size: 16px;
-        color: #333;
-        outline: none;
+/* Soft Gray Field Inputs */
+.input-field {
+    width: 100% !important;
+    padding: 14px 18px !important;
+    background-color: #f1f3f5 !important;
+    border: 1px solid transparent !important;
+    border-radius: 8px !important;
+    font-size: 12px !important;
+    color: #1f2937 !important;
+    outline: none !important;
+    transition: background-color 0.2s ease, border-color 0.2s ease !important;
+}
+
+    .input-field::placeholder {
+        color: #8c95a1 !important;
+        font-size: 11.5px !important;
     }
 
-        .form-group input::placeholder {
-            color: #757575;
-        }
+    .input-field:focus {
+        background-color: #ffffff !important;
+        border-color: #0b1f3a !important;
+    }
 
-/* Error message styling */
-.error {
-    color: #d32f2f;
-    font-size: 12px;
-    margin-top: 4px;
-    display: block;
-    text-align: left;
+/* Forgot Password Link */
+.forgot-link-wrapper {
+    display: flex !important;
+    justify-content: flex-start !important;
+    margin-top: -4px !important;
+    margin-bottom: 8px !important;
 }
 
-/* Action Container for Button and Link */
-.action-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-top: 16px;
-    width: 100%;
+.forgot-password-link {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    color: #0b1f3a !important;
+    text-decoration: none !important;
 }
 
-/* Dark Navy Button */
+    .forgot-password-link:hover {
+        text-decoration: underline !important;
+    }
+
+/* Dark Navy Submit Button */
 .btn-continue {
-    width: 100%;
-    padding: 16px 0;
-    background-color: #050a52;
-    color: #fff;
-    border: none;
-    border-radius: 12px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-    margin-bottom: 24px;
+    width: 100% !important;
+    padding: 14px 0 !important;
+    background-color: #030e2e !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 8px !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    transition: background-color 0.2s ease !important;
+    margin-top: 4px !important;
 }
 
     .btn-continue:hover {
-        background-color: #020536;
+        background-color: #0b1f3a !important;
     }
 
-/* Sign Up Link Styles below button */
+/* Bottom Sign-Up Redirect */
 .signup-redirect {
-    font-size: 15px;
-    color: #000000;
-    font-weight: 500;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    margin-top: 18px !important;
+    font-size: 11px !important;
 }
 
-    .signup-redirect a {
-        color: #000000;
-        text-decoration: none;
-        font-weight: bold;
-        margin-left: 4px;
+.signup-text {
+    color: #6b7280 !important;
+}
+
+.signup-link {
+    color: #000000 !important;
+    font-weight: 800 !important;
+    text-decoration: none !important;
+}
+
+    .signup-link:hover {
+        text-decoration: underline !important;
     }
 
-        .signup-redirect a:hover {
-            text-decoration: underline;
-        }
-
-
-.left-banner {
-    background-color: #000000;
-    height: 55vh;
-    border-radius: 4px;
-    width: 100%;
-    margin-top: auto; 
+/* Footer Copyright Notice */
+.footer-copyright {
+    font-size: 11px !important;
+    color: #9ca3af !important;
+    border-top: 1px solid #f3f4f6 !important;
+    padding-top: 20px !important;
+    margin-top: 20px !important;
+    text-align: left !important;
 }
 
-
-.right-banner {
-    background-color: #000000;
-    height: 75vh;
-    border-radius: 4px;
-    width: 100%;
-    margin-bottom: auto; /* Balances it upwards */
+/* ===== RIGHT GRAPHIC PANEL ===== */
+.right-graphic-panel {
+    background-color: #f1f3f5 !important;
+    border-top-left-radius: 80px !important;
+    width: 100% !important;
+    height: 90vh !important;
+    align-self: flex-end !important;
 }
 
-/* Responsiveness */
+/* ===== VALIDATION STYLES ===== */
+.error-text {
+    color: #dc2626 !important;
+    font-size: 10.5px !important;
+    margin-top: 4px !important;
+    display: block !important;
+    text-align: left !important;
+}
 
-@media (max-width: 1024px) {
-    .page-container {
-        grid-template-columns: 1fr;
-        padding: 40px 24px;
+.error-summary {
+    background-color: #fef2f2 !important;
+    border: 1px solid #fecaca !important;
+    color: #991b1b !important;
+    padding: 8px 12px !important;
+    border-radius: 6px !important;
+    font-size: 11px !important;
+    margin-bottom: 16px !important;
+    width: 100% !important;
+    text-align: left !important;
+}
+
+/* Responsive collapse for tablet/mobile */
+@media (max-width: 900px) {
+    .passenger-page-container {
+        grid-template-columns: 1fr !important;
     }
-}
 
-.left-banner, .right-banner {
-    display: none;
-}
+    .right-graphic-panel {
+        display: none !important;
+    }
 
-.form-section {
-    max-width: 100%;
+    .left-content-area {
+        padding: 32px 24px !important;
+    }
 }

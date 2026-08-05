@@ -1,147 +1,283 @@
-﻿/* ===== General Resets ===== */
+﻿/* ===== Base & Layout Setup ===== */
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 body {
-    background-color: #ffffff;
+    background-color: #f3f4f6;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    color: #1a1a1a;
 }
 
-/* ===== Header Bar (Solid Black) ===== */
-header {
-    background-color: #000000;
-    color: #fff;
-    padding: 20px 40px;
+/* ===== Top Header Bar ===== */
+.top-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 3rem;
+    background-color: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.logo-text {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.btn-link {
+    text-decoration: none;
+    color: #6b7280;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: color 0.2s;
+    cursor: pointer;
+}
+
+    .btn-link:hover {
+        color: #111827;
+    }
+
+.btn-pill-active {
+    text-decoration: none;
+    background-color: #9ca3af;
+    color: #ffffff;
+    padding: 0.5rem 1.125rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* ===== Responsive Workspace Layout ===== */
+.main-wrapper {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Keeps a nice gap around the card on larger displays */
+    padding: 2rem 2vw;
     width: 100%;
 }
 
-.nav-container p {
-    font-size: 18px;
-    font-weight: bold;
-    letter-spacing: 0.5px;
+.auth-card {
+    background: #ffffff;
+    width: 100%;
+    /* Caps max width on 4K screens so it doesn't look stretched, but spans fully on standard monitors */
+    max-width: 1400px;
+    /* Responsive Proportions: Form gets 58%, Blue Column gets 42% on ALL screen sizes */
+    grid-template-columns: 1.4fr 1fr !important;
+    display: grid !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+    border-radius: 16px;
+    min-height: 70vh;
 }
 
-/* ===== Desktop Layout Splitter ===== */
-.page-container {
-    display: grid;
-    grid-template-columns: 1.2fr 0.8fr; 
-    flex: 1;
-    min-height: calc(100vh - 61px);
-}
-
-/* ===== Left Form Panel Styling ===== */
+/* ===== Left Form Section ===== */
 .form-section {
-    padding: 60px 80px;
+    /* Responsive padding scales smoothly with screen size */
+    padding: clamp(2rem, 4vw, 4rem) clamp(2rem, 5vw, 5rem);
     display: flex;
     flex-direction: column;
     justify-content: center;
-    max-width: 800px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.form-header {
+    margin-bottom: 1.75rem;
 }
 
 .page-title {
-    font-size: 56px;
-    font-weight: 500;
-    margin-bottom: 40px;
-    color: #000000;
+    font-size: clamp(1.75rem, 2.5vw, 2.25rem);
+    font-weight: 700;
+    color: #0b1527;
+    margin-bottom: 0.375rem;
 }
 
-/* 2-Column Form Fields Grid Layout */
+.subtitle {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+/* Grid Layout for Form Fields */
 .signup-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 30px 24px; 
+    gap: 1.25rem 1.5rem;
 }
 
 .form-group {
-    width: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
-    /* Gray Pill Inputs */
-    .form-group input {
-        width: 100%;
-        padding: 18px 24px;
-        background-color: #e0e0e0;
-        border: none;
-        border-radius: 12px;
-        font-size: 16px;
-        color: #333;
-        outline: none;
+    .form-group.full-width {
+        grid-column: span 2;
     }
 
-        .form-group input::placeholder {
-            color: #757575;
+    .form-group label {
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.375rem;
+    }
+
+    /* Inputs */
+    .form-group input {
+        width: 100%;
+        padding: 0.875rem 1.125rem;
+        background-color: #f3f4f6;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        font-size: 0.9375rem;
+        color: #1f2937;
+        outline: none;
+        transition: border-color 0.2s, background-color 0.2s;
+    }
+
+        .form-group input:focus {
+            background-color: #ffffff;
+            border-color: #0b1b3d;
         }
 
-/* Error message styling */
+        .form-group input::placeholder {
+            color: #9ca3af;
+        }
+
+/* Validation */
 .error {
-    color: #d32f2f;
-    font-size: 12px;
-    margin-top: 4px;
-    display: block;
+    color: #dc2626;
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
 }
 
+.validation-summary {
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+    padding: 0.75rem;
+    border-radius: 8px;
+    font-size: 0.8125rem;
+    margin-bottom: 1rem;
+}
 
+/* Button */
 .btn-container {
     grid-column: span 2;
-    margin-top: 20px;
+    margin-top: 0.75rem;
 }
 
-/* Dark Navy Button */
 .btn-submit {
-    padding: 16px 60px;
-    background-color: #050a52; 
-    color: #fff;
+    width: 140px;
+    padding: 0.875rem 0;
+    background-color: #0b1b3d;
+    color: #ffffff;
     border: none;
-    border-radius: 10px;
-    font-size: 16px;
-    font-weight: bold;
+    border-radius: 8px;
+    font-size: 0.9375rem;
+    font-weight: 600;
     cursor: pointer;
     transition: background-color 0.2s ease;
 }
 
     .btn-submit:hover {
-        background-color: #020536;
+        background-color: #162a56;
     }
 
-/* ===== Right Black Graphic Banner Panel ===== */
-.graphic-side {
-    background-color: #000000;
-    margin: 40px 40px 40px 0; 
-    border-radius: 4px;
+/* Sign In Prompt */
+.signin-prompt {
+    grid-column: span 2;
+    margin-top: 1.25rem;
+    font-size: 0.8125rem;
+    color: #6b7280;
 }
 
-/* Responsiveness */
+.signin-link {
+    color: #0b1b3d;
+    font-weight: 700;
+    text-decoration: none;
+    margin-left: 0.25rem;
+}
 
-/* Mobile & Tablet Screens Setup */
-@media (max-width: 900px) {
-    .page-container {
-        grid-template-columns: 1fr;  
+    .signin-link:hover {
+        text-decoration: underline;
+    }
+
+/* ===== Right Blue Column ===== */
+.graphic-side {
+    background-color: #050e21; /* Dark navy */
+    height: 100%;
+    width: 100%;
+}
+
+/* ===== Footer Section ===== */
+.footer {
+    background-color: #e5e7eb;
+    padding: 2rem 3rem;
+    margin-top: auto;
+}
+
+.footer-content {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.footer-brand {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 0.25rem;
+}
+
+.footer-copyright {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+/* ===== Mobile & Tablet Adjustments ===== */
+@media (max-width: 960px) {
+    .main-wrapper {
+        padding: 0;
+    }
+
+    .auth-card {
+        grid-template-columns: 1fr !important;
+        border-radius: 0;
+        min-height: auto;
     }
 
     .graphic-side {
-        display: none; /* Disappears on smaller displays */
+        display: none; /* Hide blue panel on small mobile devices */
     }
 
     .form-section {
-        padding: 40px 24px;
+        padding: 2rem 1.25rem;
     }
 
     .signup-grid {
-        grid-template-columns: 1fr; /* Collapse form into 1 simple column */
-        gap: 20px;
+        grid-template-columns: 1fr;
     }
 
-    .btn-container {
+    .form-group.full-width,
+    .btn-container,
+    .signin-prompt {
         grid-column: span 1;
     }
 
     .btn-submit {
-        width: 100%; /* Make button full width on smaller phones */
+        width: 100%;
     }
 }
