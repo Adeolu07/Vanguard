@@ -1,8 +1,6 @@
 using System.Diagnostics;
 using _Tripfinity.Interfaces;
-using _Tripfinity.Models.Data.Requests;
 using _Tripfinity.Models.ViewModels;
-using _Tripfinity.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace _Tripfinity.Controllers;
