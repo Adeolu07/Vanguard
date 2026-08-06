@@ -19,6 +19,8 @@ public class Program
         builder.Services.AddScoped<ITripListingService, TripListingService>();
         builder.Services.AddScoped<IMarshalService, MarshalService>();
         builder.Services.AddScoped<IPassengerService, PassengerService>();
+        builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+        builder.Services.AddProblemDetails();
         builder.Services.AddHttpClient<IWalletService, WalletService>(client =>
         {
             client.BaseAddress = new Uri(builder.Configuration["WalletStation:baseUrl"] ?? "");
@@ -38,7 +40,8 @@ public class Program
         builder.Services.AddControllersWithViews();
         builder.Services.AddControllers();
         var app = builder.Build();
-        app.UseMiddleware<ExceptionMiddleware>();
+        app.UseExceptionHandler();
+        
         // using (var scope = app.Services.CreateScope())
         // {
         //     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -47,6 +50,7 @@ public class Program
         app.UseStaticFiles();
         app.UseSession();
 
+        
         app.UseRouting();
         app.MapControllers();
         app.MapControllerRoute(

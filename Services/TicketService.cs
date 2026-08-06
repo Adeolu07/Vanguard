@@ -19,7 +19,7 @@ public class TicketService : ITicketService
         _logger = logger;
     }
 
-    public async Task<Ticket> IssueTicketAsync(Booking booking, string? vehicleId = null)
+    public async Task<Ticket> IssueTicketAsync(Booking booking, string? vehicleId)
     {
         _logger.LogInformation("Issuing ticket for booking {BookingId}", booking.Id);
 
@@ -50,7 +50,7 @@ public class TicketService : ITicketService
         return ticket;
     }
 
-    public async Task<TicketValidationResult> ValidateTicketAsync(string ticketReference, int marshalId)
+    public async Task<TicketValidationResult> ValidateTicketAsync(string ticketReference, int marshalId, string expectedVehicleId)
     {
         //  Reject foreign/random QR codes
         if (!ticketReference.StartsWith("TKT-"))
@@ -66,7 +66,7 @@ public class TicketService : ITicketService
 
         if (ticket == null)
             return new TicketValidationResult { Success = false, Message = "Ticket not found" };
-        //  cancelled tickets
+
         if (ticket.Status == TicketStatus.Cancelled)
             return new TicketValidationResult
             {

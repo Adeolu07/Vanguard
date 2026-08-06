@@ -160,7 +160,10 @@ public class MarshalController : Controller
             return View("Scan");
         }
 
+
         var result = await _ticket.ValidateTicketAsync(qrToken, MarshalId.Value);
+
+        var result = await _ticket.ValidateTicketAsync(qrToken, MarshalId.Value, MarshalVehicleId);
 
         if (!result.Success)
         {

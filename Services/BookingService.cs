@@ -91,8 +91,14 @@ public class BookingService : IBookingService
         // Set FK
         switch (transportType)
         {
-            case TransportType.Bus:     booking.BusTripId = tripId;      booking.BusTrip = trip as BusTrip; break;
-            case TransportType.Railway: booking.RailwayTripId = tripId;  booking.RailwayTrip = trip as RailwayTrip; break;
+            case TransportType.Bus:
+                booking.BusTripId = tripId;
+                booking.BusTrip = trip as BusTrip;
+                break;
+            case TransportType.Railway: 
+                booking.RailwayTripId = tripId;  
+                booking.RailwayTrip = trip as RailwayTrip;
+                break;
         }
 
         return await ProcessBookingAsync(user, booking, () => SetAvailableSeats(trip, available - seats));
@@ -103,12 +109,14 @@ public class BookingService : IBookingService
     {
         var user = await _context.Users.FindAsync(userId);
         var trip = await _context.TaxiTrips.FindAsync(tripId);
-        if (user == null || trip == null)
-            return Failed("Trip or user not found");
+        var availableSeats = trip!.AvailableSeats;
+        
+        if (user == null)
+            return Failed("User not found");
         if (seats < 1)
             return Failed("Invalid number of seats");
-        if (seats > trip.MaxPassengers)
-            return Failed("Seats requested exceed taxi capacity");
+        if (seats > availableSeats)
+            return Failed("Not enough seats");
 
         var booking = new Booking
         {
@@ -122,7 +130,10 @@ public class BookingService : IBookingService
             BookingDate = DateTime.Now
         };
 
-        return await ProcessBookingAsync(user, booking, () => { });
+        return await ProcessBookingAsync(user, booking, () =>
+        {
+            trip.AvailableSeats -= seats;
+        });
     }
 
     // ─── Cancellation ───────────────────────────────────────────────────
@@ -155,8 +166,18 @@ public class BookingService : IBookingService
             // Restore inventory if trip hasn't yet left
             if (tripTime > DateTime.Now)
             {
-                if (booking.BusTrip != null) booking.BusTrip.AvailableSeats += booking.NumberOfSeats;
-                else if (booking.RailwayTrip != null) booking.RailwayTrip.AvailableSeats += booking.NumberOfSeats;
+                if (booking.BusTrip != null)
+                {
+                    booking.BusTrip.AvailableSeats += booking.NumberOfSeats;
+                }
+                else if (booking.RailwayTrip != null)
+                {
+                    booking.RailwayTrip.AvailableSeats += booking.NumberOfSeats;
+                }
+                else if(booking.TaxiTrip != null)
+                {
+                    booking.TaxiTrip?.AvailableSeats += booking.NumberOfSeats;
+                }
             }
 
             booking.Status = BookingStatus.Cancelled;
@@ -209,7 +230,7 @@ public class BookingService : IBookingService
         if (string.IsNullOrEmpty(user.UserWalletId))
             return Failed("No wallet is linked to this account. Confirm your email to create a wallet.");
 
-        await using var tx = await _context.Database.BeginTransactionAsync();
+        await using var transaction = await _context.Database.BeginTransactionAsync();
         try
         {
             applySeatChange();
@@ -231,8 +252,9 @@ public class BookingService : IBookingService
                 booking.PaymentTransactionId = debit.TransactionId;
                 booking.PaymentTraceId = traceId;
                 await _context.SaveChangesAsync();
-                var ticket = await _ticketService.IssueTicketAsync(booking);
-                await tx.CommitAsync();
+                var vehicleId = ResolveVehicleId(booking);
+                var ticket = await _ticketService.IssueTicketAsync(booking, vehicleId);
+                await transaction.CommitAsync();
 
                 return new BookingResult
                 {
@@ -244,7 +266,7 @@ public class BookingService : IBookingService
                 };
             }
 
-            await tx.RollbackAsync();
+            await transaction.RollbackAsync();
 
             if (debit?.ResponseHeader?.ResponseCode == "01")
                 return new BookingResult
@@ -263,7 +285,7 @@ public class BookingService : IBookingService
         }
         catch (Exception ex)
         {
-            await tx.RollbackAsync();
+            await transaction.RollbackAsync();
             _logger.LogError(ex, "Booking failed for user {UserId}", user.Id);
             throw;
         }
@@ -306,9 +328,12 @@ public class BookingService : IBookingService
 
     private static DateTime ResolveTripTime(Booking booking)
     {
-        if (booking.BusTrip != null) return booking.BusTrip.DepartureTime;
-        if (booking.RailwayTrip != null) return booking.RailwayTrip.DepartureTime;
-        if (booking.TaxiTrip != null) return booking.TaxiTrip.PickupTime;
+        if (booking.BusTrip != null) 
+            return booking.BusTrip.DepartureTime;
+        if (booking.RailwayTrip != null) 
+            return booking.RailwayTrip.DepartureTime;
+        if (booking.TaxiTrip != null) 
+            return booking.TaxiTrip.PickupTime;
         return DateTime.Now;
     }
 
@@ -318,6 +343,7 @@ public class BookingService : IBookingService
         {
             BusTrip b => b.AvailableSeats,
             RailwayTrip r => r.AvailableSeats,
+            TaxiTrip t => t.AvailableSeats,
             _ => throw new InvalidOperationException("Unsupported trip type")
         };
 
@@ -333,8 +359,23 @@ public class BookingService : IBookingService
     {
         switch (trip)
         {
-            case BusTrip b: b.AvailableSeats = value; break;
-            case RailwayTrip r: r.AvailableSeats = value; break;
+            case BusTrip b: 
+                b.AvailableSeats = value;
+                break;
+            case RailwayTrip r:
+                r.AvailableSeats = value;
+                break;
+            case TaxiTrip t:
+                t.AvailableSeats = value;
+                break;
         }
+    }
+    
+    private static string? ResolveVehicleId(Booking booking)
+    {
+        if (booking.BusTrip != null) return booking.BusTrip.VehicleId;
+        if (booking.RailwayTrip != null) return booking.RailwayTrip.VehicleId;
+        if (booking.TaxiTrip != null) return booking.TaxiTrip.VehicleId;
+        return null;
     }
 }

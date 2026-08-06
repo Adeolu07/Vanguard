@@ -13,6 +13,7 @@ public class TaxiTrip
     [Required] [Range(500, 50000)] public decimal Price { get; set; }
 
     [Required] [Range(1, 4)] public int MaxPassengers { get; set; } = 4;
+    public int AvailableSeats { get; set; }
 
     [Required] public DateTime PickupTime { get; set; }
 

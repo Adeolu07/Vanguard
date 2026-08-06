@@ -1,0 +1,104 @@
+@model _Tripfinity.Models.Tables.User
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "My Profile";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/profile.css" />
+}
+
+<div class="profile-container">
+    <h2>My Profile</h2>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <form asp-action="UpdateProfile" method="post" id="profileForm">
+        @Html.AntiForgeryToken()
+
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" value="@Model.Email" disabled class="form-control" />
+            <small class="text-muted">Email cannot be changed</small>
+        </div>
+
+        <div class="form-group">
+            <label for="FirstName">First Name</label>
+            <input name="FirstName" id="FirstName" value="@Model.FirstName" required
+                   class="form-control" disabled />
+        </div>
+
+        <div class="form-group">
+            <label for="LastName">Last Name</label>
+            <input name="LastName" id="LastName" value="@Model.LastName" required
+                   class="form-control" disabled />
+        </div>
+
+        <div class="form-group">
+            <label for="PhoneNumber">Phone Number</label>
+            <input name="PhoneNumber" id="PhoneNumber" value="@Model.PhoneNumber" required
+                   class="form-control" disabled />
+        </div>
+
+        @if (Model.Role == "Marshal")
+        {
+            <div class="form-group">
+                <label>Vehicle Type</label>
+                <input value="@Model.VehicleType" disabled class="form-control" />
+                <small class="text-muted">Vehicle type is set at registration</small>
+            </div>
+            <div class="form-group">
+                <label>Vehicle ID</label>
+                <input value="@Model.VehicleId" disabled class="form-control" />
+            </div>
+            <div class="form-group">
+                <label>License ID</label>
+                <input value="@Model.LicenseId" disabled class="form-control" />
+            </div>
+        }
+
+        <div class="form-actions">
+            <button type="button" id="editBtn" class="btn btn-primary">Edit Profile</button>
+            <button type="submit" id="saveBtn" class="btn btn-success" style="display:none;">Save Changes</button>
+            <button type="button" id="cancelBtn" class="btn btn-secondary" style="display:none;">Cancel</button>
+        </div>
+    </form>
+
+    <a href="/Home/Dashboard" class="btn btn-link mt-3">← Back to Dashboard</a>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const form = document.getElementById('profileForm');
+            const inputs = form.querySelectorAll('input[name]'); // only named (submitted) fields
+            const editBtn = document.getElementById('editBtn');
+            const saveBtn = document.getElementById('saveBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+
+            editBtn.addEventListener('click', () => {
+                inputs.forEach(i => i.disabled = false);
+                editBtn.style.display = 'none';
+                saveBtn.style.display = 'inline-block';
+                cancelBtn.style.display = 'inline-block';
+            });
+
+            cancelBtn.addEventListener('click', () => {
+                inputs.forEach(i => {
+                    i.disabled = true;
+                    i.value = i.defaultValue; // reset to original
+                });
+                saveBtn.style.display = 'none';
+                cancelBtn.style.display = 'none';
+                editBtn.style.display = 'inline-block';
+            });
+        });
+    </script>
+}
