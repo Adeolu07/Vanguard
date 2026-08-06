@@ -230,7 +230,7 @@ public class BookingService : IBookingService
         if (string.IsNullOrEmpty(user.UserWalletId))
             return Failed("No wallet is linked to this account. Confirm your email to create a wallet.");
 
-        await using var tx = await _context.Database.BeginTransactionAsync();
+        await using var transaction = await _context.Database.BeginTransactionAsync();
         try
         {
             applySeatChange();
@@ -252,8 +252,9 @@ public class BookingService : IBookingService
                 booking.PaymentTransactionId = debit.TransactionId;
                 booking.PaymentTraceId = traceId;
                 await _context.SaveChangesAsync();
-                var ticket = await _ticketService.IssueTicketAsync(booking);
-                await tx.CommitAsync();
+                var vehicleId = ResolveVehicleId(booking);
+                var ticket = await _ticketService.IssueTicketAsync(booking, vehicleId);
+                await transaction.CommitAsync();
 
                 return new BookingResult
                 {
@@ -265,7 +266,7 @@ public class BookingService : IBookingService
                 };
             }
 
-            await tx.RollbackAsync();
+            await transaction.RollbackAsync();
 
             if (debit?.ResponseHeader?.ResponseCode == "01")
                 return new BookingResult
@@ -284,7 +285,7 @@ public class BookingService : IBookingService
         }
         catch (Exception ex)
         {
-            await tx.RollbackAsync();
+            await transaction.RollbackAsync();
             _logger.LogError(ex, "Booking failed for user {UserId}", user.Id);
             throw;
         }
@@ -368,5 +369,13 @@ public class BookingService : IBookingService
                 t.AvailableSeats = value;
                 break;
         }
+    }
+    
+    private static string? ResolveVehicleId(Booking booking)
+    {
+        if (booking.BusTrip != null) return booking.BusTrip.VehicleId;
+        if (booking.RailwayTrip != null) return booking.RailwayTrip.VehicleId;
+        if (booking.TaxiTrip != null) return booking.TaxiTrip.VehicleId;
+        return null;
     }
 }

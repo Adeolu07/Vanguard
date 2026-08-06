@@ -19,7 +19,7 @@ public class TicketService : ITicketService
         _logger = logger;
     }
 
-    public async Task<Ticket> IssueTicketAsync(Booking booking, string? vehicleId = null)
+    public async Task<Ticket> IssueTicketAsync(Booking booking, string? vehicleId)
     {
         _logger.LogInformation("Issuing ticket for booking {BookingId}", booking.Id);
 
@@ -50,13 +50,22 @@ public class TicketService : ITicketService
         return ticket;
     }
 
-    public async Task<TicketValidationResult> ValidateTicketAsync(string ticketReference, int marshalId)
+    public async Task<TicketValidationResult> ValidateTicketAsync(string ticketReference, int marshalId, string expectedVehicleId)
     {
         var ticket = await _context.Tickets.FirstOrDefaultAsync(t => t.TicketReference == ticketReference);
 
         if (ticket == null)
             return new TicketValidationResult { Success = false, Message = "Ticket not found" };
 
+        if (ticket.VehicleId != expectedVehicleId)
+        {
+            return new TicketValidationResult
+            {
+                Success = false,
+                Message = "You are not authorized to validate this ticket",
+                Ticket = ticket
+            };
+        }
         if (ticket.Status == TicketStatus.Cancelled)
             return new TicketValidationResult { Success = false, Message = "Ticket has been cancelled", Ticket = ticket };
 
