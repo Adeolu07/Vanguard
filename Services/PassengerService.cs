@@ -1,6 +1,7 @@
 using _Tripfinity.Interfaces;
 using _Tripfinity.Models.Data;
 using _Tripfinity.Models.Data.Requests;
+using _Tripfinity.Models.Data.Response;
 using _Tripfinity.Models.Tables;
 using _Tripfinity.Models.ViewModels;
 using Microsoft.EntityFrameworkCore;
@@ -34,7 +35,7 @@ public class PassengerService : IPassengerService
         try
         {
             var resp = await _wallet.GetBalanceAsync(new GetBalanceRequest { CustomerId = walletId });
-            return resp?.Balance ?? 0;
+            return resp.Balance;
         }
         catch (Exception ex)
         {
@@ -85,6 +86,65 @@ public class PassengerService : IPassengerService
 
         var ticket = await _ticketService.GetTicketByBookingAsync(booking.Id);
         return new BookingDetailViewModel { Booking = booking, Ticket = ticket };
+    }
+    
+    public async Task<User?> GetUserByIdAsync(int userId)
+    {
+        return await _context.Users.FindAsync(userId);
+    }
+    
+    public async Task<bool> UpdateUserProfileAsync(int userId, UpdateProfileModel model)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user is null) return false;
+
+        user.FirstName = model.FirstName;
+        user.LastName = model.LastName;
+        user.PhoneNumber = model.PhoneNumber;
+
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<TransactionsViewModel?> GetWalletTransactions(int userId, int page = 1)
+    {
+        var user = await GetPassengerAsync(userId);
+        if (user is null || string.IsNullOrWhiteSpace(user.UserWalletId))
+            return null;
+        var balance = await GetWalletBalanceAsync(user.UserWalletId);
+
+        var request = new GetTransactionListRequest
+        {
+            CustomerId = user.UserWalletId,
+            SearchDetails = new SearchDetails
+            {
+                Page = page,
+                ItemsPerPage = 10,
+                DateRange = new DateRange { Start = DateTime.Now.AddMonths(-3), End = DateTime.Now }
+            }
+        };
+        var response = await _wallet.GetTransactionList(request);
+
+        var viewModel = new TransactionsViewModel
+        {
+            WalletId = user.UserWalletId,
+            Balance = balance,
+            Transactions = response.TransactionDetailsList?
+                .Select(details => new TransactionDetailsList
+                {
+                    TranType = details.TranType,
+                    Amount = details.Amount,
+                    Description = details.Description,
+                    TransactionId = details.TransactionId,
+                    SessionId = details.SessionId
+                }).ToList() ?? [],
+            CurrentPage = response.Pagination?.CurrentPage ?? page,
+            TotalPages = response.Pagination?.TotalPages ?? 1,
+            HasPrevious = response.Pagination?.HasPrevious ?? false,
+            HasNext = response.Pagination?.HasNext ?? false
+        };
+
+        return viewModel;
     }
 }
 

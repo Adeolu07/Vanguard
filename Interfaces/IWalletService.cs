@@ -12,6 +12,7 @@ public interface IWalletService
     Task<GetBalanceResponse> GetBalanceAsync(GetBalanceRequest getBalance);
     Task<GetTransactionResponse> GetTransactionAsync(GetTransactionRequest getTransaction);
     Task<RefundResponse> RefundAsync(RefundRequest refund);
+    Task<GetTransactionListResponse> GetTransactionList(GetTransactionListRequest request);
     Task EnsureAuthenticatedAsync();
 
 }
