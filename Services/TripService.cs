@@ -25,6 +25,8 @@ public class TripService : ITripService
     // ── High‑level creators with DTO mapping ──
     public async Task<BusTrip> CreateBusTripAsync(CreateBusTripRequest request, int marshalId, string vehicleId)
     {
+        if (request.AvailableSeats > request.TotalSeats)
+            throw new ArgumentException("Available seats cannot exceed total seats");
         var trip = new BusTrip
         {
             From = request.From,
@@ -44,6 +46,8 @@ public class TripService : ITripService
 
     public async Task<RailwayTrip> CreateRailwayTripAsync(CreateRailwayTripRequest request, int marshalId, string vehicleId)
     {
+        if (request.AvailableSeats > request.TotalSeats)
+            throw new ArgumentException("Available seats cannot exceed total seats");
         var trip = new RailwayTrip
         {
             From = request.From,
@@ -63,12 +67,15 @@ public class TripService : ITripService
 
     public async Task<TaxiTrip> CreateTaxiTripAsync(CreateTaxiTripRequest request, int marshalId, string vehicleId)
     {
+        if (request.NumberOfPassengers > 4)
+            throw new ArgumentException("Passengers cannot exceed 4.");
         var trip = new TaxiTrip
         {
             PickupLocation = request.PickupLocation,
             DropoffLocation = request.DropoffLocation,
             Price = request.Price,
             MaxPassengers = request.NumberOfPassengers,
+            AvailableSeats = request.NumberOfPassengers,
             PickupTime = request.PickupTime,
             MarshalId = marshalId,
             VehicleId = vehicleId

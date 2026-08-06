@@ -71,4 +71,12 @@ public class WalletApiController : ControllerBase
         var response = await _walletService.GetTransactionAsync(request);
         return Ok(response);
     }
+    
+    [HttpPost("transactions")]
+    public async Task<IActionResult> GetTransactionList([FromBody] GetTransactionListRequest request)
+    {
+        _logger.LogInformation("Get transaction list for : {CustomerId}", request.CustomerId);
+        var response = await _walletService.GetTransactionList(request);
+        return Ok(response);
+    }
 }

@@ -362,7 +362,52 @@ public class WalletService : IWalletService
             return FailedRefund(ex.Message);
         }
     }
-    
+
+    public async Task<GetTransactionListResponse> GetTransactionList(GetTransactionListRequest request)
+    {
+        await EnsureAuthenticatedAsync();
+        _logger.LogInformation("Get Transaction List");
+
+        try
+        {
+            var requestBody = JsonConvert.SerializeObject(request);
+
+            var response = await _client.PostAsync("GetTransactionList",
+                new StringContent(requestBody, Encoding.UTF8, "application/json"));
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                var errorJson = JsonConvert.DeserializeObject<GetTransactionListResponse>(error);
+                _logger.LogWarning("Error getting transaction list " + errorJson);
+                return errorJson!;
+            }
+
+            var result = await response.Content.ReadAsStringAsync();
+            var jsonResponse = JsonConvert.DeserializeObject<GetTransactionListResponse>(result);
+
+            if (jsonResponse?.ResponseHeader.ResponseCode == "00")
+            {
+                _logger.LogInformation("Successful Get Transaction List");
+                return jsonResponse;
+            }
+            _logger.LogInformation("Unsuccessful Get Transaction List");
+            return jsonResponse!;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,"Get Transaction Failed for Customer {CustomerId}", request.CustomerId);
+            return FailedGetTransactionList(ex.Message);
+        }
+    }
+
+    private static GetTransactionListResponse FailedGetTransactionList(string message) =>
+        new()
+        {
+            ResponseHeader = new ResponseHeader { ResponseCode = "99", ResponseMessage = message },
+            Pagination = null,
+            TransactionDetailsList = null
+        };
     
     private static WalletTransaction FailedTransaction(string message) =>
         new()
@@ -385,7 +430,7 @@ public class WalletService : IWalletService
         new()
         {
             ResponseHeader = new ResponseHeader { ResponseCode = "99", ResponseMessage = message },
-            TransactionDetails = null!   // or an empty object if required
+            TransactionDetails = null
         };
 
     private static RefundResponse FailedRefund(string message) =>

@@ -96,6 +96,7 @@ public class AuthService : IAuthService
 
     public async Task<AuthResponse?> SignInAsync(string email, string password)
     {
+
         _logger.LogInformation("User sign in");
 
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
