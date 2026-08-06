@@ -159,10 +159,7 @@ public class MarshalController : Controller
             TempData["Error"] = "No QR code provided.";
             return View("Scan");
         }
-
-
-        var result = await _ticket.ValidateTicketAsync(qrToken, MarshalId.Value);
-
+        
         var result = await _ticket.ValidateTicketAsync(qrToken, MarshalId.Value, MarshalVehicleId);
 
         if (!result.Success)

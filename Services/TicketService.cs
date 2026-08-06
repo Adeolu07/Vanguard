@@ -50,22 +50,23 @@ public class TicketService : ITicketService
         return ticket;
     }
 
-    public async Task<TicketValidationResult> ValidateTicketAsync(string ticketReference, int marshalId)
+    public async Task<TicketValidationResult> ValidateTicketAsync(string ticketReference, int marshalId, string expectedVehicleId)
     {
-        //  Reject foreign/random QR codes
-        if (!ticketReference.StartsWith("TKT-"))
-        {
-            return new TicketValidationResult
-            {
-                Success = false,
-                Message = "Not a valid ticket QR"
-            };
-        }
         // Look it up in the DB
         var ticket = await _context.Tickets.FirstOrDefaultAsync(t => t.TicketReference == ticketReference);
 
         if (ticket == null)
             return new TicketValidationResult { Success = false, Message = "Ticket not found" };
+
+        if (ticket.VehicleId != expectedVehicleId)
+        {
+            return new TicketValidationResult
+            {
+                Success = false,
+                Message = "You are not authorized to validate this ticket. It belongs to a different vehicle.",
+                Ticket = ticket
+            };
+        }
         //  cancelled tickets
         if (ticket.Status == TicketStatus.Cancelled)
             return new TicketValidationResult
@@ -132,4 +133,3 @@ public class TicketService : ITicketService
         return DateTime.Now;
     }
 }
-ti
