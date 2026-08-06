@@ -240,6 +240,13 @@ public class WalletService : IWalletService
             var response = await _client.PostAsync("GetBalance",
                 new StringContent(requestBody, Encoding.UTF8, "application/json"));
 
+            if (string.IsNullOrWhiteSpace(response.Content.ToString()))
+            {
+                Console.WriteLine("madfmasfmasfmasfmasfmaefm");
+                _logger.LogError("madfmasfmasfmasfmasfmaefm");
+            }
+
+            
             if (!response.IsSuccessStatusCode)
             {
                 var error = await response.Content.ReadAsStringAsync();
