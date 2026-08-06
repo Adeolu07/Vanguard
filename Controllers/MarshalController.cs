@@ -173,4 +173,21 @@ public class MarshalController : Controller
 
         return View("Scan");
     }
+    
+    [HttpGet("wallet")]
+    public async Task<IActionResult> Wallet()
+    {
+        _logger.LogInformation("GET marshal/wallet");
+        if (MarshalId is null)
+            return RedirectToMarshalLogin();
+        var marshal = await _marshal.GetMarshalAsync(MarshalId.Value);
+        if (marshal != null)
+        {
+            ViewBag.WalletId = marshal?.UserWalletId;
+            return View("Wallet");
+        }
+        
+        TempData["Error"] = "Wallet not found for this marsahl";
+        return View("Wallet");
+    }
 }
