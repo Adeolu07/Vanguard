@@ -7,28 +7,10 @@ using _Tripfinity.Models.Data.Response;
 using Microsoft.EntityFrameworkCore;
 
 namespace _Tripfinity.Services;
-public enum TransportType
-{
-    Railway,
-    Taxi,
-    Bus
-}
-    
-public enum TicketStatus
-{
-    Issued,
-    Validated,
-    Expired,
-    Cancelled,
-}
 
-public enum BookingStatus
-{
-    Pending,
-    Confirmed,
-    Cancelled,
-    Failed
-}
+public enum TransportType { Railway, Taxi, Bus }
+public enum TicketStatus { Issued, Validated, Expired, Cancelled }
+public enum BookingStatus { Pending, Confirmed, Cancelled, Failed }
 
 public class BookingService : IBookingService
 {
@@ -48,80 +30,84 @@ public class BookingService : IBookingService
         _ticketService = ticketService;
         _logger = logger;
     }
+    
+    public async Task<Booking?> GetBookingAsync(int id, TransportType transportType) =>
+        await _context.Bookings
+            .Include(b => b.User)
+            .FirstOrDefaultAsync(b => b.Id == id && b.TransportType == transportType);
 
-    public async Task<Booking?> GetBookingAsync(int id, TransportType transportType)
-    {
-        return await _context.Bookings
-            .Include(booking => booking.User)
-            .FirstOrDefaultAsync(booking => booking.Id == id && booking.TransportType == transportType);
-    }
+    public async Task<List<Booking>> GetRecentBookings(int userId, TransportType transportType) =>
+        await _context.Bookings
+            .Where(b => b.UserId == userId && b.TransportType == transportType)
+            .OrderByDescending(b => b.BookingDate)
+            .Take(5)
+            .ToListAsync();
 
-    public Task<List<Booking>> GetRecentBookings(int userId, string transportType)
-    {
-        throw new NotImplementedException();
-    }
+    public async Task<object?> GetTripAsync(string type, int tripId) =>
+        type.ToLower() switch
+        {
+            "bus"     => await _context.BusTrips.FindAsync(tripId),
+            "railway" => await _context.RailwayTrips.FindAsync(tripId),
+            "taxi"    => await _context.TaxiTrips.FindAsync(tripId),
+            _         => null
+        };
 
-    public async Task<BookingResult> BookBusAsync(int tripId, int seats, int? userId)
+    public async Task<BookingResult> BookAsync(string type, int tripId, int seats, int userId) =>
+        type.ToLower() switch
+        {
+            "bus"     => await BookTripAsync<BusTrip>(tripId, seats, userId, TransportType.Bus),
+            "railway" => await BookTripAsync<RailwayTrip>(tripId, seats, userId, TransportType.Railway),
+            "taxi"    => await BookTaxiAsync(tripId, seats, userId), // special flat‑rate logic
+            _         => new BookingResult { Success = false, Message = "Invalid transport type" }
+        };
+
+    // ─── Unified bus/railway booking ─────────────────────────────────────
+
+    private async Task<BookingResult> BookTripAsync<T>(int tripId, int seats, int userId,
+        TransportType transportType) where T : class
     {
         var user = await _context.Users.FindAsync(userId);
-        var trip = await _context.BusTrips.FindAsync(tripId);
-        if (user == null || trip == null) 
+        var trip = await _context.FindAsync<T>(tripId);
+        if (user == null || trip == null)
             return Failed("Trip or user not found");
-        if (seats < 1) 
+        if (seats < 1)
             return Failed("Invalid number of seats");
-        if (seats > trip.AvailableSeats) 
+
+        // Reflection‑free seat access
+        var available = GetAvailableSeats(trip);
+        if (seats > available)
             return Failed("Not enough available seats");
 
         var booking = new Booking
         {
             UserId = user.Id,
-            BusTripId = tripId,
-            BusTrip = trip,
-            TransportType = TransportType.Bus,
+            TransportType = transportType,
             NumberOfSeats = seats,
-            TotalAmount = trip.Price * seats,
+            TotalAmount = GetPrice(trip) * seats,
             Status = BookingStatus.Pending,
             BookingDate = DateTime.Now
         };
 
-        return await ProcessBookingAsync(user, booking, () => trip.AvailableSeats -= seats);
-    }
-
-    public async Task<BookingResult> BookRailwayAsync(int tripId, int seats, int? userId)
-    {
-        var user = await _context.Users.FindAsync(userId);
-        var trip = await _context.RailwayTrips.FindAsync(tripId);
-        if (user == null || trip == null) 
-            return Failed("Trip or user not found");
-        if (seats < 1) 
-            return Failed("Invalid number of seats");
-        if (seats > trip.AvailableSeats) 
-            return Failed("Not enough available seats");
-
-        var booking = new Booking
+        // Set FK
+        switch (transportType)
         {
-            UserId = user.Id,
-            RailwayTripId = tripId,
-            RailwayTrip = trip,
-            TransportType = TransportType.Railway,
-            NumberOfSeats = seats,
-            TotalAmount = trip.Price * seats,
-            Status = BookingStatus.Pending,
-            BookingDate = DateTime.Now
-        };
+            case TransportType.Bus:     booking.BusTripId = tripId;      booking.BusTrip = trip as BusTrip; break;
+            case TransportType.Railway: booking.RailwayTripId = tripId;  booking.RailwayTrip = trip as RailwayTrip; break;
+        }
 
-        return await ProcessBookingAsync(user, booking, () => trip.AvailableSeats -= seats);
+        return await ProcessBookingAsync(user, booking, () => SetAvailableSeats(trip, available - seats));
     }
 
-    public async Task<BookingResult> BookTaxiAsync(int tripId, int seats, int? userId)
+    // Taxi remains special because of flat‑rate pricing and no seat inventory
+    private async Task<BookingResult> BookTaxiAsync(int tripId, int seats, int userId)
     {
         var user = await _context.Users.FindAsync(userId);
         var trip = await _context.TaxiTrips.FindAsync(tripId);
-        if (user == null || trip == null) 
+        if (user == null || trip == null)
             return Failed("Trip or user not found");
-        if (seats < 1) 
+        if (seats < 1)
             return Failed("Invalid number of seats");
-        if (seats > trip.MaxPassengers) 
+        if (seats > trip.MaxPassengers)
             return Failed("Seats requested exceed taxi capacity");
 
         var booking = new Booking
@@ -131,14 +117,15 @@ public class BookingService : IBookingService
             TaxiTrip = trip,
             TransportType = TransportType.Taxi,
             NumberOfSeats = seats,
-            TotalAmount = trip.Price, // taxi is flat-rate per ride
+            TotalAmount = trip.Price, // flat‑rate
             Status = BookingStatus.Pending,
             BookingDate = DateTime.Now
         };
 
-        // taxis have no shared-seat inventory to decrement
         return await ProcessBookingAsync(user, booking, () => { });
     }
+
+    // ─── Cancellation ───────────────────────────────────────────────────
 
     public async Task<BookingResult> CancelBookingAsync(int bookingId, int? requestingUserId, string reason)
     {
@@ -148,26 +135,24 @@ public class BookingService : IBookingService
             .Include(b => b.TaxiTrip)
             .FirstOrDefaultAsync(b => b.Id == bookingId);
 
-        if (booking == null) 
-            return Failed("Booking not found");
+        if (booking == null) return Failed("Booking not found");
         if (requestingUserId != null && booking.UserId != requestingUserId)
             return Failed("You are not authorized to cancel this booking");
-        if (booking.Status == BookingStatus.Cancelled) 
+        if (booking.Status == BookingStatus.Cancelled)
             return Failed("Booking is already cancelled");
 
         var ticket = await _context.Tickets.FirstOrDefaultAsync(t => t.BookingId == bookingId);
-        
-        // A validated ticket means the trip was already taken — not cancellable.
         if (ticket is { Status: TicketStatus.Validated })
             return Failed("Ticket has already been used and cannot be cancelled");
 
         var tripTime = ResolveTripTime(booking);
-        var eligibleForRefund = booking.Status == BookingStatus.Confirmed && tripTime > DateTime.Now.AddHours(2);
+        var eligibleForRefund = booking.Status == BookingStatus.Confirmed &&
+                                tripTime > DateTime.Now.AddHours(2);
 
         await using var tx = await _context.Database.BeginTransactionAsync();
         try
         {
-            // Restore inventory for future trips (bus/railway only).
+            // Restore inventory if trip hasn't yet left
             if (tripTime > DateTime.Now)
             {
                 if (booking.BusTrip != null) booking.BusTrip.AvailableSeats += booking.NumberOfSeats;
@@ -180,28 +165,26 @@ public class BookingService : IBookingService
 
             if (eligibleForRefund)
             {
-                if (ticket != null) 
-                    ticket.Status = TicketStatus.Cancelled;
+                if (ticket != null) ticket.Status = TicketStatus.Cancelled;
                 await _context.SaveChangesAsync();
 
-                var refunded = await RefundAsync(booking);
+                var refundOk = await RefundAsync(booking);
                 await tx.CommitAsync();
 
                 return new BookingResult
                 {
                     Success = true,
                     Status = BookingStatus.Cancelled,
-                    Message = refunded
+                    Message = refundOk
                         ? "Booking cancelled and wallet refunded"
                         : "Booking cancelled. Refund could not be processed",
                     Booking = booking
                 };
             }
 
-            // Not eligible for a refund: delete the issued ticket outright.
-            // if (ticket != null) _context.Tickets.Remove(ticket);
-            // await _context.SaveChangesAsync();
-            // await tx.CommitAsync();
+            // No refund – just cancel
+            await _context.SaveChangesAsync();
+            await tx.CommitAsync();
 
             return new BookingResult
             {
@@ -219,16 +202,8 @@ public class BookingService : IBookingService
         }
     }
 
-    public async Task<List<Booking>> GetRecentBookings(int userId, TransportType transportType)
-    {
-        return await _context.Bookings
-            .Where(b => b.UserId == userId)
-            .Where(b => b.TransportType == transportType)
-            .OrderByDescending(b => b.BookingDate)
-            .Take(5)
-            .ToListAsync();
-    }
-    
+    // ─── Core booking engine ────────────────────────────────────────────
+
     private async Task<BookingResult> ProcessBookingAsync(User user, Booking booking, Action applySeatChange)
     {
         if (string.IsNullOrEmpty(user.UserWalletId))
@@ -239,7 +214,7 @@ public class BookingService : IBookingService
         {
             applySeatChange();
             _context.Bookings.Add(booking);
-            await _context.SaveChangesAsync(); // assigns booking.Id
+            await _context.SaveChangesAsync();
 
             var traceId = Guid.NewGuid().ToString("N");
             var debit = await _walletService.DebitWalletAsync(new DebitWalletRequest
@@ -250,15 +225,12 @@ public class BookingService : IBookingService
                 TraceId = traceId
             });
 
-            var code = debit?.ResponseHeader?.ResponseCode;
-
-            if (code == "00")
+            if (debit?.ResponseHeader?.ResponseCode == "00")
             {
                 booking.Status = BookingStatus.Confirmed;
-                booking.PaymentTransactionId = debit!.TransactionId;
+                booking.PaymentTransactionId = debit.TransactionId;
                 booking.PaymentTraceId = traceId;
                 await _context.SaveChangesAsync();
-
                 var ticket = await _ticketService.IssueTicketAsync(booking);
                 await tx.CommitAsync();
 
@@ -272,10 +244,9 @@ public class BookingService : IBookingService
                 };
             }
 
-            // Payment did not succeed — undo the booking and seat reservation.
             await tx.RollbackAsync();
 
-            if (code == "01")
+            if (debit?.ResponseHeader?.ResponseCode == "01")
                 return new BookingResult
                 {
                     Success = false,
@@ -298,6 +269,8 @@ public class BookingService : IBookingService
         }
     }
 
+    // ─── Refund ─────────────────────────────────────────────────────────
+
     private async Task<bool> RefundAsync(Booking booking)
     {
         var user = await _context.Users.FindAsync(booking.UserId);
@@ -314,7 +287,9 @@ public class BookingService : IBookingService
                 TraceId = Guid.NewGuid().ToString("N")
             });
 
-            return credit?.ResponseHeader?.ResponseCode == "00";
+            if (credit?.ResponseHeader?.ResponseCode != "00") 
+                return false;
+            return true;
         }
         catch (Exception ex)
         {
@@ -322,6 +297,12 @@ public class BookingService : IBookingService
             return false;
         }
     }
+
+    // ─── Transaction audit ──────────────────────────────────────────────
+    // ─── Helpers ────────────────────────────────────────────────────────
+
+    private static BookingResult Failed(string message) =>
+        new() { Success = false, Status = BookingStatus.Failed, Message = message };
 
     private static DateTime ResolveTripTime(Booking booking)
     {
@@ -331,11 +312,29 @@ public class BookingService : IBookingService
         return DateTime.Now;
     }
 
-    private static BookingResult Failed(string message) =>
-        new ()
+    // Tiny reflection‑free accessors for the unified booker
+    private static int GetAvailableSeats<T>(T trip) =>
+        trip switch
         {
-            Success = false, 
-            Status = BookingStatus.Failed, 
-            Message = message,
+            BusTrip b => b.AvailableSeats,
+            RailwayTrip r => r.AvailableSeats,
+            _ => throw new InvalidOperationException("Unsupported trip type")
         };
+
+    private static decimal GetPrice<T>(T trip) =>
+        trip switch
+        {
+            BusTrip b => b.Price,
+            RailwayTrip r => r.Price,
+            _ => throw new InvalidOperationException("Unsupported trip type")
+        };
+
+    private static void SetAvailableSeats<T>(T trip, int value)
+    {
+        switch (trip)
+        {
+            case BusTrip b: b.AvailableSeats = value; break;
+            case RailwayTrip r: r.AvailableSeats = value; break;
+        }
+    }
 }

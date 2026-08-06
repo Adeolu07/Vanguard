@@ -52,29 +52,52 @@ public class TicketService : ITicketService
 
     public async Task<TicketValidationResult> ValidateTicketAsync(string ticketReference, int marshalId)
     {
+        //  Reject foreign/random QR codes
+        if (!ticketReference.StartsWith("TKT-"))
+        {
+            return new TicketValidationResult
+            {
+                Success = false,
+                Message = "Not a valid ticket QR"
+            };
+        }
+        // Look it up in the DB
         var ticket = await _context.Tickets.FirstOrDefaultAsync(t => t.TicketReference == ticketReference);
 
         if (ticket == null)
             return new TicketValidationResult { Success = false, Message = "Ticket not found" };
-
+        //  cancelled tickets
         if (ticket.Status == TicketStatus.Cancelled)
-            return new TicketValidationResult { Success = false, Message = "Ticket has been cancelled", Ticket = ticket };
+            return new TicketValidationResult
+            {
+                Success = false,
+                Message = "Ticket has been cancelled",
+                Ticket = ticket
+            };
 
+        //  duplicate scans
         if (ticket.Status == TicketStatus.Validated)
             return new TicketValidationResult
             {
                 Success = false,
-                Message = $"Ticket already validated at {ticket.ValidatedAt:g}",
+                Message = $"Ticket already validated at {ticket.ValidatedAt:g} by Marshal {ticket.ValidatedByMarshalId}",
                 Ticket = ticket
             };
 
+        //  Mark ticket as validated
         ticket.Status = TicketStatus.Validated;
         ticket.ValidatedAt = DateTime.Now;
         ticket.ValidatedByMarshalId = marshalId;
         await _context.SaveChangesAsync();
 
         _logger.LogInformation("Ticket {Reference} validated by marshal {MarshalId}", ticket.TicketReference, marshalId);
-        return new TicketValidationResult { Success = true, Message = "Ticket validated", Ticket = ticket };
+
+        return new TicketValidationResult
+        {
+            Success = true,
+            Message = "Ticket validated successfully",
+            Ticket = ticket
+        };
     }
 
     public async Task<Ticket?> GetTicketAsync(int ticketId)

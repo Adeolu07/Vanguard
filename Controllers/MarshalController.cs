@@ -1,72 +1,187 @@
-using System.Net;
 using _Tripfinity.Interfaces;
-using _Tripfinity.Models.Data;
+using _Tripfinity.Models.Data.Requests;
+using _Tripfinity.Services;
+using _Tripfinity.Utilities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace _Tripfinity.Controllers;
 
-public class MarshalController : ParentController
+[Route("marshal")]
+[MarshalOnly]
+public class MarshalController : Controller
 {
-    private readonly IAuthService _authService;
-    private readonly AppDbContext _context;
-    
-    public  MarshalController(IAuthService authService, AppDbContext context)
+    private readonly ITripService _trip;
+    private readonly ITicketService _ticket;
+    private readonly IMarshalService _marshal;
+    private readonly ILogger<MarshalController> _logger;
+
+    public MarshalController(ITripService trip, ITicketService ticket, IMarshalService marshal,
+        ILogger<MarshalController> logger)
     {
-        _authService = authService;
-        _context = context;
+        _trip = trip;
+        _ticket = ticket;
+        _marshal = marshal;
+        _logger = logger;
     }
 
-    public IActionResult Index()
+    private int? MarshalId => HttpContext.Session.GetInt32("marshalId");
+    private string? MarshalVehicleType => HttpContext.Session.GetString("marshalVehicleType");
+    private string? MarshalVehicleId => HttpContext.Session.GetString("marshalVehicleId");
+    private IActionResult RedirectToMarshalLogin() => RedirectToAction("MarshalSignIn", "Auth");
+
+    [HttpGet("")]
+    public async Task<IActionResult> Index()
     {
-        var user = _authService.GetCurrentUser(HttpContext);
+        if (MarshalId is null)
+            return RedirectToMarshalLogin();
 
-        if (user == null || user.Role != "Marshal")
-            return RedirectToLogin();
+        var marshal = await _marshal.GetMarshalAsync(MarshalId.Value);
+        if (marshal is null)
+            return RedirectToMarshalLogin();
 
-        ViewBag.VehicleId = user.VehicleId;
-        ViewBag.VehicleType = user.VehicleType;
+        ViewBag.FirstName = marshal.FirstName;
+        ViewBag.VehicleType = marshal.VehicleType;
+        ViewBag.VehicleId = marshal.VehicleId;
         return View();
     }
 
-    [HttpGet]
+    [HttpGet("create/{type}")]
+    public IActionResult CreateTrip(string type)
+    {
+        if (MarshalId is null)
+            return RedirectToMarshalLogin();
+
+        var now = DateTime.Now.AddTicks(-(DateTime.Now.Ticks % TimeSpan.TicksPerMinute));
+        return type.ToLower() switch
+        {
+            "bus" => View("CreateBus", new CreateBusTripRequest { DepartureTime = now }),
+            "railway" => View("CreateRailway", new CreateRailwayTripRequest { DepartureTime = now }),
+            "taxi" => View("CreateTaxi", new CreateTaxiTripRequest { PickupTime = now }),
+            _ => View("Error")
+        };
+    }
+
+    [HttpPost("create/bus")]
+    public async Task<IActionResult> CreateBus(CreateBusTripRequest request)
+    {
+        if (MarshalId is null || MarshalVehicleId is null)
+            return RedirectToMarshalLogin();
+
+        if (!ModelState.IsValid)
+        {
+            TempData["Error"] = "Invalid input.";
+            return View("CreateBus", request);
+        }
+
+        await _trip.CreateBusTripAsync(request, MarshalId.Value, MarshalVehicleId);
+        TempData["Success"] = "Bus trip created.";
+        return RedirectToAction("MyTrips");
+    }
+
+    [HttpPost("create/railway")]
+    public async Task<IActionResult> CreateRailway(CreateRailwayTripRequest request)
+    {
+        if (MarshalId is null || MarshalVehicleId is null)
+            return RedirectToMarshalLogin();
+
+        if (!ModelState.IsValid)
+        {
+            TempData["Error"] = "Invalid input.";
+            return View("CreateRailway", request);
+        }
+
+        await _trip.CreateRailwayTripAsync(request, MarshalId.Value, MarshalVehicleId);
+        TempData["Success"] = "Railway trip created.";
+        return RedirectToAction("MyTrips");
+    }
+
+    [HttpPost("create/taxi")]
+    public async Task<IActionResult> CreateTaxi(CreateTaxiTripRequest req)
+    {
+        if (MarshalId is null || MarshalVehicleId is null)
+            return RedirectToMarshalLogin();
+
+        if (!ModelState.IsValid)
+        {
+            TempData["Error"] = "Invalid input.";
+            return View("CreateTaxi", req);
+        }
+
+        await _trip.CreateTaxiTripAsync(req, MarshalId.Value, MarshalVehicleId);
+        TempData["Success"] = "Taxi trip created.";
+        return RedirectToAction("MyTrips");
+    }
+
+    [HttpGet("trips")]
+    public async Task<IActionResult> MyTrips()
+    {
+        if (MarshalId is null || MarshalVehicleType is null)
+            return RedirectToMarshalLogin();
+
+        ViewBag.VehicleType = MarshalVehicleType;
+        var trips = await _marshal.GetMarshalTripsAsync(MarshalId.Value, MarshalVehicleType);
+        return View("MyTrips", trips ?? new List<object>());
+    }
+
+    [HttpPost("trips/cancel")]
+    public async Task<IActionResult> CancelTrip(string transportType, int tripId, string reason)
+    {
+        if (MarshalId is null)
+            return RedirectToMarshalLogin();
+
+        if (!Enum.TryParse<TransportType>(transportType, out var type))
+        {
+            TempData["Error"] = "Invalid transport type.";
+            return RedirectToAction("MyTrips");
+        }
+
+        var ok = await _trip.CancelTripAsync(type, tripId, MarshalId.Value, reason);
+        TempData[ok ? "Success" : "Error"] = ok ? "Trip cancelled." : "Trip not found.";
+        return RedirectToAction("MyTrips");
+    }
+
+    [HttpGet("scan")]
     public IActionResult Scan()
     {
-        var user = _authService.GetCurrentUser(HttpContext);
-        if(user == null || user.Role != "Marshal")
-            return  RedirectToLogin();
-        return View();
+        if (MarshalId is null)
+            return RedirectToMarshalLogin();
+        return View("Scan");
     }
-    
-    [HttpGet]
-    public async Task<IActionResult> Trips()
-    {
-        var user = _authService.GetCurrentUser(HttpContext);
-        if (user == null || user.Role != "Marshal")
-            return RedirectToLogin();
 
-        ViewBag.VehicleType = user.VehicleType;
-        return View();
-    }
-    
-    [HttpGet]
-    public async Task<IActionResult> Cancel()
+    [HttpPost("scan")]
+    public async Task<IActionResult> Scan(string qrToken)
     {
-        var user = _authService.GetCurrentUser(HttpContext);
-        if (user == null || user.Role != "Marshal")
-            return RedirectToLogin();
+        if (MarshalId is null)
+            return RedirectToMarshalLogin();
 
-        ViewBag.VehicleType = user.VehicleType;
-        return View();
-    }
-    
-    [HttpGet]
-    public IActionResult CreateTrip()
-    {
-        var user = _authService.GetCurrentUser(HttpContext);
-        if (user == null || user.Role != "Marshal")
-            return RedirectToLogin();
+        if (string.IsNullOrWhiteSpace(qrToken))
+        {
+            TempData["Error"] = "No QR code provided.";
+            return View("Scan");
+        }
 
-        ViewBag.VehicleType = user.VehicleType;
-        return View();
+        var result = await _ticket.ValidateTicketAsync(qrToken, MarshalId.Value);
+
+        if (!result.Success)
+        {
+            // Handle duplicate scans separately for clearer feedback
+            if (result.Ticket?.Status == TicketStatus.Validated)
+            {
+                TempData["Error"] = $"{result.Message} (Validated by Marshal {result.Ticket.ValidatedByMarshalId})";
+                ViewBag.ValidatedTicket = result.Ticket;
+            }
+            else
+            {
+                TempData["Error"] = result.Message;
+            }
+        }
+        else
+        {
+            TempData["Success"] = $"Ticket {result.Ticket!.TicketReference} validated successfully!";
+            ViewBag.ValidatedTicket = result.Ticket;
+        }
+
+        return View("Scan");
     }
+
 }

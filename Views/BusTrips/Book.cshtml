@@ -1,122 +1,93 @@
 @model dynamic
 @{
-    Layout = "_Layout";
+    Layout = "_DashboardLayout";
     ViewData["Title"] = "Confirm Bus Booking";
+    ViewData["ActiveNav"] = "Dashboard";
 }
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Tripfinity</title>
-    <link rel="stylesheet" href="~/css/bus-trips.css" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-</head>
-<body>
-    <div class="dashboard-layout">
-        <main class="main-content">
-            <header class="top-header">
-                <h2 style="margin:0; font-size: 22px; color: var(--primary-blue)">Passenger Dashboard</h2>
-                <div class="header-meta">
-                    <a href="/Home/Dashboard" class="btn-back">← Back to Dashboard</a>
-                    <a href="/Auth/Logout" class="btn-signout">Sign Out</a>
-                </div>
-            </header>
+@section Styles {
+    <link rel="stylesheet" href="~/css/booking-page.css" />
+}
 
-            <section class="page-title-section">
-                <div class="breadcrumbs" style="color: var(--text-muted)">Confirm Bus Booking</div>
-                <p>Review your travel details and secure your seat on the Tripfinity Express.</p>
-            </section>
+<header class="top-header">
+    <h2>Confirm Bus Booking</h2>
+    <a href="/Auth/Logout" class="btn-signout">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>
+        Sign Out
+    </a>
+</header>
 
-            @if (TempData["Error"] != null)
-            {
-                <div style="background: #fee2e2; border-left: 4px solid #ef4444; color: #b91c1c; padding: 16px; border-radius: 8px; margin-bottom: 24px; font-weight: 500;">
-                    ⚠️ @TempData["Error"]
-                </div>
-            }
+@if (TempData["Error"] != null)
+{
+    <div class="error-banner">⚠️ @TempData["Error"]</div>
+}
 
-            <div class="booking-split-layout">
-
-                <div class="details-card">
-                    <div class="interactive-route-node">
-                        <div class="node-point">
-                            <span class="node-label">From</span>
-                            <div class="node-value">@ViewBag.Trip.From</div>
-                        </div>
-                        <div class="node-point destination">
-                            <span class="node-label">To</span>
-                            <div class="node-value">@ViewBag.Trip.Destination</div>
-                        </div>
-                    </div>
-
-                    <div class="meta-grid" style="grid-template-columns: 1fr 1fr; gap: 24px;">
-                        <div class="meta-item">
-                            <span class="meta-label">📅 Departure Date</span>
-                            <span class="meta-value" style="font-size: 15px;">@(((DateTime)ViewBag.Trip.DepartureTime).ToString("MMMM dd, yyyy"))</span>
-                        </div>
-                        <div class="meta-item">
-                            <span class="meta-label">🕒 Time</span>
-                            <span class="meta-value" style="font-size: 15px;">@(((DateTime)ViewBag.Trip.DepartureTime).ToString("hh:mm:ss tt"))</span>
-                        </div>
-                        <div class="meta-item" style="margin-top:12px;">
-                            <span class="meta-label">💵 Price per seat</span>
-                            <span class="meta-value" style="font-size: 16px; color: var(--primary-blue)">₦@(((decimal)ViewBag.Trip.Price).ToString("N2"))</span>
-                        </div>
-                        <div class="meta-item" style="margin-top:12px;">
-                            <span class="meta-label">💺 Available seats</span>
-                            <span class="meta-value" style="font-size: 16px;">@ViewBag.Trip.AvailableSeats <span class="tag-high-demand">High Demand</span></span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="checkout-panel">
-                    <h3>Select Your Seats</h3>
-
-                    <form method="post" action="/BusTrips/Book">
-                        <input type="hidden" name="tripId" value="@ViewBag.Trip.Id" />
-
-                        <div class="form-input-wrapper">
-                            <label for="seats">Number of Seats</label>
-                            <input type="number" name="seats" id="seats" min="1" max="@ViewBag.Trip.AvailableSeats" value="1" required />
-                        </div>
-
-                        <div class="pricing-summary-row">
-                            <span class="total-lbl">TOTAL AMOUNT</span>
-                            <span class="total-val">₦<span id="totalPriceDisplay">0</span></span>
-                        </div>
-
-                        <div class="disclaimer-box">
-                            ℹ️ By clicking confirm, you agree to our booking terms. Your ticket will be issued immediately upon payment verification.
-                        </div>
-
-                        <button type="submit" class="btn-checkout-submit">Confirm Booking →</button>
-                    </form>
-                </div>
-
+<div class="booking-split-layout">
+    <div class="details-card">
+        <div class="interactive-route-node">
+            <div class="node-point">
+                <span class="node-label">From</span>
+                <div class="node-value">@ViewBag.Trip.From</div>
             </div>
-
-            <footer class="system-footer" style="border-top: none; margin-top: 40px;">
-                &copy; 2026 - Tripfinity - Smart Transport Booking System.
-            </footer>
-        </main>
+            <div class="node-point destination">
+                <span class="node-label">To</span>
+                <div class="node-value">@ViewBag.Trip.Destination</div>
+            </div>
+        </div>
+        <div class="meta-grid">
+            <div class="meta-item">
+                <span class="meta-label">📅 Departure Date</span>
+                <span class="meta-value">@(((DateTime)ViewBag.Trip.DepartureTime).ToString("MMMM dd, yyyy"))</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">🕒 Time</span>
+                <span class="meta-value">@(((DateTime)ViewBag.Trip.DepartureTime).ToString("hh:mm tt"))</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">💵 Price per seat</span>
+                <span class="meta-value">₦@(((decimal)ViewBag.Trip.Price).ToString("N2"))</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">💺 Available seats</span>
+                <span class="meta-value">@ViewBag.Trip.AvailableSeats</span>
+            </div>
+        </div>
     </div>
+    <div class="checkout-panel">
+        <h3>Select Your Seats</h3>
+        <form method="post" asp-controller="Trips" asp-action="Book">
+            <input type="hidden" name="tripId" value="@ViewBag.Trip.Id" />
+            <div class="form-input-wrapper">
+                <label for="seats">Number of Seats</label>
+                <input type="number" name="seats" id="seats" min="1" max="@ViewBag.Trip.AvailableSeats" value="1" required />
+            </div>
+            <div class="pricing-summary-row">
+                <span class="total-lbl">TOTAL AMOUNT</span>
+                <span class="total-val">₦<span id="totalPriceDisplay">0</span></span>
+            </div>
+            <div class="disclaimer-box">
+                ℹ️ By clicking confirm, you agree to our booking terms.
+            </div>
+            <button type="submit" class="btn-checkout-submit">Confirm Booking →</button>
+        </form>
+    </div>
+</div>
 
+<footer class="system-footer">
+    &copy; 2026 - Tripfinity – Smart Transport Booking System.
+</footer>
+
+@section Scripts {
     <script>
-            document.addEventListener("DOMContentLoaded", () => {
-                const basePrice = @ViewBag.Trip.Price;
-                const seatsInput = document.getElementById('seats');
-                const totalDisplay = document.getElementById('totalPriceDisplay');
-
-                function updatePrice() {
-                    const currentSeats = parseInt(seatsInput.value) || 0;
-                    const finalTotal = basePrice * currentSeats;
-                    totalDisplay.textContent = finalTotal.toLocaleString();
-                }
-
-                seatsInput.addEventListener('input', updatePrice);
-                updatePrice();
-            });
-    </script></body>
-</html>
+        document.addEventListener("DOMContentLoaded", () => {
+            const basePrice = @ViewBag.Trip.Price;
+            const seatsInput = document.getElementById('seats');
+            const totalDisplay = document.getElementById('totalPriceDisplay');
+            function updatePrice() {
+                const seats = parseInt(seatsInput.value) || 0;
+                totalDisplay.textContent = (basePrice * seats).toLocaleString();
+            }
+            seatsInput.addEventListener('input', updatePrice);
+            updatePrice();
+        });
+    </script>
+}

@@ -128,9 +128,47 @@ html, body {
     margin-top: 4px !important;
 }
 
+<<<<<<< HEAD
     .btn-continue:hover {
         background-color: #0b1f3a !important;
+=======
+.btn-continue:hover {
+    background-color: #020536;
+}
+
+.btn-continue::after{
+    content: '';
+    display: block;
+    width: 1.1em;
+    height: 1.1em;
+    position: absolute;
+    left: calc(50% - 0.75em);
+    top: calc(50% - 0.75em);
+    border: 0.2em solid transparent;
+    border-right-color: white;
+    border-radius: 50%;
+    animation: loader-animation 0.7s linear infinite;
+    opacity: 0;
+}
+
+@keyframes loader-animation {
+    from {
+        transform: rotate(0);
+>>>>>>> 9cf81be43044896f8d178d284140cc56bc4ebe13
     }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.btn-continue.loading {
+    color: transparent;
+}
+
+.btn-continue.loading::after {
+    opacity: 1;
+}
+    
 
 /* Bottom Sign-Up Redirect */
 .signup-redirect {

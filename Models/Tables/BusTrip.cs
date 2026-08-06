@@ -18,7 +18,9 @@ public class BusTrip
 
     [Required] public DateTime DepartureTime { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime CreatedAt { get; set; }
 
     public bool IsActive { get; set; } = true;
+    public int MarshalId { get; set; }
+    [Required] [MaxLength(50)] public string VehicleId { get; set; } = string.Empty;
 }

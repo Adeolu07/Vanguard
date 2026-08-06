@@ -23,7 +23,7 @@ public class Booking
     [MaxLength(20)]
     public BookingStatus Status { get; set; }
 
-    public DateTime BookingDate { get; set; } = DateTime.Now;
+    public DateTime BookingDate { get; set; }
 
     public DateTime? CancelledAt { get; set; }
 

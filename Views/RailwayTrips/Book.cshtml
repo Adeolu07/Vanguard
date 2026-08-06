@@ -72,7 +72,7 @@
                     </div>
                 </div>
 
-                <form method="post" action="/RailwayTrips/Book">
+                <form method="post" asp-controller="Trips" asp-action="Book">
                     <input type="hidden" name="tripId" value="@ViewBag.Trip.Id" />
                     
                     <div style="display: flex; justify-content: space-between; align-items: flex-end;">

@@ -1,155 +1,92 @@
+@model _Tripfinity.Views.PaginatedList<_Tripfinity.Models.Tables.BusTrip>
 @{
-    Layout = null;
+    Layout = "_DashboardLayout";
     ViewData["Title"] = "Bus Trips";
 }
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Tripfinity</title>
+@section Styles {
     <link rel="stylesheet" href="~/css/bus-trips.css" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-</head>
-<body>
-    <div class="dashboard-layout">
-        <aside class="sidebar">
-            <div>
-                <div class="brand-logo">Tripfinity</div>
-                <nav class="sidebar-nav">
-                    <a href="/Home/Dashboard" class="nav-item">Dashboard</a>
-                    <a href="/Ticket/Index" class="nav-item">My Tickets</a>
-                    <a href="/Home/Wallet" class="nav-item">Wallet</a>
-                </nav>
-            </div>
-            <div class="user-avatar-tag" style="font-size:12px; font-weight:700; color:var(--text-muted)">
-                @ViewBag.FirstName<br><span style="font-size:10px; font-weight:400;">VERIFIED MEMBER</span>
-            </div>
-        </aside>
+}
 
-        <main class="main-content">
-            <header class="top-header">
-                <div></div>
-                <div class="header-meta">
-                    <a href="/Home/Dashboard" class="btn-back">← Back to Dashboard</a>
-                    <span>Hello, @ViewBag.FirstName</span>
-                    <a href="/Auth/Logout" class="btn-signout">Sign Out</a>
-                </div>
-            </header>
-
-            <section class="page-title-section">
-                <div class="breadcrumbs">Passenger Dashboard > Book a Bus</div>
-                <h1>Available Bus Trips</h1>
-                <p>Real-time inter-city transport availability.</p>
-            </section>
-
-            <div id="trips-container">
-                <p>Loading trips...</p>
-            </div>
-
-            <footer class="system-footer">
-                &copy; 2026 Tripfinity Ecosystem. All rights reserved.
-            </footer>
-        </main>
+<header class="top-header">
+    <div></div>
+    <div class="header-meta">
+        <a href="/Home/Dashboard" class="btn-back">← Back to Dashboard</a>
+        <span>Hello, @Context.Session.GetString("FirstName")</span>
+        <a href="/Auth/Logout" class="btn-signout">Sign Out</a>
     </div>
+</header>
 
-    <script>
-            let currentPage = 1;
-            let totalPages = 1;
-            let isLoading = false;
+<section class="page-title-section">
+    <div class="breadcrumbs">Passenger Dashboard > Book a Bus</div>
+    <h1>Available Bus Trips</h1>
+    <p>Real-time inter-city transport availability.</p>
+</section>
 
-            async function loadTrips(page = 1) {
-                if (isLoading) return;
-                isLoading = true;
-                document.getElementById('trips-container').innerHTML = '<p>Loading trips...</p>';
-
-                try {
-                    const response = await fetch(`/api/bustrips?page=${page}&pageSize=4`);
-                    const result = await response.json();
-
-                    if (result.success) {
-                        displayTrips(result.data);
-                        currentPage = result.pagination.pageIndex;
-                        totalPages = result.pagination.totalPages;
-                        displayPagination(result.pagination);
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                    document.getElementById('trips-container').innerHTML = '<p>Error loading trips.</p>';
-                } finally {
-                    isLoading = false;
-                }
-            }
-
-            function displayTrips(trips) {
-                if (!trips || trips.length === 0) {
-                    document.getElementById('trips-container').innerHTML = '<p>No trips available right now.</p>';
-                    return;
-                }
-
-                let html = '<div class="trip-options">';
-                trips.forEach(trip => {
-                    const dateObj = new Date(trip.departureTime);
-                    const formattedDate = dateObj.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
-                    const formattedTime = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-
-                    html += `
-                        <div class="trip-card">
-                            <div class="trip-card-icon">🚌</div>
-                            <div class="route-display">
-                                <h2>${trip.from}</h2>
-                                <span class="route-arrow">→</span>
-                                <h2>${trip.destination}</h2>
-                            </div>
-                            <div class="meta-grid">
-                                <div class="meta-item">
-                                    <span class="meta-label">Departure</span>
-                                    <span class="meta-value">${formattedDate}<br><span style="color:var(--text-muted); font-weight:400;">${formattedTime}</span></span>
-                                </div>
-                                <div class="meta-item">
-                                    <span class="meta-label">Price</span>
-                                    <span class="meta-value">₦${trip.price.toLocaleString()}</span>
-                                </div>
-                                <div class="meta-item">
-                                    <span class="meta-label">Seats</span>
-                                    <span class="meta-value">${trip.availableSeats}/${trip.totalSeats} <span class="tag-full">Available</span></span>
-                                </div>
-                            </div>
-                            <button class="btn-book-action" onclick="bookTrip(${trip.id})">Book Now ></button>
+<div id="trips-container">
+    @if (!Model.Any())
+    {
+        <p>No trips available right now.</p>
+    }
+    else
+    {
+        <div class="trip-options">
+            @foreach (var trip in Model)
+            {
+                var formattedDate = trip.DepartureTime.ToString("MM/dd/yyyy");
+                var formattedTime = trip.DepartureTime.ToString("hh:mm tt");
+                <div class="trip-card">
+                    <div class="trip-card-icon">🚌</div>
+                    <div class="route-display">
+                        <h2>@trip.From</h2>
+                        <span class="route-arrow">→</span>
+                        <h2>@trip.Destination</h2>
+                    </div>
+                    <div class="meta-grid">
+                        <div class="meta-item">
+                            <span class="meta-label">Departure</span>
+                            <span class="meta-value">@formattedDate<br><span style="color:var(--text-muted); font-weight:400;">@formattedTime</span></span>
                         </div>
-                    `;
-                });
-                html += '</div>';
-                document.getElementById('trips-container').innerHTML = html;
+                        <div class="meta-item">
+                            <span class="meta-label">Price</span>
+                            <span class="meta-value">₦@trip.Price.ToString("N0")</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Seats</span>
+                            <span class="meta-value">@trip.AvailableSeats/@trip.TotalSeats <span class="tag-full">Available</span></span>
+                        </div>
+                    </div>
+                    <a href="/Trips/Bus/@trip.Id/Book" class="btn-book-action">Book Now ></a>
+                </div>
             }
+        </div>
+    }
+</div>
 
-            function displayPagination(pagination) {
-                const existingPagination = document.querySelector('.pagination');
-                if (existingPagination) existingPagination.remove();
-
-                let html = '<div class="pagination">';
-                if (pagination.hasPreviousPage) {
-                    html += `<button onclick="loadTrips(${pagination.pageIndex - 1})">Previous</button>`;
-                }
-
-                html += `<div class="page-num active">${pagination.pageIndex}</div>`;
-                if (pagination.totalPages > pagination.pageIndex) {
-                    html += `<div class="page-num" style="cursor:pointer" onclick="loadTrips(${pagination.pageIndex + 1})">${pagination.pageIndex + 1}</div>`;
-                }
-
-                if (pagination.hasNextPage) {
-                    html += `<button onclick="loadTrips(${pagination.pageIndex + 1})">Next ></button>`;
-                }
-                html += '</div>';
-                document.getElementById('trips-container').insertAdjacentHTML('afterend', html);
+@if (Model.TotalPages > 1)
+{
+    <div class="pagination">
+        @if (Model.HasPreviousPage)
+        {
+            <a href="/Trips/Bus?page=@(Model.PageIndex - 1)" class="page-btn">Previous</a>
+        }
+        @for (int i = 1; i <= Model.TotalPages; i++)
+        {
+            if (i == Model.PageIndex)
+            {
+                <span class="page-num active">@i</span>
             }
-
-            function bookTrip(tripId) {
-                window.location.href = `/BusTrips/Book?tripId=${tripId}`;
+            else
+            {
+                <a href="/Trips/Bus?page=@i" class="page-num">@i</a>
             }
+        }
+        @if (Model.HasNextPage)
+        {
+            <a href="/Trips/Bus?page=@(Model.PageIndex + 1)" class="page-btn">Next ></a>
+        }
+    </div>
+}
 
-            loadTrips();
-    </script></body>
-</html>
+<footer class="system-footer">
+    &copy; 2026 Tripfinity Ecosystem. All rights reserved.
+</footer>

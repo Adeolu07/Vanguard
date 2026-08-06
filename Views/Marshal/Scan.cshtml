@@ -1,54 +1,73 @@
 @{
-    ViewData["Title"] = "Scan Ticket QR";
     Layout = "_Layout";
+    ViewData["Title"] = "Scan & Validate Ticket";
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/marshal-portal.css" />
 }
 
-<h2>Scan QR Code</h2>
+<div class="marshal-scan">
+    <header class="page-header">
+        <h2>Scan Ticket</h2>
+        <p>Use the camera or enter the QR token manually to validate a passenger’s ticket.</p>
+    </header>
 
-<div class="scan-container">
-    <div class="form-group">
-        <label>QR Token</label>
-        <input type="text" id="qrToken" placeholder="Enter QR token manually" />
-        <button class="btn-primary" onclick="validateTicket()">Validate</button>
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <!-- Camera QR Scanner -->
+    <div class="qr-scanner">
+        <h3>Camera Scanner</h3>
+        <div id="reader"></div>
     </div>
 
-    <div id="validationResult" class="message" style="margin-top: 20px;"></div>
+    <!-- Manual Entry -->
+    <form asp-action="Scan" method="post" class="scan-form">
+        <input type="text" name="qrToken" placeholder="Enter QR token..." autofocus required />
+        <button type="submit" class="btn-primary">Validate</button>
+    </form>
+
+    @if (ViewBag.ValidatedTicket != null)
+    {
+        var ticket = (_Tripfinity.Models.Tables.Ticket)ViewBag.ValidatedTicket;
+        <div class="validated-ticket">
+            <div class="ticket-confirmed">✓ Ticket Validated</div>
+            <div class="ticket-details">
+                <div><strong>Reference:</strong> @ticket.TicketReference</div>
+                <div><strong>Transport:</strong> @ticket.TransportType</div>
+                <div><strong>Trip Time:</strong> @ticket.TripTime.ToString("g")</div>
+                <div><strong>Status:</strong> @ticket.Status</div>
+                @if (ticket.ValidatedAt.HasValue)
+                {
+                    <div><strong>Validated At:</strong> @ticket.ValidatedAt.Value.ToString("g")</div>
+                }
+            </div>
+        </div>
+    }
 </div>
 
 @section Scripts {
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <script>
-        async function validateTicket() {
-            const token = document.getElementById('qrToken').value.trim();
-            if (!token) {
-                document.getElementById('validationResult').innerHTML = '<span class="error">Enter a QR token</span>';
-                return;
-            }
-
-            document.getElementById('validationResult').innerHTML = 'Processing...';
-
-            try {
-                const res = await fetch('/api/marshal/tickets/validate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ qrToken: token })
-                });
-                const data = await res.json();
-
-                if (data.success) {
-                    document.getElementById('validationResult').innerHTML = `
-                        <div class="alert alert-success">
-                            ✅ ${data.message}<br>
-                            <strong>Ticket Ref:</strong> ${data.data.ticketReference}<br>
-                            <strong>Type:</strong> ${data.data.transportType}<br>
-                            <strong>Trip Time:</strong> ${data.data.tripTime}<br>
-                            <strong>Status:</strong> ${data.data.status}
-                        </div>`;
-                } else {
-                    document.getElementById('validationResult').innerHTML = `<div class="alert alert-danger">❌ ${data.message}</div>`;
-                }
-            } catch (err) {
-                document.getElementById('validationResult').innerHTML = '<div class="alert alert-danger">Network error</div>';
-            }
+        function onScanSuccess(decodedText) {
+        // Post scanned QR token to controller
+        fetch('/marshal/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `qrToken=${encodeURIComponent(decodedText)}`
+        })
+        .then(res => res.text())
+        .then(html => { document.body.innerHTML = html; })
+        .catch(err => console.error(err));
         }
+
+        let scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+        scanner.render(onScanSuccess);
     </script>
 }
