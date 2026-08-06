@@ -186,5 +186,4 @@ public class MarshalController : Controller
 
         return View("Scan");
     }
-
 }
