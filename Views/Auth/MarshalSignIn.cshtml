@@ -1,82 +1,59 @@
 ﻿@model _Tripfinity.Models.ViewModels.LoginViewModel
-
 @{
+    Layout = "_AuthLayout";
     ViewData["Title"] = "Marshal Sign In";
-    Layout = null;
 }
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Tripfinity</title>
-
+@section Styles {
     <link rel="stylesheet" href="~/css/MarshalSignIn.css" asp-append-version="true" />
-</head>
-<body>
+}
 
-    <div class="viewport-outer-container">
-        <!-- Fullscreen Layout Canvas -->
-        <div class="mockup-card">
+<div class="viewport-outer-container">
+    <div class="mockup-card">
+        <div class="navy-block-left"></div>
+        <div class="navy-block-right"></div>
 
-            <!-- Logo -->
-            <div class="card-logo">Tripfinity</div>
+        <main class="form-wrapper">
+            <h1 class="form-heading">Sign In</h1>
 
-            <!-- Asymmetric Navy Side Banners (Viewport Anchored) -->
-            <div class="navy-block-left"></div>
-            <div class="navy-block-right"></div>
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert-summary">⚠️ @TempData["ErrorMessage"]</div>
+            }
+            @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
+            {
+                <div class="alert-summary">
+                    @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        <div>⚠️ @error.ErrorMessage</div>
+                    }
+                </div>
+            }
 
-            <!-- Centered Form Area -->
-            <main class="form-wrapper">
-                <h1 class="form-heading">Sign In</h1>
-
-                @* TempData & ModelState Error Handling *@
-                @if (TempData["ErrorMessage"] != null)
-                {
-                    <div class="alert-summary">⚠️ @TempData["ErrorMessage"]</div>
-                }
-
-                @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
-                {
-                    <div class="alert-summary">
-                        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
-                        {
-                            <div>⚠️ @error.ErrorMessage</div>
-                        }
-                    </div>
-                }
-
-                <form asp-action="MarshalSignIn" method="post" class="login-form-custom">
-                    <div class="form-field-group">
-                        <input asp-for="Email" class="input-field-custom" type="text" placeholder="Enter email or phone number" />
-                        <span asp-validation-for="Email" class="error-text"></span>
-                    </div>
-
-                    <div class="form-field-group">
-                        <input asp-for="Password" class="input-field-custom" type="password" placeholder="Enter password" />
-                        <span asp-validation-for="Password" class="error-text"></span>
-                    </div>
-
-                    <button type="submit" class="btn-continue">Continue</button>
-
-                    <div class="signup-text-wrapper">
-                        <span class="signup-prompt">Don't have an account?</span>
-                        <a href="/Auth/DecisionSignup" class="signup-link-custom">Sign up</a>
-                    </div>
-                </form>
-            </main>
-
-            <!-- Footer -->
-            <p class="card-copyright">&copy; 2026 Tripfinity Ecosystem. All rights reserved.</p>
-
-        </div>
+            <form asp-action="MarshalSignIn" method="post" class="login-form-custom">
+                <div class="form-field-group">
+                    <input asp-for="Email" class="input-field-custom" type="text" placeholder="Enter email or phone number" />
+                    <span asp-validation-for="Email" class="error-text"></span>
+                </div>
+                <div class="form-field-group">
+                    <input asp-for="Password" class="input-field-custom" type="password" placeholder="Enter password" />
+                    <span asp-validation-for="Password" class="error-text"></span>
+                </div>
+                <div class="forgot-link-wrapper">
+                    <a asp-action="ForgotPassword" class="forgot-password-link">Forgot password?</a>
+                </div>
+                <button type="submit" class="btn-continue">Continue</button>
+                <div class="signup-text-wrapper">
+                    <span class="signup-prompt">Don't have an account?</span>
+                    <a href="/Auth/MarshalSignup" class="signup-link-custom">Sign up</a>
+                </div>
+            </form>
+        </main>
     </div>
+</div>
 
-    <!-- Validation Scripts -->
+@section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
-
-</body>
-</html>
+}

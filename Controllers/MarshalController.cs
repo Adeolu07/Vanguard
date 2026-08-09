@@ -1,5 +1,8 @@
 using _Tripfinity.Interfaces;
 using _Tripfinity.Models.Data.Requests;
+using _Tripfinity.Models.Data.Response;
+using _Tripfinity.Models.Tables;
+using _Tripfinity.Models.ViewModels;
 using _Tripfinity.Services;
 using _Tripfinity.Utilities;
 using Microsoft.AspNetCore.Mvc;
@@ -12,36 +15,39 @@ public class MarshalController : Controller
 {
     private readonly ITripService _trip;
     private readonly ITicketService _ticket;
-    private readonly IMarshalService _marshal;
+    private readonly IMarshalService _marshalService;
     private readonly ILogger<MarshalController> _logger;
+    private readonly ICipService _cipService;
+    private const string InstitutionId = "000966";
 
-    public MarshalController(ITripService trip, ITicketService ticket, IMarshalService marshal,
+    public MarshalController(ITripService trip, ITicketService ticket, ICipService cipService, IMarshalService marshalService,
         ILogger<MarshalController> logger)
     {
         _trip = trip;
         _ticket = ticket;
-        _marshal = marshal;
+        _cipService = cipService;
+        _marshalService = marshalService;
         _logger = logger;
     }
 
     private int? MarshalId => HttpContext.Session.GetInt32("marshalId");
+
     private string? MarshalVehicleType => HttpContext.Session.GetString("marshalVehicleType");
     private string? MarshalVehicleId => HttpContext.Session.GetString("marshalVehicleId");
     private IActionResult RedirectToMarshalLogin() => RedirectToAction("MarshalSignIn", "Auth");
 
-    [HttpGet("")]
+    [HttpGet]
     public async Task<IActionResult> Index()
     {
         if (MarshalId is null)
             return RedirectToMarshalLogin();
-
-        var marshal = await _marshal.GetMarshalAsync(MarshalId.Value);
-        if (marshal is null)
-            return RedirectToMarshalLogin();
-
-        ViewBag.FirstName = marshal.FirstName;
-        ViewBag.VehicleType = marshal.VehicleType;
-        ViewBag.VehicleId = marshal.VehicleId;
+        
+        var marshal = await _marshalService.GetMarshalAsync(MarshalId.Value);
+        
+        HttpContext.Session.SetInt32("userId", marshal!.Id);
+        ViewBag.FirstName = marshal!.FirstName;
+        ViewBag.VehicleType = marshal!.VehicleType;
+        ViewBag.VehicleId = marshal!.VehicleId;
         return View();
     }
 
@@ -111,6 +117,8 @@ public class MarshalController : Controller
         TempData["Success"] = "Taxi trip created.";
         return RedirectToAction("MyTrips");
     }
+    
+    
 
     [HttpGet("trips")]
     public async Task<IActionResult> MyTrips()
@@ -119,7 +127,7 @@ public class MarshalController : Controller
             return RedirectToMarshalLogin();
 
         ViewBag.VehicleType = MarshalVehicleType;
-        var trips = await _marshal.GetMarshalTripsAsync(MarshalId.Value, MarshalVehicleType);
+        var trips = await _marshalService.GetMarshalTripsAsync(MarshalId.Value, MarshalVehicleType);
         return View("MyTrips", trips ?? new List<object>());
     }
 
@@ -160,34 +168,136 @@ public class MarshalController : Controller
             return View("Scan");
         }
         
-        var result = await _ticket.ValidateTicketAsync(qrToken, MarshalId.Value, MarshalVehicleId);
+        var result = await _ticket.ValidateTicketAsync(qrToken, MarshalId.Value, MarshalVehicleId!);
+
         if (!result.Success)
         {
-            TempData["Error"] = result.Message;
+            // Handle duplicate scans separately for clearer feedback
+            if (result.Ticket?.Status == TicketStatus.Validated)
+            {
+                TempData["Error"] = $"{result.Message} (Validated by Marshal {result.Ticket.ValidatedByMarshalId})";
+                ViewBag.ValidatedTicket = result.Ticket;
+            }
+            else
+            {
+                TempData["Error"] = result.Message;
+            }
         }
         else
         {
-            TempData["Success"] = $"Ticket {result.Ticket!.TicketReference} validated!";
+            TempData["Success"] = $"Ticket {result.Ticket!.TicketReference} validated successfully!";
             ViewBag.ValidatedTicket = result.Ticket;
         }
 
         return View("Scan");
     }
     
-    [HttpGet("wallet")]
-    public async Task<IActionResult> Wallet()
+    
+    
+   
+    
+    [HttpPost]
+    public async Task<IActionResult> NameEnquiry(string bankCode, string accountNumber)
     {
-        _logger.LogInformation("GET marshal/wallet");
-        if (MarshalId is null)
-            return RedirectToMarshalLogin();
-        var marshal = await _marshal.GetMarshalAsync(MarshalId.Value);
-        if (marshal != null)
+        var userId = HttpContext.Session.GetInt32("userId");
+        if (userId == null) return Unauthorized();
+
+        var sessionId = Guid.NewGuid().ToString("N");
+        var request = new NameEnquiryRequest
         {
-            ViewBag.WalletId = marshal?.UserWalletId;
-            return View("Wallet");
-        }
-        
-        TempData["Error"] = "Wallet not found for this marsahl";
-        return View("Wallet");
+            SessionId = sessionId,
+            DestinationInstitutionId = bankCode,
+            AccountId = accountNumber
+        };
+
+        var result = await _cipService.AccountEnquiry(request);
+        return Json(new { success = result.ResponseCode == "00", accountName = result.AccountName, message = result.ResponseMessage });
     }
+
+    [HttpGet("wallet")]
+    public async Task<IActionResult> Wallet(int page = 1)
+    {
+        var userId = HttpContext.Session.GetInt32("userId");
+        if (userId == null) 
+            return RedirectToAction("MarshalSignIn", "Auth");
+
+        var model = await _marshalService.GetWalletInfoAsync(userId.Value, page);
+        if (model == null)
+        {
+            // Wallet not ready yet – build minimal fallback
+            var marshal = await _marshalService.GetMarshalAsync(userId.Value) ?? new User
+            {
+                FirstName = "Marshal",
+                LastName = "",
+                Email = "",
+            };
+
+            model = new MarshalWalletViewModel
+            {
+                WalletId = marshal.UserWalletId ?? "Not available",
+                Balance = 0,
+                Transactions = new List<_Tripfinity.Models.Data.Response.TransactionDetailsList>(),
+                CurrentPage = 1,
+                TotalPages = 1,
+                HasNext = false,
+                HasPrevious = false
+            };
+
+            TempData["ErrorMessage"] = "Your wallet is being set up. Please check back soon, or contact support if this persists.";
+        }
+
+        return View(model);
+    }
+    
+    [HttpPost]
+    public async Task<IActionResult> Cashout(decimal amount, string bankCode, string accountNumber, string accountName)
+    {
+        var userId = HttpContext.Session.GetInt32("userId");
+        if (userId == null) return RedirectToAction("MarshalSignIn", "Auth");
+
+        var marshal = await _marshalService.GetMarshalAsync(userId.Value);
+        if (marshal == null || string.IsNullOrEmpty(marshal.UserWalletId))
+            return RedirectToAction("MarshalSignIn", "Auth");
+
+        var sessionId = Guid.NewGuid().ToString("N");
+        var paymentRef = Guid.NewGuid().ToString("N");
+
+        var postCreditRequest = new PostCreditRequest
+        {
+            SessionId = sessionId,
+            PaymentRef = paymentRef,
+            DestinationInstitutionId = bankCode,
+            CreditAccount = accountNumber,
+            CreditAccountName = accountName,
+            SourceAccountId = marshal.UserWalletId,
+            SourceAccountName = $"{marshal.FirstName} {marshal.LastName}",
+            Narration = $"Tripfinity marshal cashout",
+            Channel = "Online",
+            Group = "Tripfinity",
+            Sector = "Transport",
+            Amount = amount
+        };
+
+        var result = await _cipService.PostCredit(postCreditRequest);
+        if (result.ResponseCode == "00")
+        {
+            TempData["SuccessMessage"] = $"Cashout of ₦{amount:N2} to {accountName} ({accountNumber}) initiated successfully.";
+        }
+        else
+        {
+            TempData["ErrorMessage"] = $"Cashout failed: {result.ResponseMessage}";
+        }
+
+        return RedirectToAction("Wallet");
+    }
+    
+    
+
+    private static string GenerateSessionId()
+    {
+        var timestamp = DateTime.Now.ToString("yyMMddHHmmss");
+        var random = Random.Shared.Next(100_000_000, 999_999_999).ToString("D12")[..12];
+        return $"{InstitutionId}{timestamp}{random}";
+    }
+
 }

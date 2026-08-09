@@ -3,14 +3,11 @@
 @{
     ViewData["Title"] = "Marshal Sign Up";
     Layout = "_AuthLayout";
+    ViewData["HideNavbar"] = true;
 }
 
 @section Styles {
     <link rel="stylesheet" href="~/css/MarshalSignUp.css" />
-}
-
-@{
-    ViewData["HideNavbar"] = true;
 }
 
 <!-- Top Header Navigation -->
@@ -124,14 +121,6 @@
         </section>
     </main>
 </div>
-
-<!-- Footer Section -->
-<footer class="footer">
-    <div class="footer-content">
-        <h3 class="footer-brand">Tripfinity</h3>
-        <p class="footer-copyright">&copy; 2026 Tripfinity Ecosystem. All rights reserved.</p>
-    </div>
-</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>

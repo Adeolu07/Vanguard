@@ -239,23 +239,17 @@ public class WalletService : IWalletService
             
             var response = await _client.PostAsync("GetBalance",
                 new StringContent(requestBody, Encoding.UTF8, "application/json"));
-
-            if (string.IsNullOrWhiteSpace(response.Content.ToString()))
-            {
-                Console.WriteLine("madfmasfmasfmasfmasfmaefm");
-                _logger.LogError("madfmasfmasfmasfmasfmaefm");
-            }
-
+            
             
             if (!response.IsSuccessStatusCode)
             {
                 var error = await response.Content.ReadAsStringAsync();
                 var errorJson = JsonConvert.DeserializeObject<GetBalanceResponse>(error);
-                _logger.LogWarning("Error in Fetching Balance: " + errorJson);
+                _logger.LogError("Error in Fetching Balance: {error}", errorJson);
                 return errorJson!;
             }
-            var json = await response.Content.ReadAsStringAsync();
-            var result = JsonConvert.DeserializeObject<GetBalanceResponse>(json);
+            var successfulResponse = await response.Content.ReadAsStringAsync();
+            var result = JsonConvert.DeserializeObject<GetBalanceResponse>(successfulResponse);
             
             _logger.LogInformation(result!.ResponseHeader.ResponseMessage);
             if(result.ResponseHeader.ResponseCode == "00")
@@ -407,6 +401,56 @@ public class WalletService : IWalletService
             return FailedGetTransactionList(ex.Message);
         }
     }
+
+    public async Task<WalletNameEnquiryResponse> WalletNameEnquiryAsync(WalletNameEnquiryRequest request)
+    {
+        await EnsureAuthenticatedAsync();
+        _logger.LogInformation("Name Enquiry...");
+        try
+        {
+            var requestBody = JsonConvert.SerializeObject(request);
+
+            var response = await _client.PostAsync("NameEnquiry",
+                new StringContent(requestBody, Encoding.UTF8, "application/json"));
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                var errorJson = JsonConvert.DeserializeObject<WalletNameEnquiryResponse>(error);
+                _logger.LogError("Error in Name Enquiry: {error}", errorJson);
+                return errorJson!;
+            }
+            
+            var successfulResponse = await response.Content.ReadAsStringAsync();
+            var result = JsonConvert.DeserializeObject<WalletNameEnquiryResponse>(successfulResponse);
+            
+            _logger.LogInformation(result!.ResponseHeader.ResponseMessage);
+            if(result.ResponseHeader.ResponseCode == "00")
+                _logger.LogInformation("Successfull Name Enquiry");
+
+            return result;
+
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,"Name enquiry failed for Customer {CustomerId}", request.CustomerId);
+            return FailedNameEnquiry(ex.Message);
+        }
+    }
+    
+    private static WalletNameEnquiryResponse FailedNameEnquiry(string message) =>
+        new()
+        {
+            ResponseHeader = new ResponseHeader { ResponseCode = "99", ResponseMessage = message },
+            AccountNumber = null,
+            FirstName = null,
+            LastName = null,
+            CustomerId = null,
+            CustomerAlias = null,
+            BankCode = null,
+            BankName = null,
+            Bvn = null,
+        };
 
     private static GetTransactionListResponse FailedGetTransactionList(string message) =>
         new()

@@ -1,23 +1,12 @@
 ﻿@{
     ViewData["Title"] = "Login Decision";
-    ViewData["FullPage"] = true;
     Layout = "_AuthLayout";
 }
 
 @section Styles {
-    <link rel="stylesheet" href="~/css/login-decision.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/decision.css" asp-append-version="true" />
 }
 
-<div class="decision-page-wrapper">
-    <!-- Clean Minimalist Header -->
-    <header class="auth-header">
-        <div class="header-container">
-            <span class="brand-logo">Tripfinity</span>
-            <a asp-controller="Auth" asp-action="DecisionSignUp" class="header-link">Create an account</a>
-        </div>
-    </header>
-
-    <!-- Center Content Layout -->
     <main class="content-container">
         <div class="decision-box">
             <h1 class="decision-title">Login as a</h1>
@@ -26,15 +15,8 @@
                 <a asp-controller="Auth" asp-action="SignIn" class="btn-selection">Passenger</a>
                 <a asp-controller="Auth" asp-action="MarshalSignIn" class="btn-selection">Marshal</a>
             </div>
+            <p class="signup-redirect">
+                Don't have an account? <a href="/Auth/DecisionSignup">Create one!</a>
+            </p>
         </div>
     </main>
-
-    <!-- Center-aligned Minimalist Footer (Matching Mockup Elements) -->
-    <footer class="auth-footer">
-        <div class="footer-links">
-            <a href="#">Privacy Policy</a>
-            <a href="#">Terms of Service</a>
-        </div>
-        <p class="copyright">&copy; 2026 Tripfinity Ecosystem. All rights reserved.</p>
-    </footer>
-</div>

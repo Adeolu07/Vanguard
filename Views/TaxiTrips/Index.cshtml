@@ -7,15 +7,6 @@
     <link rel="stylesheet" href="~/css/bus-trips.css" />
 }
 
-<header class="top-header">
-    <div></div>
-    <div class="header-meta">
-        <a href="/Home/Dashboard" class="btn-back">← Back to Dashboard</a>
-        <span>Hello, @Context.Session.GetString("FirstName")</span>
-        <a href="/Auth/Logout" class="btn-signout">Sign Out</a>
-    </div>
-</header>
-
 <section class="page-title-section">
     <div class="breadcrumbs">Passenger Dashboard > Book a Taxi</div>
     <h1>Available Taxi Rides</h1>
@@ -86,7 +77,3 @@
         }
     </div>
 }
-
-<footer class="system-footer">
-    &copy; 2026 Tripfinity Ecosystem. All rights reserved.
-</footer>

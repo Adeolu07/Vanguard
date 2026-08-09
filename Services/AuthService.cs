@@ -5,6 +5,7 @@ using _Tripfinity.Models.Tables;
 using _Tripfinity.Models.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using QRCoder;
 
 namespace _Tripfinity.Services;
 
@@ -82,8 +83,10 @@ public class AuthService : IAuthService
             VehicleType = model.VehicleType,
             LicenseId = model.LicenseId,
             VehicleId = $"VEH-{prefix}-{Guid.NewGuid().ToString("N")[..8].ToUpper()}",
-            IsActive = true,
-            IsEmailConfirmed = true
+            IsActive = false,
+            IsEmailConfirmed = false,
+            EmailConfirmationToken = Guid.NewGuid().ToString(),
+            ConfirmationTokenExpiry = DateTime.Now.AddDays(1)
         };
 
         marshal.PasswordHash = hasher.HashPassword(marshal, model.Password);
@@ -220,26 +223,27 @@ public class AuthService : IAuthService
         return true;
     }
 
-    public async Task<AuthResponse> ForgotPasswordAsync(string email)
+    public async Task<AuthResponse> ForgotPasswordAsync(string email, string resetLinkTemplate)
     {
         _logger.LogInformation("Forgot password for {Email}", email);
 
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
-        if (user == null)
+        
+        if (user is null)
         {
-            return new AuthResponse { Success = true, Message = "If your email exists, a reset link has been sent." };
+            return new AuthResponse { Success = false, Message = "You do not have an account with us sir/ma" };
         }
 
         user.PasswordResetToken = Guid.NewGuid().ToString();
         user.PasswordResetTokenExpiry = DateTime.Now.AddHours(1);
         await _context.SaveChangesAsync();
 
-        var resetLink = $"https://localhost:5001/Auth/ResetPassword?email={Uri.EscapeDataString(email)}&token={user.PasswordResetToken}";
-        await _emailService.SendEmailAsync(email, "Reset Your Password",
-            $"Click the link below to reset your password:\n{resetLink}\n\nThis link expires in 1 hour.");
+        var resetLink = resetLinkTemplate.Replace("__TOKEN__", user.PasswordResetToken);
+
+        await _emailService.SendPasswordResetEmailAsync(email, resetLink);
 
         _logger.LogInformation("Password reset email sent to {Email}", email);
-        return new AuthResponse { Success = true, Message = "If your email exists, a reset link has been sent." };
+        return new AuthResponse { Success = true, Message = "A reset password link has been sent to your mail" };
     }
 
     public async Task<bool> ValidatePasswordResetTokenAsync(string email, string token)

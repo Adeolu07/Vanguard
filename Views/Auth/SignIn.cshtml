@@ -1,74 +1,58 @@
 @model _Tripfinity.Models.ViewModels.LoginViewModel
-
 @{
-    ViewData["Title"] = "Passenger Sign In";
-    ViewData["HideNavbar"] = true;
     Layout = "_AuthLayout";
+    ViewData["Title"] = "Passenger Sign In";
 }
 
 @section Styles {
-    <link rel="stylesheet" href="~/css/SignIn.css" />
+    <link rel="stylesheet" href="~/css/SignIn.css" asp-append-version="true" />
 }
-<script>
-    const animBtn = document.getElementById("submit");
 
-    animBtn.addEventListener('click', () => {
-        animBtn.classList.add("loading");
-        //The following is used for demo purposes only//
-        setTimeout(() => animBtn.classList.remove("loading"), 5000);
-    });
+<div class="passenger-page-container">
+    <div class="left-content-area">
+        <main class="form-section">
+            <h1 class="page-title">Sign in and start<br />commuting</h1>
 
-</script>
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="error-summary">⚠️ @TempData["ErrorMessage"]</div>
+            }
 
-<header>
-    <div class="nav-container">
-        <p>Tripfinity</p>
-    </div>
-</header>
-
-<main class="page-container">
-    <section class="graphic-side left-banner"></section>
-
-    <section class="form-section">
-        <h1 class="page-title">Sign in and start commuting</h1>
-
-        @if (TempData["ErrorMessage"] != null)
-        {
-            <div class="error-message">⚠️ @TempData["ErrorMessage"]</div>
-        }
-
-        @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
-        {
-            <div class="validation-summary">
-                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
-                {
-                    <div>⚠️ @error.ErrorMessage</div>
-                }
-            </div>
-        }
-
-        <form asp-controller="Auth" asp-action="SignIn" method="post" class="login-form">
-            <div class="form-group">
-                <input asp-for="Email" type="text" placeholder="Enter email" />
-                <span asp-validation-for="Email" class="error"></span>
-                <br/>
-                <input asp-for="Password" type="password" placeholder="Enter password" />
-                <span asp-validation-for="Password" class="error"></span>
-                <a asp-action="ForgotPassword">Forgot password?</a>
-            </div>
-
-            <div class="action-container">
-                <button type="submit" class="btn-continue" id="submit">Continue</button>
-                <div class="signup-redirect">
-                    <span>Don't have an account? <a href="/Auth/DecisionSignup">→ Sign up</a></span>
+            @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
+            {
+                <div class="error-summary">
+                    @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        <div>⚠️ @error.ErrorMessage</div>
+                    }
                 </div>
-            </div>
-        </form>
-    </section>
+            }
 
-    <section class="graphic-side right-banner"></section>
-</main>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+            <form asp-action="SignIn" method="post" class="login-form">
+                <div class="form-group">
+                    <input asp-for="Email" class="input-field" type="text" placeholder="Enter email or phone number" />
+                    <span asp-validation-for="Email" class="error-text"></span>
+                </div>
+                <div class="form-group">
+                    <input asp-for="Password" class="input-field" type="password" placeholder="Enter password" />
+                    <span asp-validation-for="Password" class="error-text"></span>
+                </div>
+                <div class="forgot-link-wrapper">
+                    <a asp-action="ForgotPassword" class="forgot-password-link">Forgot password?</a>
+                </div>
+                <button type="submit" class="btn-continue">Continue</button>
+                <div class="signup-redirect">
+                    <span class="signup-text">Don't have an account?</span>
+                    <a href="/Auth/Signup" class="signup-link">Sign up &rarr;</a>
+                </div>
+            </form>
+        </main>
+    </div>
+    <div class="right-graphic-panel"></div>
+</div>
 
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+}

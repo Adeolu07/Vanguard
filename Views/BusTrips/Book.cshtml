@@ -1,20 +1,12 @@
 @model dynamic
 @{
     Layout = "_DashboardLayout";
-    ViewData["Title"] = "Confirm Bus Booking";
+    ViewData["Title"] = "Book Bus";
     ViewData["ActiveNav"] = "Dashboard";
 }
 @section Styles {
     <link rel="stylesheet" href="~/css/booking-page.css" />
 }
-
-<header class="top-header">
-    <h2>Confirm Bus Booking</h2>
-    <a href="/Auth/Logout" class="btn-signout">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>
-        Sign Out
-    </a>
-</header>
 
 @if (TempData["Error"] != null)
 {
@@ -71,10 +63,6 @@
         </form>
     </div>
 </div>
-
-<footer class="system-footer">
-    &copy; 2026 - Tripfinity – Smart Transport Booking System.
-</footer>
 
 @section Scripts {
     <script>

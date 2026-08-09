@@ -5,15 +5,155 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Tripfinity</title>
 
-    <!-- Added: Plus Jakarta Sans Google Font to match the mockups perfectly -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
+    <style>
+        /* ── Flex wrapper ── */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        .decision-page-wrapper {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            width: 100%;
+            background-color: #f8fafc;
+        }
+
+        /* ── Shared header ── */
+        .auth-header-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 32px;
+            background-color: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            width: 100%;
+            flex-shrink: 0;
+        }
+
+        .auth-header-logo {
+            font-size: 1.125rem;
+            font-weight: 800;
+            color: #0f254c;
+            text-decoration: none;
+            letter-spacing: -0.02em;
+        }
+
+        .auth-header-pills {
+            display: flex;
+            gap: 8px;
+        }
+
+        .auth-header-pills a {
+            padding: 6px 16px;
+            border-radius: 6px;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .pill-passenger {
+            background-color: #f1f3f5;
+            color: #64748b;
+        }
+        .pill-marshal {
+            background-color: #f1f3f5;
+            color: #64748b;
+        }
+
+        .pill-passenger:hover,
+        .pill-marshal:hover {
+            background-color: #0f254c;
+            color: #ffffff;
+        }
+
+        /* Active state (optional – you can toggle via JS or server‑side) */
+        .pill-active {
+            background-color: #0f254c !important;
+            color: #ffffff !important;
+            pointer-events: none;
+        }
+
+        /* ── Footer (compact) ── */
+        .auth-footer {
+            padding: 24px 24px;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+            width: 100%;
+            margin-top: auto;
+            background-color: #f8fafc;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 8px;
+        }
+
+        .footer-links a {
+            font-size: 11px;
+            color: #64748b;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .footer-links a:hover {
+            color: #0f254c;
+        }
+
+        .copyright {
+            font-size: 11px;
+            color: #a0aec0;
+        }
+    </style>
+
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
+<div class="decision-page-wrapper">
+
+    <!-- Shared header -->
+    <header class="auth-header-bar">
+        <a href="/" class="auth-header-logo">Tripfinity</a>
+        <div class="auth-header-pills">
+            <a href="/Auth/SignIn" class="pill-passenger">Passenger</a>
+            <a href="/Auth/MarshalSignIn" class="pill-marshal">Marshal</a>
+        </div>
+    </header>
+
     @RenderBody()
-    @await RenderSectionAsync("Scripts", false)
+
+    <footer class="auth-footer">
+        <div class="footer-links">
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+            <a href="#">Cookies</a>
+            <a href="#">FAQ</a>
+        </div>
+        <p class="copyright">&copy; 2026 Tripfinity Ecosystem. All rights reserved.</p>
+    </footer>
+</div>
+
+@await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
+
+<script>
+    const currentPath = window.location.pathname.toLowerCase();
+    const passengerPill = document.querySelector('.pill-passenger');
+    const marshalPill = document.querySelector('.pill-marshal');
+
+    if (currentPath.includes('/auth/signin') || currentPath.includes('/auth/signup') ||  currentPath.includes('/auth/forgotpassword') || currentPath.includes('/auth/resetpassword')) {
+        passengerPill.classList.add('pill-active');
+    } else if (currentPath.includes('/auth/marshal')) {
+        marshalPill.classList.add('pill-active');
+    }
+</script>

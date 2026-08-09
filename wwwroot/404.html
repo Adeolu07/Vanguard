@@ -1,15 +1,162 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Not Found</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>404 – Page Not Found | Tripfinity</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(140deg, #f8fafc 0%, #e2e8f0 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+            color: #0f172a;
+        }
+
+        .container {
+            max-width: 560px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .illustration {
+            position: relative;
+            height: 200px;
+            margin-bottom: 24px;
+        }
+
+        .illustration svg {
+            width: 180px;
+            height: auto;
+            opacity: 0.9;
+        }
+
+        .error-code {
+            font-size: 7rem;
+            font-weight: 800;
+            color: #0f254c;
+            line-height: 1;
+            letter-spacing: -0.03em;
+            margin-bottom: 8px;
+        }
+
+        .error-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: 12px;
+        }
+
+        .error-description {
+            font-size: 0.95rem;
+            color: #64748b;
+            line-height: 1.6;
+            margin-bottom: 36px;
+            max-width: 380px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .btn-home {
+            display: inline-block;
+            background: #0f254c;
+            color: #ffffff;
+            padding: 14px 32px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: background-color 0.2s ease, transform 0.15s ease;
+            box-shadow: 0 4px 12px rgba(15, 37, 76, 0.2);
+        }
+
+        .btn-home:hover {
+            background: #0a1a36;
+            transform: translateY(-1px);
+        }
+
+        .redirect-hint {
+            margin-top: 20px;
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+
+        .footer {
+            margin-top: 60px;
+            font-size: 0.75rem;
+            color: #a0aec0;
+        }
+
+        .footer a {
+            color: #64748b;
+            text-decoration: none;
+            margin: 0 8px;
+        }
+
+        .footer a:hover {
+            color: #0f254c;
+        }
+    </style>
 </head>
 <body>
-<div style="text-align: center; padding: 80px 20px;">
-    <h1 style="font-size: 80px; margin-bottom: 20px;">404</h1>
-    <h2 style="margin-bottom: 16px;">Page Not Found</h2>
-    <a class="btn-primary" href="/Home/Dashboard"
-       style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 28px; border-radius: 40px; text-decoration: none;">Go
-        Home</a>
-</div>
-</body>
+<div class="container">
 
+    <!-- Illustration -->
+    <div class="illustration">
+        <svg viewBox="0 0 240 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="40" y="20" width="160" height="120" rx="12" fill="#0f254c" opacity="0.06" />
+            <path d="M60 80 L180 80" stroke="#0f254c" stroke-width="2" stroke-linecap="round" opacity="0.25" />
+            <path d="M60 100 L140 100" stroke="#0f254c" stroke-width="2" stroke-linecap="round" opacity="0.25" />
+            <path d="M60 120 L120 120" stroke="#0f254c" stroke-width="2" stroke-linecap="round" opacity="0.25" />
+            <circle cx="140" cy="140" r="24" fill="#0f254c" opacity="0.1" />
+            <circle cx="140" cy="140" r="14" fill="#0f254c" opacity="0.2" />
+            <path d="M132 140 L136 146 L148 134" stroke="#0f254c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.6" />
+        </svg>
+    </div>
+
+    <h1 class="error-code">404</h1>
+    <h2 class="error-title">Oops, page not found</h2>
+    <p class="error-description">
+        The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
+    </p>
+
+    <a href="/" class="btn-home">Back to Homepage</a>
+
+    <p class="redirect-hint">You’ll be redirected in <span id="countdown">10</span> seconds…</p>
+
+    <div class="footer">
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+        <a href="#">Cookies</a>
+        <a href="#">FAQ</a>
+        <p style="margin-top:8px;">&copy; 2026 Tripfinity Ecosystem. All rights reserved.</p>
+    </div>
+
+</div>
+
+<script>
+    let seconds = 7;
+    const countdownEl = document.getElementById('countdown');
+    const interval = setInterval(() => {
+        seconds--;
+        countdownEl.textContent = seconds;
+        if (seconds <= 0) {
+            clearInterval(interval);
+            window.location.href = '/';
+        }
+    }, 1000);
+</script>
+</body>
 </html>
