@@ -1,9 +1,10 @@
 @model IEnumerable<object>
 @using _Tripfinity.Models.Tables
 @{
-    Layout = "_Layout";
-    ViewData["Title"] = "My Trips";
-    var vehicleType = ViewBag.VehicleType as string ?? "";
+  ViewData["Title"] = "My Trips";
+  ViewData["ActiveNav"] = "My Trips";
+  var vehicleType = ViewBag.VehicleType as string ?? "";
+  Layout = "_MarshalLayout";
 }
 @section Styles {
     <link rel="stylesheet" href="~/css/marshal-portal.css" />

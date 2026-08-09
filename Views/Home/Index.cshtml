@@ -1,18 +1,36 @@
 ﻿@{
-    Layout = "_Layout";
+    Layout = null;
     ViewData["Title"] = "Welcome";
-    ViewData["FullPage"] = "true"; @* Bypasses the layout container for full-width control *@
-
-    <link rel="stylesheet" href="~/css/landing.css" />
 }
 
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>@ViewData["Title"] - Tripfinity</title>
+    <link rel="stylesheet" href="~/css/landing.css"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet">
+</head>
+<body>
+<header class="landing-header">
+    <a href="/" class="header-logo">Tripfinity</a>
+    <nav class="header-nav">
+        <a href="/Home/Privacy">Privacy</a>
+        <a href="/Home/Terms">Terms</a>
+        <a href="/Auth/DecisionSignUp" class="btn-header-signin">Get Started</a>
+    </nav>
+</header>
 <div class="landing-wrapper">
-    <!-- Header/Navigation Overrides (Styled via landing.css to match the mockup) -->
-    <!-- Hero Section -->
     <section class="hero-section">
         <div class="hero-content">
             <h1>Smart Transport, Made Simple</h1>
-            <p>Experience a fluid journey from booking to boarding. Tripfinity centralizes your travel needs into a single, intuitive ecosystem.</p>
+            <p>Experience a fluid journey from booking to boarding. Tripfinity centralizes your travel needs into a
+                single, intuitive ecosystem.</p>
             <div class="decision-buttons">
                 <a href="/Auth/DecisionSignUp" class="btn-signup-hero">Create Account</a>
                 <a href="/Auth/DecisionLogin" class="btn-login-hero">Sign In</a>
@@ -20,7 +38,7 @@
         </div>
     </section>
 
-    <!-- Our Services Section -->
+    <!-- Services Section -->
     <section class="services-section">
         <h2 class="section-title-centered">Our Services</h2>
         <div class="services-grid">
@@ -47,7 +65,8 @@
         <div class="experience-container">
             <div class="experience-text">
                 <h2 class="gradient-heading">Passenger<br>Experience</h2>
-                <p class="section-desc">Empowering travelers with a seamless, digital-first experience. Manage every aspect of your journey from a single interface.</p>
+                <p class="section-desc">Empowering travelers with a seamless, digital-first experience. Manage every
+                    aspect of your journey from a single interface.</p>
                 <ul class="feature-bullets">
                     <li>Secure booking and seat reservation</li>
                     <li>Wallet-based fare payments</li>
@@ -73,7 +92,8 @@
             </div>
             <div class="experience-text">
                 <h2 class="solid-heading">Marshal Operations</h2>
-                <p class="section-desc">Advanced tools for transit personnel to maintain operational excellence and ensure passenger safety.</p>
+                <p class="section-desc">Advanced tools for transit personnel to maintain operational excellence and
+                    ensure passenger safety.</p>
                 <ul class="feature-bullets">
                     <li>Trip schedule management</li>
                     <li>Real-time seating oversight</li>
@@ -88,7 +108,9 @@
     <section class="mission-section">
         <h2 class="section-title-centered">Our Mission</h2>
         <p class="mission-desc">
-            Tripfinity aims to eliminate the friction points of modern transit. We've built an ecosystem focused on transparency, security, and ease of use. By integrating digital payments with real-time ticketing, we ensure your journey is as smooth as your destination.
+            Tripfinity aims to eliminate the friction points of modern transit. We've built an ecosystem focused on
+            transparency, security, and ease of use. By integrating digital payments with real-time ticketing, we ensure
+            your journey is as smooth as your destination.
         </p>
         <div class="mission-stats-grid">
             <div class="stat-item">
@@ -115,9 +137,14 @@
         <h3>Tripfinity</h3>
         <p>&copy; 2026 Tripfinity Ecosystem. All rights reserved.</p>
         <div class="footer-links">
-            <a href="#">Privacy Policy</a>
-            <a href="#">Terms of Service</a>
+            <a href="/Home/Privacy">Privacy Policy</a>
+            <a href="/Home/Terms">Terms of Service</a>
             <a href="#">Cookies</a>
         </div>
     </footer>
 </div>
+
+</body>
+
+
+</html>

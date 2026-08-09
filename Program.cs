@@ -12,6 +12,7 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
         builder.Services.AddScoped<IAuthService, AuthService>();
         builder.Services.AddScoped<IBookingService, BookingService>();
+        builder.Services.AddScoped<ICipService, CipService>();
         builder.Services.AddScoped<ITicketService, TicketService>();
         builder.Services.AddScoped<ITripService, TripService>();
         builder.Services.AddScoped<IEmailService, EmailService>();
@@ -19,11 +20,17 @@ public class Program
         builder.Services.AddScoped<ITripListingService, TripListingService>();
         builder.Services.AddScoped<IMarshalService, MarshalService>();
         builder.Services.AddScoped<IPassengerService, PassengerService>();
+        builder.Services.AddScoped<IAdminService, AdminService>();
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
         builder.Services.AddProblemDetails();
         builder.Services.AddHttpClient<IWalletService, WalletService>(client =>
         {
             client.BaseAddress = new Uri(builder.Configuration["WalletStation:baseUrl"] ?? "");
+        });
+        
+        builder.Services.AddHttpClient<ICipService, CipService>(client =>
+        {
+            client.BaseAddress = new Uri(builder.Configuration["CipService:baseUrl"] ?? "");
         });
         builder.Services.AddMemoryCache();
         builder.Services.AddDbContext<AppDbContext>(options =>

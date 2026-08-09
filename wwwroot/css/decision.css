@@ -8,169 +8,146 @@
 }
 
 * {
-    box-sizing: border-box !important;
+    box-sizing: border-box ;
     margin: 0;
     padding: 0;
-    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif ;
 }
 
 body, html {
-    background-color: var(--bg-page) !important;
-    min-height: 100vh !important;
-    height: 100% !important;
+    min-height: 100vh ;
+    height: 100% ;
 }
 
 /* Page structural wrapper using flexbox to center elements */
 .decision-page-wrapper {
-    display: flex !important;
-    flex-direction: column !important;
-    min-height: 100vh !important;
-    background-color: var(--bg-page) !important;
-    width: 100% !important;
+    display: flex ;
+    flex-direction: column ;
+    min-height: 100vh ;
+    width: 100% ;
 }
 
 /* ===== Elegant Top Header (Clean Transparent Background) ===== */
 .auth-header {
-    background-color: transparent !important; /* Force overrides original solid black background */
-    padding: 32px 80px !important;
-    width: 100% !important;
-    display: block !important;
+    background-color: transparent ;
+    padding: 32px 80px ;
+    width: 100% ;
+    display: block ;
 }
 
 .header-container {
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    max-width: 1400px !important;
-    margin: 0 auto !important;
-    width: 100% !important;
+    display: flex ;
+    justify-content: space-between ;
+    align-items: center ;
+    max-width: 1400px ;
+    margin: 0 auto ;
+    width: 100% ;
 }
 
 .brand-logo {
-    font-size: 22px !important;
-    font-weight: 700 !important;
-    color: var(--navy-primary) !important;
-    letter-spacing: -0.02em !important;
+    font-size: 22px ;
+    font-weight: 700 ;
+    color: var(--navy-primary) ;
+    letter-spacing: -0.02em ;
 }
 
 .header-link {
-    font-size: 13px !important;
-    font-weight: 600 !important;
-    color: var(--text-dark) !important;
-    text-decoration: none !important;
-    transition: opacity 0.15s ease !important;
+    font-size: 13px ;
+    font-weight: 600 ;
+    /*color: var(--text-dark) ;*/
+    text-decoration: none ;
+    transition: opacity 0.15s ease ;
 }
 
-    .header-link:hover {
-        opacity: 0.8 !important;
-    }
+.header-link:hover {
+    opacity: 0.8 ;
+}
 
 /* ===== Centered Main Layout Container ===== */
 .content-container {
-    flex: 1 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important; /* Forces layout to center horizontally */
-    padding: 40px 24px 80px !important;
-    width: 100% !important;
+    flex: 1 ;
+    display: flex ;
+    align-items: center ;
+    justify-content: center ;
+    padding: 40px 24px 80px ;
+    width: 100% ;
 }
 
 .decision-box {
-    width: 100% !important;
-    max-width: 360px !important; /* Lock button block width */
-    text-align: center !important; /* Center-aligns texts */
-    margin: 0 auto !important;
+    width: 100% ;
+    max-width: 360px ;
+    text-align: center ;
+    margin: 0 auto ;
 }
 
 .decision-title {
-    font-size: 26px !important;
-    font-weight: 700 !important;
-    margin-bottom: 28px !important;
-    color: var(--navy-primary) !important;
-    letter-spacing: -0.02em !important;
+    font-size: 26px ;
+    font-weight: 700 ;
+    margin-bottom: 28px ;
+    color: var(--navy-primary) ;
+    letter-spacing: -0.02em ;
 }
 
 /* Stacked interactive selection buttons */
 .button-group {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 12px !important;
-    margin-bottom: 32px !important;
+    display: flex ;
+    flex-direction: column ;
+    gap: 12px ;
+    margin-bottom: 32px ;
 }
 
 /* Navy rounded buttons */
 .btn-selection {
-    display: block !important;
-    text-align: center !important;
-    text-decoration: none !important;
-    padding: 16px 0 !important;
-    background-color: var(--navy-primary) !important;
-    color: #ffffff !important;
-    border-radius: 8px !important;
-    font-size: 14px !important;
-    font-weight: 700 !important;
-    cursor: pointer !important;
-    border: none !important;
-    transition: background-color 0.2s ease, transform 0.1s ease !important;
+    display: block ;
+    text-align: center ;
+    text-decoration: none ;
+    padding: 16px 0 ;
+    background-color: var(--navy-primary) ;
+    color: #ffffff ;
+    border-radius: 8px ;
+    font-size: 14px ;
+    font-weight: 700 ;
+    cursor: pointer ;
+    border: none ;
+    transition: background-color 0.2s ease, transform 0.1s ease ;
 }
 
-    .btn-selection:hover {
-        background-color: var(--navy-hover) !important;
-    }
 
-/* Already have an account redirect prompt style */
+/* Already have an account? redirect prompt style */
+.signup-redirect {
+    font-size: 13px ;
+    color: var(--text-muted) ;
+}
+
+.signup-redirect a {
+    color: var(--navy-primary) ;
+    text-decoration: none ;
+    font-weight: 700 ;
+}
+
+.signup-redirect a:hover {
+    text-decoration: underline ;
+}
+
+
 .login-redirect {
-    font-size: 13px !important;
-    color: var(--text-muted) !important;
+    font-size: 13px ;
+    color: var(--text-muted) ;
 }
 
-    .login-redirect a {
-        color: var(--navy-primary) !important;
-        text-decoration: none !important;
-        font-weight: 700 !important;
-    }
-
-        .login-redirect a:hover {
-            text-decoration: underline !important;
-        }
-
-/* ===== Full-width horizontal divider and Spacious Footer ===== */
-.auth-footer {
-    padding: 48px 24px !important;
-    text-align: center !important;
-    border-top: 1px solid #e2e8f0 !important; /* Horizontal separation line */
-    background-color: var(--bg-page) !important;
-    width: 100% !important;
-    margin-top: auto !important;
+.login-redirect a {
+    color: var(--navy-primary) ;
+    text-decoration: none ;
+    font-weight: 700 ;
 }
 
-.footer-links {
-    display: flex !important;
-    justify-content: center !important;
-    gap: 16px !important;
-    margin-bottom: 12px !important;
-}
-
-    .footer-links a {
-        font-size: 11px !important;
-        color: var(--text-muted) !important;
-        text-decoration: none !important;
-        font-weight: 500 !important;
-        transition: color 0.15s ease !important;
-    }
-
-        .footer-links a:hover {
-            color: var(--navy-primary) !important;
-        }
-
-.copyright {
-    font-size: 11px !important;
-    color: #a0aec0 !important;
+.login-redirect a:hover {
+    text-decoration: underline ;
 }
 
 /* ===== Responsiveness adjustments ===== */
 @media (max-width: 768px) {
     .auth-header {
-        padding: 24px !important;
+        padding: 24px ;
     }
 }

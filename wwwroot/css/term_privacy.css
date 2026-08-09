@@ -1,0 +1,19 @@
+.content-page {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 60px 24px;
+    line-height: 1.7;
+}
+.content-page h1 {
+    font-size: 2rem;
+    color: #0f254c;
+    margin-bottom: 0.5rem;
+}
+.content-page h2 {
+    font-size: 1.25rem;
+    margin-top: 2rem;
+    color: #1e293b;
+}
+.content-page p {
+    color: #475569;
+}

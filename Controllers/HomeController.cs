@@ -25,6 +25,8 @@ public class HomeController : ParentController
         return View();
     }
     public IActionResult Privacy() => View();
+    public IActionResult Terms() => View();
+    
     
     public async Task<IActionResult> Wallet(int page = 1)
     {
@@ -33,7 +35,8 @@ public class HomeController : ParentController
             return RedirectToAction("Index", "Home");
         
         var user = await _passenger.GetPassengerAsync(UserId!.Value);
-        // if (user is null) return RedirectToLogin();
+        if (user is null) 
+            return RedirectToLogin();
         ViewBag.WalletId = user!.UserWalletId;
         var transactions = await _passenger.GetWalletTransactions(UserId!.Value, page);
         return View("~/Views/Wallet/Index.cshtml", transactions);

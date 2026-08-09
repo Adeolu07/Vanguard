@@ -21,9 +21,9 @@ public class Pagination
 
 public class TransactionDetailsList
 {
-    public string TranType { get; set; } = string.Empty;
+    public string? TranType { get; set; }
     public decimal Amount { get; set; }
-    public string Description { get; set; } = string.Empty;
-    public string TransactionId { get; set; } = string.Empty;
-    public string SessionId { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public string? TransactionId { get; set; }
+    public string? SessionId { get; set; }
 }

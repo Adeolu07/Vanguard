@@ -1,6 +1,7 @@
 @{
     var firstName = Context.Session.GetString("FirstName") ?? "User";
     var active = ViewData["ActiveNav"] as string ?? "Dashboard";
+    var headerTitle = ViewData["Title"] as string ?? "Dashboard";
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -12,10 +13,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    @RenderSection("Styles", required: false)
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
     <div class="dashboard-layout">
+        <!-- Sidebar -->
         <aside class="sidebar">
             <div class="brand-logo">
                 <div class="logo-icon"></div>
@@ -34,7 +36,7 @@
                     Wallet
                 </a>
             </nav>
-            <div class="sidebar-footer">
+            <a href="/Home/Profile" class="sidebar-footer" style="text-decoration: none; color: inherit;">
                 <div class="user-avatar">
                     <span>@(string.IsNullOrEmpty(firstName) ? "P" : firstName.Substring(0, 1))</span>
                 </div>
@@ -42,14 +44,27 @@
                     <div class="user-name">@firstName</div>
                     <div class="user-status">VERIFIED MEMBER</div>
                 </div>
-            </div>
+            </a>
         </aside>
 
+        <!-- Main area with unified header & footer -->
         <main class="main-content">
+            <header class="top-header">
+                <h2>@headerTitle</h2>
+                <a href="/Auth/Logout" class="btn-signout">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>
+                    Sign Out
+                </a>
+            </header>
+
             @RenderBody()
+
+            <footer class="dashboard-footer-text">
+                &copy; 2026 Tripfinity Ecosystem. All rights reserved.
+            </footer>
         </main>
     </div>
 
-    @RenderSection("Scripts", required: false)
+    @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

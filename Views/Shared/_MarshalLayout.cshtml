@@ -1,0 +1,259 @@
+@{
+    var firstName = Context.Session.GetString("FirstName") ?? "Marshal";
+    var active = ViewData["ActiveNav"] as string ?? "Dashboard";
+    var headerTitle = ViewData["Title"] as string ?? "Marshal Portal";
+    var vehicleType = Context.Session.GetString("marshalVehicleType") ?? "Bus";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@headerTitle – Tripfinity Marshal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --marshal-deep: #0f254c;
+            --marshal-accent: #f59e0b;
+            --marshal-surface: #ffffff;
+            --marshal-bg: #f1f5f9;
+            --marshal-text: #1e293b;
+            --marshal-muted: #64748b;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        *, *::before, *::after {
+            margin: 0; padding: 0; box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+            background: var(--marshal-bg);
+            color: var(--marshal-text);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ── Sidebar ── */
+        .marshal-sidebar {
+            width: 260px;
+            background: var(--marshal-surface);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            padding: 24px 16px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .brand-logo {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--marshal-deep);
+            margin-bottom: 32px;
+            padding-left: 8px;
+            letter-spacing: -0.02em;
+        }
+
+        .nav-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--marshal-muted);
+            font-weight: 500;
+            font-size: 0.875rem;
+            transition: all 0.15s;
+        }
+
+        .nav-item:hover {
+            background: #f8fafc;
+            color: var(--marshal-deep);
+        }
+
+        .nav-item.active {
+            background: var(--marshal-deep);
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding: 16px 12px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: var(--marshal-deep);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .user-info-text .user-name {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--marshal-text);
+        }
+
+        .user-info-text .user-status {
+            font-size: 0.7rem;
+            color: var(--marshal-muted);
+            letter-spacing: 0.05em;
+        }
+
+        /* ── Main ── */
+        .main-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .top-header {
+            background: var(--marshal-surface);
+            padding: 20px 32px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .top-header h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--marshal-deep);
+        }
+
+        .btn-signout {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 6px;
+            background: #fee2e2;
+            color: #b91c1c;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background 0.15s;
+        }
+
+        .btn-signout:hover {
+            background: #fecaca;
+        }
+
+        .content-body {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+        }
+
+        .dashboard-footer-text {
+            text-align: center;
+            padding: 16px;
+            font-size: 0.75rem;
+            color: var(--marshal-muted);
+            border-top: 1px solid var(--border-color);
+            background: var(--marshal-surface);
+        }
+
+        /* Utility */
+        .alert-success {
+            background: #dcfce7;
+            color: #166534;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .alert-danger {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+    </style>
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <aside class="marshal-sidebar">
+        <div class="brand-logo">⚡ Tripfinity</div>
+        <nav class="nav-section">
+            <a href="/marshal" class="nav-item @(active == "Dashboard" ? "active" : "")">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M4 13h6c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1zm0 8h6c.55 0 1-.45 1-1v-4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v4c0 .55.45 1 1 1zm10 0h6c.55 0 1-.45 1-1v-8c0-.55-.45-1-1-1h-6c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1zm0-18v4c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1h-6c-.55 0-1 .45-1 1z"/></svg>
+                Dashboard
+            </a>
+            <a href="/marshal/trips" class="nav-item @(active == "My Trips" ? "active" : "")">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 22 12 16 16 16 8"/></svg>
+                My Trips
+            </a>
+            <a href="/marshal/scan" class="nav-item @(active == "Scan" ? "active" : "")">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></svg>
+                Scan Ticket
+            </a>
+            <a href="/marshal/wallet" class="nav-item @(active == "Wallet" ? "active" : "")">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2" ry="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                Wallet
+            </a>
+        </nav>
+        <a href="/Home/Profile" class="sidebar-footer" style="text-decoration:none;color:inherit;">
+            <div class="user-avatar"><span>@(string.IsNullOrEmpty(firstName) ? "M" : firstName[..1])</span></div>
+            <div class="user-info-text">
+                <div class="user-name">@firstName</div>
+                <div class="user-status">@vehicleType MARSHAL</div>
+            </div>
+        </a>
+    </aside>
+
+    <main class="main-area">
+        <header class="top-header">
+            <h2>@headerTitle</h2>
+            <a href="/Auth/Logout" class="btn-signout">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+                Sign Out
+            </a>
+        </header>
+
+        <div class="content-body">
+            @RenderBody()
+        </div>
+
+        <footer class="dashboard-footer-text">
+            &copy; 2026 Tripfinity Ecosystem. All rights reserved.
+        </footer>
+    </main>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

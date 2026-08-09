@@ -1,5 +1,4 @@
 @model _Tripfinity.Models.ViewModels.TicketIndexViewModel
-@using _Tripfinity.Models.Tables
 @{
     Layout = "_DashboardLayout";
     ViewData["Title"] = "My Tickets";
@@ -9,13 +8,6 @@
     <link rel="stylesheet" href="~/css/ticket-list.css" />
 }
 
-<header class="top-header">
-    <h2>My Tickets</h2>
-    <a href="/Auth/Logout" class="btn-signout">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>
-        Sign Out
-    </a>
-</header>
 
 <section class="welcome-section">
     <span class="sub-brand">TRAVEL HISTORY</span>
@@ -23,7 +15,7 @@
     <p>All your booked trips in one place.</p>
 </section>
 
-@if (Model.Bookings != null && Model.Bookings.Any())
+@if (Model.Bookings.Any())
 {
     <div class="tickets-list">
         @foreach (var booking in Model.Bookings)
@@ -74,7 +66,3 @@ else
         <a href="/BusTrips/Index" class="btn-action-primary">Book a Trip</a>
     </div>
 }
-
-<footer class="dashboard-footer-text">
-    &copy; 2026 Tripfinity Ecosystem. All rights reserved.
-</footer>

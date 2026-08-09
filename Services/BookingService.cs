@@ -1,5 +1,4 @@
 using _Tripfinity.Interfaces;
-using _Tripfinity.Models;
 using _Tripfinity.Models.Tables;
 using _Tripfinity.Models.Data;
 using _Tripfinity.Models.Data.Requests;
@@ -17,17 +16,23 @@ public class BookingService : IBookingService
     private readonly AppDbContext _context;
     private readonly IWalletService _walletService;
     private readonly ITicketService _ticketService;
+    private readonly IAdminService _adminService;
+    private readonly IMarshalService _marshalService;
     private readonly ILogger<BookingService> _logger;
 
     public BookingService(
         AppDbContext context,
         IWalletService walletService,
         ITicketService ticketService,
+        IAdminService adminService,
+        IMarshalService marshalService,
         ILogger<BookingService> logger)
     {
         _context = context;
         _walletService = walletService;
         _ticketService = ticketService;
+        _adminService = adminService;
+        _marshalService = marshalService;
         _logger = logger;
     }
     
@@ -156,54 +161,162 @@ public class BookingService : IBookingService
         if (ticket is { Status: TicketStatus.Validated })
             return Failed("Ticket has already been used and cannot be cancelled");
 
-        var tripTime = ResolveTripTime(booking);
-        var eligibleForRefund = booking.Status == BookingStatus.Confirmed &&
-                                tripTime > DateTime.Now.AddHours(2);
+        var isMarshalCancelling = requestingUserId == null;
+        var user = await _context.Users.FindAsync(booking.UserId);
+        if (user == null || string.IsNullOrEmpty(user.UserWalletId))
+            return Failed("Wallet not found");
 
+        var tripTime = ResolveTripTime(booking);
+        var now = DateTime.Now;
+
+        if (tripTime > now)
+        {
+            if (booking.BusTrip != null) booking.BusTrip.AvailableSeats += booking.NumberOfSeats;
+            else if (booking.RailwayTrip != null) booking.RailwayTrip.AvailableSeats += booking.NumberOfSeats;
+            else if (booking.TaxiTrip != null) booking.TaxiTrip.AvailableSeats += booking.NumberOfSeats;
+        }
+
+        booking.Status = BookingStatus.Cancelled;
+        booking.CancelledAt = now;
+        booking.CancellationReason= reason;
+        if (ticket != null) ticket.Status = TicketStatus.Cancelled;
+        
         await using var tx = await _context.Database.BeginTransactionAsync();
         try
         {
-            // Restore inventory if trip hasn't yet left
-            if (tripTime > DateTime.Now)
+            var marshalWalletId = await _marshalService.GetMarshalWalletIdAsync(booking);
+            var adminWalletId = await _adminService.GetAdminWalletIdAsync();
+            
+            if (string.IsNullOrEmpty(marshalWalletId) || string.IsNullOrEmpty(adminWalletId))
             {
-                if (booking.BusTrip != null)
+                await tx.RollbackAsync();
+                return Failed("Marshal or admin wallet not found – cannot process cancellation");
+            }
+
+            var total = booking.TotalAmount;
+
+            if (isMarshalCancelling)
+            {
+                var refundUser = await _walletService.CreditWalletAsync(new CreditWalletRequest
                 {
-                    booking.BusTrip.AvailableSeats += booking.NumberOfSeats;
+                    Amount = total,
+                    CustomerId = user.UserWalletId,
+                    Description = $"Full refund – Marshal cancelled booking #{booking.Id}",
+                    TraceId = Guid.NewGuid().ToString("N")
+                });
+                
+                if (refundUser.ResponseHeader.ResponseCode != "00")
+                {
+                    await tx.RollbackAsync();
+                    return Failed("Failed to refund user");
                 }
-                else if (booking.RailwayTrip != null)
+                
+                var debitMarshal = await _walletService.DebitWalletAsync(new DebitWalletRequest
                 {
-                    booking.RailwayTrip.AvailableSeats += booking.NumberOfSeats;
-                }
-                else if(booking.TaxiTrip != null)
+                    Amount = total * 0.8m,
+                    CustomerId = marshalWalletId,
+                    Description = $"Reversal – marshal cancelled booking #{booking.Id}",
+                    TraceId = Guid.NewGuid().ToString("N")
+                });
+
+                // Take back admin's 20%
+                var debitAdmin = await _walletService.DebitWalletAsync(new DebitWalletRequest
                 {
-                    booking.TaxiTrip?.AvailableSeats += booking.NumberOfSeats;
+                    Amount = total * 0.2m,
+                    CustomerId = adminWalletId,
+                    Description = $"Reversal – marshal cancelled booking #{booking.Id}",
+                    TraceId = Guid.NewGuid().ToString("N")
+                });
+                
+                var penaltyFromMarshal = await _walletService.DebitWalletAsync(new DebitWalletRequest
+                {
+                    Amount = total * 0.05m,
+                    CustomerId = marshalWalletId,
+                    Description = $"Penalty – marshal cancelled booking ${booking.Id}",
+                    TraceId = Guid.NewGuid().ToString("N")
+                });
+
+                var penaltyToAdmin = await _walletService.CreditWalletAsync(new CreditWalletRequest
+                {
+                    Amount = total * 0.05m,
+                    CustomerId = adminWalletId,
+                    Description = $"Penalty received – marshal cancelled booking #{booking.Id}",
+                    TraceId = Guid.NewGuid().ToString("N")
+                });
+                
+                if (debitMarshal.ResponseHeader.ResponseCode != "00" ||
+                    debitAdmin.ResponseHeader.ResponseCode != "00" ||
+                    penaltyFromMarshal.ResponseHeader.ResponseCode != "00" ||
+                    penaltyToAdmin.ResponseHeader.ResponseCode != "00")
+                {
+                    await tx.RollbackAsync();
+                    return Failed("One or more marshal cancellation adjustments failed");
                 }
             }
 
-            booking.Status = BookingStatus.Cancelled;
-            booking.CancelledAt = DateTime.Now;
-            booking.CancellationReason = reason;
-
-            if (eligibleForRefund)
+            else //User cancellation
             {
-                if (ticket != null) ticket.Status = TicketStatus.Cancelled;
-                await _context.SaveChangesAsync();
-
-                var refundOk = await RefundAsync(booking);
-                await tx.CommitAsync();
-
-                return new BookingResult
+                if (tripTime > now.AddHours(2))
                 {
-                    Success = true,
-                    Status = BookingStatus.Cancelled,
-                    Message = refundOk
-                        ? "Booking cancelled and wallet refunded"
-                        : "Booking cancelled. Refund could not be processed",
-                    Booking = booking
-                };
-            }
+                    // >2h before departure: user gets 80% back, marshal returns 80%
+                    await _walletService.CreditWalletAsync(new CreditWalletRequest
+                    {
+                        Amount = total * 0.8m,
+                        CustomerId = user.UserWalletId,
+                        Description = $"80% refund – user cancelled booking #{booking.Id}",
+                        TraceId = Guid.NewGuid().ToString("N")
+                    });
 
-            // No refund – just cancel
+                    await _walletService.DebitWalletAsync(new DebitWalletRequest
+                    {
+                        Amount = total * 0.8m,
+                        CustomerId = marshalWalletId,
+                        Description = $"Reversal – user cancelled booking #{booking.Id}",
+                        TraceId = Guid.NewGuid().ToString("N")
+                    });
+                    // admin keeps 20%
+                }
+                else if (now < tripTime)
+                {
+                    // <2h before departure: user gets 60%, marshal keeps 25% returns 55%, admin keeps 15% (returns 5%)
+                    await _walletService.CreditWalletAsync(new CreditWalletRequest
+                    {
+                        Amount = total * 0.6m,
+                        CustomerId = user.UserWalletId,
+                        Description = $"60% refund – late cancellation #{booking.Id}",
+                        TraceId = Guid.NewGuid().ToString("N")
+                    });
+
+                    await _walletService.DebitWalletAsync(new DebitWalletRequest
+                    {
+                        Amount = total * 0.55m,
+                        CustomerId = marshalWalletId,
+                        Description = $"Reversal – late cancellation #{booking.Id}",
+                        TraceId = Guid.NewGuid().ToString("N")
+                    });
+
+                    await _walletService.DebitWalletAsync(new DebitWalletRequest
+                    {
+                        Amount = total * 0.05m,
+                        CustomerId = adminWalletId,
+                        Description = $"Reversal – late cancellation #{booking.Id}",
+                        TraceId = Guid.NewGuid().ToString("N")
+                    });
+                }
+                else
+                {
+                    // Already departed – no refund
+                    await _context.SaveChangesAsync();
+                    await tx.CommitAsync();
+                    return new BookingResult
+                    {
+                        Success = true,
+                        Status = BookingStatus.Cancelled,
+                        Message = "Booking cancelled; no refund for no‑show",
+                        Booking = booking
+                    };
+                }
+            }
             await _context.SaveChangesAsync();
             await tx.CommitAsync();
 
@@ -211,7 +324,9 @@ public class BookingService : IBookingService
             {
                 Success = true,
                 Status = BookingStatus.Cancelled,
-                Message = "Booking cancelled. Not eligible for a refund.",
+                Message = isMarshalCancelling
+                    ? "Booking cancelled by marshal; passenger fully refunded"
+                    : "Booking cancelled and refund processed",
                 Booking = booking
             };
         }
@@ -246,12 +361,83 @@ public class BookingService : IBookingService
                 TraceId = traceId
             });
 
-            if (debit?.ResponseHeader?.ResponseCode == "00")
+            if (debit.ResponseHeader.ResponseCode == "00")
             {
                 booking.Status = BookingStatus.Confirmed;
                 booking.PaymentTransactionId = debit.TransactionId;
                 booking.PaymentTraceId = traceId;
                 await _context.SaveChangesAsync();
+
+                // payment splits
+                var marshalProfit = booking.TotalAmount * 0.8m;
+                var platformProfit = booking.TotalAmount * 0.2m;
+
+                var marshaWalletId = await _marshalService.GetMarshalWalletIdAsync(booking);
+                var adminWalletId = await _adminService.GetAdminWalletIdAsync();
+
+                if (string.IsNullOrEmpty(marshaWalletId) || string.IsNullOrEmpty(adminWalletId))
+                {
+                    await _walletService.RefundAsync(new RefundRequest
+                    {
+                        CustomerId = user.UserWalletId,
+                        TransactionId = debit.TransactionId,
+                        Description = "Failed split - refund",
+                    });
+
+                    await transaction.RollbackAsync();
+                    return Failed("Unable to process payment split - marshal or admin wallet missing");
+                }
+                
+                var marshalCredit = await _walletService.CreditWalletAsync(new CreditWalletRequest
+                {
+                    Amount = marshalProfit,
+                    CustomerId = marshaWalletId,
+                    Description = $"Earnings from booking #{booking.Id}",
+                    TraceId = Guid.NewGuid().ToString("N")
+                });
+
+                var adminCredit = await _walletService.CreditWalletAsync(new CreditWalletRequest
+                {
+                    Amount = platformProfit,
+                    CustomerId = adminWalletId,
+                    Description = $"Commission from booking #{booking.Id}",
+                    TraceId = Guid.NewGuid().ToString("N")
+                });
+
+                if (marshalCredit.ResponseHeader.ResponseCode != "00" || adminCredit.ResponseHeader.ResponseCode != "00")
+                {
+                    // Reverse everything – refund user, reverse any successful credits
+                    await _walletService.RefundAsync(new RefundRequest
+                    {
+                        CustomerId = user.UserWalletId,
+                        TransactionId = debit.TransactionId,
+                        Description = "Split partially failed – full refund",
+                    });
+                    
+                }
+
+                if (marshalCredit.ResponseHeader.ResponseCode == "00")
+                { 
+                    await _walletService.RefundAsync(new RefundRequest 
+                    { 
+                        CustomerId = user.UserWalletId, 
+                        TransactionId = marshalCredit.TransactionId,
+                        Description = "Reversal due to split failure",
+                    });
+                }
+
+                if (adminCredit.ResponseHeader.ResponseCode == "00")
+                { 
+                    await _walletService.RefundAsync(new RefundRequest
+                    {
+                        CustomerId = user.UserWalletId,
+                        TransactionId = adminCredit.TransactionId,
+                        Description = "Reversal due to split failure",
+                    });
+                    await transaction.RollbackAsync();
+                    return Failed("Payment split failed; booking cancelled, wallet refunded");
+                }
+                
                 var vehicleId = ResolveVehicleId(booking);
                 var ticket = await _ticketService.IssueTicketAsync(booking, vehicleId);
                 await transaction.CommitAsync();
@@ -268,7 +454,7 @@ public class BookingService : IBookingService
 
             await transaction.RollbackAsync();
 
-            if (debit?.ResponseHeader?.ResponseCode == "01")
+            if (debit.ResponseHeader.ResponseCode == "01")
                 return new BookingResult
                 {
                     Success = false,
@@ -280,7 +466,7 @@ public class BookingService : IBookingService
             {
                 Success = false,
                 Status = BookingStatus.Failed,
-                Message = debit?.ResponseHeader?.ResponseMessage ?? "Payment could not be processed"
+                Message = debit.ResponseHeader.ResponseMessage
             };
         }
         catch (Exception ex)
@@ -290,39 +476,8 @@ public class BookingService : IBookingService
             throw;
         }
     }
-
-    // ─── Refund ─────────────────────────────────────────────────────────
-
-    private async Task<bool> RefundAsync(Booking booking)
-    {
-        var user = await _context.Users.FindAsync(booking.UserId);
-        if (user == null || string.IsNullOrEmpty(user.UserWalletId))
-            return false;
-
-        try
-        {
-            var credit = await _walletService.CreditWalletAsync(new CreditWalletRequest
-            {
-                Amount = booking.TotalAmount,
-                CustomerId = user.UserWalletId,
-                Description = $"Refund for cancelled booking #{booking.Id}",
-                TraceId = Guid.NewGuid().ToString("N")
-            });
-
-            if (credit?.ResponseHeader?.ResponseCode != "00") 
-                return false;
-            return true;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Refund failed for booking {BookingId}", booking.Id);
-            return false;
-        }
-    }
-
-    // ─── Transaction audit ──────────────────────────────────────────────
+    
     // ─── Helpers ────────────────────────────────────────────────────────
-
     private static BookingResult Failed(string message) =>
         new() { Success = false, Status = BookingStatus.Failed, Message = message };
 
@@ -378,4 +533,5 @@ public class BookingService : IBookingService
         if (booking.TaxiTrip != null) return booking.TaxiTrip.VehicleId;
         return null;
     }
+    
 }

@@ -8,39 +8,98 @@
     <link rel="stylesheet" href="~/css/confirmation.css" />
 }
 
-<header class="top-header">
-    <h2>Confirmation</h2>
-    <a href="/Auth/Logout" class="btn-signout">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>
-        Sign Out
-    </a>
-</header>
+<section class="confirmation-success-banner">
+    <div class="success-icon-wrapper">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2">
+            <circle cx="12" cy="12" r="10" stroke="#10b981" />
+            <polyline points="8 12 11 15 16 9" />
+        </svg>
+    </div>
+    <h1>Booking Confirmed!</h1>
+    <p>Your trip has been booked successfully. You can view your trip details below.</p>
+</section>
 
 <div class="confirmation-card">
-    <div class="confirmation-icon">✅</div>
-    <h2>Booking Confirmed!</h2>
-    <div class="confirmation-details">
-        <p><strong>Booking ID:</strong> #@Model.Id</p>
-        <p><strong>Transport:</strong> @Model.TransportType</p>
+    <div class="confirmation-header">
+        <span class="booking-id-label">Booking ID</span>
+        <span class="booking-id-value">#@Model.Id</span>
+    </div>
+
+    <div class="trip-icon-type">
+        @switch (Model.TransportType)
+        {
+            case TransportType.Bus:
+                <span class="icon-bus">
+                    🚌 Bus Journey
+                </span>
+                break;
+            case TransportType.Taxi:
+                <span class="icon-taxi">
+                    🚕 Taxi Ride
+                </span>
+                break;
+            case TransportType.Railway:
+                <span class="icon-rail">
+                    🚆 Railway Trip
+                </span>
+                break;
+        }
+    </div>
+
+    <div class="trip-details-grid">
         @if (Model.TransportType == TransportType.Bus && Model.BusTrip != null)
         {
-            <p><strong>From:</strong> @Model.BusTrip.From → <strong>@Model.BusTrip.Destination</strong></p>
-            <p><strong>Departure:</strong> @Model.BusTrip.DepartureTime</p>
+            <div class="detail-item full-width">
+                <span class="detail-label">Route</span>
+                <span class="detail-value">@Model.BusTrip.From → @Model.BusTrip.Destination</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Departure</span>
+                <span class="detail-value">@Model.BusTrip.DepartureTime</span>
+            </div>
         }
         else if (Model.TransportType == TransportType.Taxi && Model.TaxiTrip != null)
         {
-            <p><strong>Pickup:</strong> @Model.TaxiTrip.PickupLocation → <strong>@Model.TaxiTrip.DropoffLocation</strong></p>
-            <p><strong>Time:</strong> @Model.TaxiTrip.PickupTime</p>
+            <div class="detail-item full-width">
+                <span class="detail-label">Pickup → Drop‑off</span>
+                <span class="detail-value">@Model.TaxiTrip.PickupLocation → @Model.TaxiTrip.DropoffLocation</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Pickup Time</span>
+                <span class="detail-value">@Model.TaxiTrip.PickupTime</span>
+            </div>
         }
         else if (Model.TransportType == TransportType.Railway && Model.RailwayTrip != null)
         {
-            <p><strong>From:</strong> @Model.RailwayTrip.From → <strong>@Model.RailwayTrip.Destination</strong></p>
-            <p><strong>Departure:</strong> @Model.RailwayTrip.DepartureTime</p>
-            <p><strong>Class:</strong> @Model.RailwayTrip.TrainClass</p>
+            <div class="detail-item full-width">
+                <span class="detail-label">Route</span>
+                <span class="detail-value">@Model.RailwayTrip.From → @Model.RailwayTrip.Destination</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Departure</span>
+                <span class="detail-value">@Model.RailwayTrip.DepartureTime</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Class</span>
+                <span class="detail-value">@Model.RailwayTrip.TrainClass</span>
+            </div>
         }
-        <p><strong>Seats:</strong> @Model.NumberOfSeats</p>
-        <p><strong>Total Amount:</strong> ₦@Model.TotalAmount.ToString("N0")</p>
-        <p><strong>Status:</strong> @Model.Status</p>
+
+        <div class="detail-item">
+            <span class="detail-label">Seats</span>
+            <span class="detail-value">@Model.NumberOfSeats</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Total Amount</span>
+            <span class="detail-value highlight">₦@Model.TotalAmount.ToString("N0")</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Status</span>
+            <span class="status-badge @Model.Status">@Model.Status</span>
+        </div>
     </div>
-    <a href="/Home/Dashboard" class="btn-back">Go to Dashboard</a>
+
+    <div class="confirmation-actions">
+        <a href="/Home/Dashboard" class="btn-primary">Go to Dashboard</a>
+    </div>
 </div>

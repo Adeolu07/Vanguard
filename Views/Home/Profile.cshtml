@@ -1,84 +1,96 @@
 @model _Tripfinity.Models.Tables.User
 @{
-    Layout = "_Layout";
+    Layout = "_DashboardLayout";
     ViewData["Title"] = "My Profile";
+    ViewData["ActiveNav"] = "Dashboard";
 }
 
 @section Styles {
-    <link rel="stylesheet" href="~/css/profile.css" />
+    <link rel="stylesheet" href="~/css/profile.css" asp-append-version="true" />
 }
 
-<div class="profile-container">
-    <h2>My Profile</h2>
-
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success">@TempData["Success"]</div>
-    }
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger">@TempData["Error"]</div>
-    }
-
-    <form asp-action="UpdateProfile" method="post" id="profileForm">
-        @Html.AntiForgeryToken()
-
-        <div class="form-group">
-            <label>Email</label>
-            <input type="email" value="@Model.Email" disabled class="form-control" />
-            <small class="text-muted">Email cannot be changed</small>
-        </div>
-
-        <div class="form-group">
-            <label for="FirstName">First Name</label>
-            <input name="FirstName" id="FirstName" value="@Model.FirstName" required
-                   class="form-control" disabled />
-        </div>
-
-        <div class="form-group">
-            <label for="LastName">Last Name</label>
-            <input name="LastName" id="LastName" value="@Model.LastName" required
-                   class="form-control" disabled />
-        </div>
-
-        <div class="form-group">
-            <label for="PhoneNumber">Phone Number</label>
-            <input name="PhoneNumber" id="PhoneNumber" value="@Model.PhoneNumber" required
-                   class="form-control" disabled />
-        </div>
-
-        @if (Model.Role == "Marshal")
-        {
-            <div class="form-group">
-                <label>Vehicle Type</label>
-                <input value="@Model.VehicleType" disabled class="form-control" />
-                <small class="text-muted">Vehicle type is set at registration</small>
+<div class="profile-page-wrapper">
+    <div class="profile-card">
+        <div class="profile-avatar-section">
+            <div class="profile-avatar-large">
+                <span>@Model.FirstName?.Substring(0, 1)@Model.LastName?.Substring(0, 1)</span>
             </div>
-            <div class="form-group">
-                <label>Vehicle ID</label>
-                <input value="@Model.VehicleId" disabled class="form-control" />
+            <div class="profile-name-role">
+                <h2>@Model.FirstName @Model.LastName</h2>
+                <span class="profile-role-badge">@(Model.Role == "Marshal" ? "Marshal" : "Passenger")</span>
             </div>
-            <div class="form-group">
-                <label>License ID</label>
-                <input value="@Model.LicenseId" disabled class="form-control" />
-            </div>
-        }
-
-        <div class="form-actions">
-            <button type="button" id="editBtn" class="btn btn-primary">Edit Profile</button>
-            <button type="submit" id="saveBtn" class="btn btn-success" style="display:none;">Save Changes</button>
-            <button type="button" id="cancelBtn" class="btn btn-secondary" style="display:none;">Cancel</button>
         </div>
-    </form>
 
-    <a href="/Home/Dashboard" class="btn btn-link mt-3">← Back to Dashboard</a>
+        <div class="profile-details-card">
+            <form asp-action="UpdateProfile" method="post" id="profileForm">
+                @Html.AntiForgeryToken()
+
+                <div class="profile-details-grid">
+                    <div class="detail-field">
+                        <label class="field-label">Email Address</label>
+                        <input type="email" value="@Model.Email" class="field-input" disabled />
+                        <span class="field-hint">Email cannot be changed</span>
+                    </div>
+
+                    <div class="detail-field">
+                        <label class="field-label" for="FirstName">First Name</label>
+                        <input name="FirstName" id="FirstName" value="@Model.FirstName" class="field-input" disabled required />
+                    </div>
+
+                    <div class="detail-field">
+                        <label class="field-label" for="LastName">Last Name</label>
+                        <input name="LastName" id="LastName" value="@Model.LastName" class="field-input" disabled required />
+                    </div>
+
+                    <div class="detail-field">
+                        <label class="field-label" for="PhoneNumber">Phone Number</label>
+                        <input name="PhoneNumber" id="PhoneNumber" value="@Model.PhoneNumber" class="field-input" disabled required />
+                    </div>
+
+                    @if (Model.Role == "Marshal")
+                    {
+                        <div class="detail-field">
+                            <label class="field-label">Vehicle Type</label>
+                            <input value="@Model.VehicleType" class="field-input" disabled />
+                            <span class="field-hint">Vehicle type is set at registration</span>
+                        </div>
+                        <div class="detail-field">
+                            <label class="field-label">Vehicle ID</label>
+                            <input value="@Model.VehicleId" class="field-input" disabled />
+                        </div>
+                        <div class="detail-field">
+                            <label class="field-label">License ID</label>
+                            <input value="@Model.LicenseId" class="field-input" disabled />
+                        </div>
+                    }
+                </div>
+
+                <div class="profile-actions">
+                    <button type="button" id="editBtn" class="btn-primary">Edit Profile</button>
+                    <button type="submit" id="saveBtn" class="btn-primary" style="display:none;">Save Changes</button>
+                    <button type="button" id="cancelBtn" class="btn-secondary" style="display:none;">Cancel</button>
+                </div>
+            </form>
+
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success">@TempData["Success"]</div>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-error">@TempData["Error"]</div>
+            }
+        </div>
+
+        <a href="/Home/Dashboard" class="back-link">← Back to Dashboard</a>
+    </div>
 </div>
 
 @section Scripts {
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             const form = document.getElementById('profileForm');
-            const inputs = form.querySelectorAll('input[name]'); // only named (submitted) fields
+            const inputs = form.querySelectorAll('input[name]');
             const editBtn = document.getElementById('editBtn');
             const saveBtn = document.getElementById('saveBtn');
             const cancelBtn = document.getElementById('cancelBtn');
@@ -86,18 +98,18 @@
             editBtn.addEventListener('click', () => {
                 inputs.forEach(i => i.disabled = false);
                 editBtn.style.display = 'none';
-                saveBtn.style.display = 'inline-block';
-                cancelBtn.style.display = 'inline-block';
+                saveBtn.style.display = 'inline-flex';
+                cancelBtn.style.display = 'inline-flex';
             });
 
             cancelBtn.addEventListener('click', () => {
                 inputs.forEach(i => {
                     i.disabled = true;
-                    i.value = i.defaultValue; // reset to original
+                    i.value = i.defaultValue;
                 });
                 saveBtn.style.display = 'none';
                 cancelBtn.style.display = 'none';
-                editBtn.style.display = 'inline-block';
+                editBtn.style.display = 'inline-flex';
             });
         });
     </script>

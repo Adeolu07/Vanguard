@@ -34,12 +34,13 @@ public class AuthController : Controller
     [HttpPost]
     public async Task<IActionResult> SignIn(LoginViewModel model)
     {
-        if (!ModelState.IsValid) return View(model);
+        if (!ModelState.IsValid) 
+            return View(model);
 
         var result = await _authService.SignInAsync(model.Email, model.Password);
         if (!result.Success || result.User == null)
         {
-            ModelState.AddModelError("", "Unable to log in");
+            ModelState.AddModelError("FailedLogin", result.Message);
             return View(model);
         }
 
@@ -64,7 +65,7 @@ public class AuthController : Controller
         var result = await _authService.SignInAsync(model.Email, model.Password);
         if (!result.Success || result.User == null)
         {
-            ModelState.AddModelError("", "Unable to log in");
+            ModelState.AddModelError("", result.Message);
             return View(model);
         }
 
@@ -91,7 +92,13 @@ public class AuthController : Controller
         }
 
         _logger.LogInformation("Marshal Signup for {Email}", result.User.Email);
-        return RedirectToAction("Dashboard", "Home");
+        
+        var confirmationLink =  $"{Request.Scheme}://{Request.Host}/auth/ConfirmEmail?userId={result.User.Id}&token={result.User.EmailConfirmationToken}";
+        await _emailService.SendConfirmationEmailAsync(result.User.Email, confirmationLink);
+        _logger.LogInformation("Confirmation Email Sent to marshal with email: {Email}", result.User.Email);
+        TempData["SuccessMessage"] = "Registration successful. Please check your email to confirm your account.";
+        
+        return RedirectToAction("MarshalConfirmation");
     }
 
     [HttpGet]
@@ -146,15 +153,26 @@ public class AuthController : Controller
             return View();
         }
 
-        var result = await _authService.ForgotPasswordAsync(email);
-        TempData["SuccessMessage"] = result.Message;
+        var resetLink = Url.Action(
+            "ResetPassword",
+            "Auth",
+            new {email, token = "__TOKEN__" },
+            Request.Scheme
+        )!;
+
+        var result = await _authService.ForgotPasswordAsync(email,resetLink);
+
+        if (!result.Success) 
+            TempData["Error"] = result.Message;
+        else
+            TempData["SuccessMessage"] = result.Message;
+        
         return RedirectToAction("ForgotPassword");
     }
 
     [HttpGet]
     public IActionResult ResetPassword(string email, string token)
     {
-        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(token)) return BadRequest("Invalid request.");
         return View(new ResetPasswordViewModel { Email = email, Token = token });
     }
 

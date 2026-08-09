@@ -79,4 +79,12 @@ public class WalletApiController : ControllerBase
         var response = await _walletService.GetTransactionList(request);
         return Ok(response);
     }
+    
+    [HttpPost("nameenquiry")]
+    public async Task<IActionResult> NameEnquiry( WalletNameEnquiryRequest request)
+    {
+        _logger.LogInformation("Get transaction list for : {CustomerId}", request.CustomerId);
+        var response = await _walletService.WalletNameEnquiryAsync(request);
+        return Ok(response);
+    }
 }
