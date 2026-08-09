@@ -94,8 +94,6 @@ namespace _Tripfinity.Models.Data
             builder.Entity<Transaction>()
                 .Property(transaction => transaction.Amount)
                 .HasPrecision(18, 2);
-
-            DataSeeding.Seed(builder);
         }
     }
 }

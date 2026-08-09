@@ -1,0 +1,20 @@
+@model List<_Tripfinity.Models.Tables.Booking>
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "All Bookings";
+}
+<h1>All Bookings</h1>
+<table class="table">
+    <tr><th>User</th><th>Type</th><th>Trip</th><th>Seats</th><th>Amount</th><th>Status</th></tr>
+    @foreach (var b in Model)
+    {
+        <tr>
+            <td>@b.User?.FirstName</td>
+            <td>@b.TransportType</td>
+            <td>@b.BusTrip??@b.TaxiTrip??@b.RailwayTripId</td>
+            <td>@b.NumberOfSeats</td>
+            <td>₦@b.TotalAmount</td>
+            <td>@b.Status</td>
+        </tr>
+    }
+</table>

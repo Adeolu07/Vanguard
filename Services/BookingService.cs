@@ -375,7 +375,7 @@ public class BookingService : IBookingService
                 var marshaWalletId = await _marshalService.GetMarshalWalletIdAsync(booking);
                 var adminWalletId = await _adminService.GetAdminWalletIdAsync();
 
-                if (string.IsNullOrEmpty(marshaWalletId) || string.IsNullOrEmpty(adminWalletId))
+                if (string.IsNullOrEmpty(marshaWalletId) && string.IsNullOrEmpty(adminWalletId))
                 {
                     await _walletService.RefundAsync(new RefundRequest
                     {
