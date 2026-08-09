@@ -57,7 +57,7 @@ public class MarshalService : IMarshalService
         return marshal?.UserWalletId;
     }
     
-     public async Task<MarshalWalletViewModel>? GetWalletInfoAsync(int userId, int page = 1)
+     public async Task<MarshalWalletViewModel> GetWalletInfoAsync(int userId, int page = 1)
         {
             var marshal = await _context.Users.FindAsync(userId);
             if (marshal is not { Role: "Marshal" } || string.IsNullOrWhiteSpace(marshal.UserWalletId))

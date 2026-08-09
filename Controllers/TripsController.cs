@@ -37,7 +37,7 @@ public class TripsController : ParentController
             _         => null
         };
         if (model is null) return NotFound();
-        return View($"~/Views/{type}Trips/Index.cshtml", model);
+        return View($"~/Views/{type}Trips/Wallet.cshtml", model);
     }
 
     // GET /Trips/{type}/{tripId}/Book

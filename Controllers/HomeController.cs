@@ -37,9 +37,10 @@ public class HomeController : ParentController
         var user = await _passenger.GetPassengerAsync(UserId!.Value);
         if (user is null) 
             return RedirectToLogin();
-        ViewBag.WalletId = user!.UserWalletId;
+        
+        ViewBag.WalletId = user.UserWalletId;
         var transactions = await _passenger.GetWalletTransactions(UserId!.Value, page);
-        return View("~/Views/Wallet/Index.cshtml", transactions);
+        return View(transactions);
     }
     
     public async Task<IActionResult> Dashboard()
@@ -88,9 +89,13 @@ public class HomeController : ParentController
 
         return RedirectToAction("Profile");
     }
-    
-   
 
-    public IActionResult Error() =>
-        View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+    public IActionResult Error(int statusCode = 500, string title = "Error", string detail = "")
+    {
+        Response.StatusCode = statusCode;
+        ViewBag.StatusCode = statusCode;
+        ViewBag.Title = title;
+        ViewBag.Detail = detail;
+        return View();
+    }
 }

@@ -3,12 +3,13 @@
     const balance = document.getElementById('walletBalance');
 
     if (!walletId) {
-        if (balance) balance.textContent = 'Wallet not linked';
+        if (balance) 
+            balance.textContent = 'Wallet not linked';
         return;
     }
 
-    // ---- Balance loader ----
-    async function loadBalance() {
+    // ---- Balance refresh ----
+    async function loadBalance(){
         try {
             const res = await fetch('/api/wallet/balance', {
                 method: 'POST',
@@ -18,7 +19,7 @@
             const data = await res.json();
             if (balance) {
                 balance.textContent = data.responseHeader?.responseCode === '00'
-                    ? `₦${data.balance.toLocaleString()}`
+                    ? '₦' + data.balance.toLocaleString()
                     : '--';
             }
         } catch (err) {
@@ -27,7 +28,7 @@
     }
 
     // ---- Transaction receipt modal ----
-    function omo() {
+    function initReceiptModal() {
         let overlay = document.getElementById('receiptOverlay');
         let closeBtn = document.getElementById('receiptClose');
         let printBtn = document.getElementById('receiptPrintBtn');
@@ -90,8 +91,10 @@
                 const description = row.getAttribute('data-description') || '';
                 const sessionId = row.getAttribute('data-session-id') || '';
 
+                // Show placeholder data immediately
                 openReceipt({ type, amount, description, transactionId, sessionId });
 
+                // Fetch full details and update
                 fetch('/api/wallet/transaction', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -124,71 +127,79 @@
         });
     }
 
-    // ---- Bank transfer modal ----
-    const bankBtn = document.getElementById('fundBankTransferBtn');
-    const bankOverlay = document.getElementById('bankTransferOverlay');
-    const bankClose = document.getElementById('bankTransferClose');
+    // ---- Fund wallet ----
+    function initFundButton() {
+        const fundBtn = document.getElementById('fundButton');
+        const amountEl = document.getElementById('fundAmount');
+        const descEl = document.getElementById('fundDescription');
+        const msgEl = document.getElementById('fundMessage');
+        if (!fundBtn || !amountEl || !msgEl) 
+            return;
 
-    if (bankBtn && bankOverlay && bankClose) {
-        bankBtn.addEventListener('click', async () => {
-            bankOverlay.classList.add('active');
-            document.body.style.overflow = 'hidden';
+        fundBtn.addEventListener('click', async () => {
+            const amount = parseFloat(amountEl.value);
+            if (!amount || amount <= 0) {
+                msgEl.textContent = 'Please enter a valid amount.';
+                msgEl.className = 'fund-message error';
+                return;
+            }
 
-            document.getElementById('bankAccountName').textContent = 'Loading...';
-            document.getElementById('bankAccountNumber').textContent = 'Loading...';
-            document.getElementById('bankName').textContent = 'Loading...';
-            document.getElementById('bankCode').textContent = 'Loading...';
+            fundBtn.disabled = true;
+            fundBtn.textContent = 'Processing…';
+            msgEl.textContent = '';
 
             try {
-                const res = await fetch('/api/wallet/nameenquiry', {
+                const traceId = crypto.randomUUID();
+                const res = await fetch('/api/wallet/credit', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ customerId: walletId })
+                    body: JSON.stringify({
+                        CustomerId: walletId,
+                        Amount: amount,
+                        Description: descEl.value.trim() || 'Fund wallet',
+                        TraceId:traceId
+                    })
                 });
                 const data = await res.json();
-                if (data?.responseHeader?.responseCode === '00') {
-                    document.getElementById('bankAccountName').textContent =
-                        `${data.firstName ?? ''} ${data.lastName ?? ''}`.trim() || '—';
-                    document.getElementById('bankAccountNumber').textContent = data.accountNumber || '—';
-                    document.getElementById('bankName').textContent = data.bankName || '—';
-                    document.getElementById('bankCode').textContent = data.bankCode || '—';
+
+                if (res.ok && data.responseHeader && data.responseHeader.responseCode === '00') {
+                    msgEl.textContent = 'Funds added successfully!';
+                    msgEl.className = 'fund-message success';
+                    // Refresh balance display
+                    const newBalance = data.balance ?? (await fetchBalance(walletId));
+                    if (newBalance !== undefined) {
+                        document.getElementById('walletBalance').textContent =
+                            '₦' + parseFloat(newBalance).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+                    }
+                    amountEl.value = '';
+                    descEl.value = '';
                 } else {
-                    throw new Error('Name Enquiry failed');
+                    const errMsg = data.responseHeader?.responseMessage || data.message || 'Credit failed.';
+                    msgEl.textContent = errMsg;
+                    msgEl.className = 'fund-message error';
                 }
             } catch (err) {
-                console.error(err);
-                document.getElementById('bankAccountName').textContent = 'Failed to load';
-                document.getElementById('bankAccountNumber').textContent = '—';
-                document.getElementById('bankName').textContent = '—';
-                document.getElementById('bankCode').textContent = '—';
+                msgEl.textContent = 'Network error. Please try again.';
+                msgEl.className = 'fund-message error';
+            } finally {
+                fundBtn.disabled = false;
+                fundBtn.textContent = 'Add Funds';
             }
         });
 
-        bankClose.addEventListener('click', () => {
-            bankOverlay.classList.remove('active');
-            document.body.style.overflow = '';
-        });
-        bankOverlay.addEventListener('click', (e) => {
-            if (e.target === bankOverlay) {
-                bankOverlay.classList.remove('active');
-                document.body.style.overflow = '';
-            }
-        });
+        async function fetchBalance(customerId) {
+            const res = await fetch('/api/wallet/balance', {
+                method: 'POST',
+                headers: { '2Content-Type': 'application/json' },
+                body: JSON.stringify({ customerId })
+            });
+            const data = await res.json();
+            return data.balance;
+        }
     }
 
-    const copyBtn = document.getElementById('bankCopyDetails');
-    if (copyBtn) {
-        copyBtn.addEventListener('click', () => {
-            const details = `Account Number: ${document.getElementById('bankAccountNumber').textContent}\n`
-            navigator.clipboard.writeText(details).then(() => {
-                copyBtn.innerHTML = '✅ Copied';
-                setTimeout(() => {
-                    copyBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copy Details`;
-                }, 2000);
-            }).catch(() => alert('Failed to copy'));
-        });
-    }
-
+    // ---- Boot ----
     loadBalance().finally();
-    omo();
+    initReceiptModal();
+    initFundButton();
 });

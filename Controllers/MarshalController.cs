@@ -18,7 +18,6 @@ public class MarshalController : Controller
     private readonly IMarshalService _marshalService;
     private readonly ILogger<MarshalController> _logger;
     private readonly ICipService _cipService;
-    private const string InstitutionId = "000966";
 
     public MarshalController(ITripService trip, ITicketService ticket, ICipService cipService, IMarshalService marshalService,
         ILogger<MarshalController> logger)
@@ -191,28 +190,6 @@ public class MarshalController : Controller
 
         return View("Scan");
     }
-    
-    
-    
-   
-    
-    [HttpPost]
-    public async Task<IActionResult> NameEnquiry(string bankCode, string accountNumber)
-    {
-        var userId = HttpContext.Session.GetInt32("userId");
-        if (userId == null) return Unauthorized();
-
-        var sessionId = Guid.NewGuid().ToString("N");
-        var request = new NameEnquiryRequest
-        {
-            SessionId = sessionId,
-            DestinationInstitutionId = bankCode,
-            AccountId = accountNumber
-        };
-
-        var result = await _cipService.AccountEnquiry(request);
-        return Json(new { success = result.ResponseCode == "00", accountName = result.AccountName, message = result.ResponseMessage });
-    }
 
     [HttpGet("wallet")]
     public async Task<IActionResult> Wallet(int page = 1)
@@ -222,7 +199,7 @@ public class MarshalController : Controller
             return RedirectToAction("MarshalSignIn", "Auth");
 
         var model = await _marshalService.GetWalletInfoAsync(userId.Value, page);
-        if (model == null)
+        if (!model.HasNext)
         {
             // Wallet not ready yet – build minimal fallback
             var marshal = await _marshalService.GetMarshalAsync(userId.Value) ?? new User
@@ -236,7 +213,7 @@ public class MarshalController : Controller
             {
                 WalletId = marshal.UserWalletId ?? "Not available",
                 Balance = 0,
-                Transactions = new List<_Tripfinity.Models.Data.Response.TransactionDetailsList>(),
+                Transactions = new List<TransactionDetailsList>(),
                 CurrentPage = 1,
                 TotalPages = 1,
                 HasNext = false,
@@ -247,57 +224,6 @@ public class MarshalController : Controller
         }
 
         return View(model);
-    }
-    
-    [HttpPost]
-    public async Task<IActionResult> Cashout(decimal amount, string bankCode, string accountNumber, string accountName)
-    {
-        var userId = HttpContext.Session.GetInt32("userId");
-        if (userId == null) return RedirectToAction("MarshalSignIn", "Auth");
-
-        var marshal = await _marshalService.GetMarshalAsync(userId.Value);
-        if (marshal == null || string.IsNullOrEmpty(marshal.UserWalletId))
-            return RedirectToAction("MarshalSignIn", "Auth");
-
-        var sessionId = Guid.NewGuid().ToString("N");
-        var paymentRef = Guid.NewGuid().ToString("N");
-
-        var postCreditRequest = new PostCreditRequest
-        {
-            SessionId = sessionId,
-            PaymentRef = paymentRef,
-            DestinationInstitutionId = bankCode,
-            CreditAccount = accountNumber,
-            CreditAccountName = accountName,
-            SourceAccountId = marshal.UserWalletId,
-            SourceAccountName = $"{marshal.FirstName} {marshal.LastName}",
-            Narration = $"Tripfinity marshal cashout",
-            Channel = "Online",
-            Group = "Tripfinity",
-            Sector = "Transport",
-            Amount = amount
-        };
-
-        var result = await _cipService.PostCredit(postCreditRequest);
-        if (result.ResponseCode == "00")
-        {
-            TempData["SuccessMessage"] = $"Cashout of ₦{amount:N2} to {accountName} ({accountNumber}) initiated successfully.";
-        }
-        else
-        {
-            TempData["ErrorMessage"] = $"Cashout failed: {result.ResponseMessage}";
-        }
-
-        return RedirectToAction("Wallet");
-    }
-    
-    
-
-    private static string GenerateSessionId()
-    {
-        var timestamp = DateTime.Now.ToString("yyMMddHHmmss");
-        var random = Random.Shared.Next(100_000_000, 999_999_999).ToString("D12")[..12];
-        return $"{InstitutionId}{timestamp}{random}";
     }
 
 }
