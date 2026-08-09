@@ -25,4 +25,8 @@
         <PackageReference Include="Scalar.AspNetCore" Version="2.16.12" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Views\Wallet\" />
+    </ItemGroup>
+
 </Project>

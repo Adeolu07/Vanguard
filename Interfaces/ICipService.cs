@@ -5,7 +5,7 @@ namespace _Tripfinity.Interfaces;
 
 public interface ICipService
 {
-    Task<NameEnquiryResponse> AccountEnquiry(NameEnquiryRequest request);
-    Task<PostCreditResponse> PostCredit(PostCreditRequest pcRequest);
+    Task<NameEnquiryResponse> AccountEnquiry(string accountNumber, string bankCode);
+    Task<PostCreditResponse> PostCredit(decimal amount, string accountNumber, string accountName, string bankCode);
     Task<TransactionQueryResponse> TransactionQuery(TransactionQueryRequest tsqRequest);
 }

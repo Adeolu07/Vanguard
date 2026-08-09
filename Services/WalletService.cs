@@ -20,9 +20,9 @@ public class WalletService : IWalletService
     private readonly AppDbContext _context;
     private const string TokenCacheKey = "WalletToken";
 
-    public WalletService( HttpClient client,
-        ILogger<WalletService> logger, IConfiguration config
-        ,AppDbContext context, IMemoryCache cache)
+    public WalletService(HttpClient client,
+        ILogger<WalletService> logger, IConfiguration config,
+        AppDbContext context, IMemoryCache cache)
     {
         _logger = logger;
         _client = client;
@@ -33,7 +33,6 @@ public class WalletService : IWalletService
 
     public async Task EnsureAuthenticatedAsync()
     {
-        // Check cache first
         if (_cache.TryGetValue<string>(TokenCacheKey, out var cachedToken))
         {
             _client.DefaultRequestHeaders.Authorization =
@@ -53,54 +52,60 @@ public class WalletService : IWalletService
             };
 
             var requestBody = JsonConvert.SerializeObject(authRequest);
+            _logger.LogInformation("Wallet Auth request: {RequestBody}", requestBody);
+
             var response = await _client.PostAsync("Auth",
                 new StringContent(requestBody, Encoding.UTF8, "application/json"));
 
+            var rawContent = await response.Content.ReadAsStringAsync();
+            _logger.LogInformation("Wallet Auth response [Status={StatusCode}]: {RawContent}",
+                (int)response.StatusCode, rawContent);
+
             if (!response.IsSuccessStatusCode)
             {
-                var error = await response.Content.ReadAsStringAsync();
-                _logger.LogWarning("Wallet auth failed: {Error}", error);
-                return;
+                _logger.LogError("Wallet auth failed: {Error}", rawContent);
+                throw new InvalidOperationException("Unable to authenticate to wallet service.");
             }
 
-            var json = await response.Content.ReadAsStringAsync();
-            var result = JsonConvert.DeserializeObject<AuthenticationResponse>(json);
-        
+            var result = JsonConvert.DeserializeObject<AuthenticationResponse>(rawContent);
 
             if (result?.ResponseHeader.ResponseCode == "00")
             {
-                var _ = DateTime.TryParse(result.ExpiryDate, out var expiryDate);
+                var expiryDate = DateTime.Parse(result.ExpiryDate);
                 AuthToken token = new AuthToken
                 {
-                    ExpiryDate = DateTime.Parse(result.ExpiryDate),
+                    ExpiryDate = expiryDate,
                     Token = result.Token!,
                 };
-            
+
                 _client.DefaultRequestHeaders.Authorization =
                     new AuthenticationHeaderValue("Bearer", result.Token);
                 _context.AuthTokens.Update(token);
                 await _context.SaveChangesAsync();
-                
+
                 _cache.Set(TokenCacheKey, result.Token, expiryDate);
                 _logger.LogInformation("Wallet token acquired and cached");
-                
+            }
+            else
+            {
+                _logger.LogError("Wallet auth returned non-success: {ResponseCode} {ResponseMessage}",
+                    result?.ResponseHeader.ResponseCode, result?.ResponseHeader.ResponseMessage);
+                throw new InvalidOperationException("Wallet authentication response not successful.");
             }
         }
         else
         {
             _logger.LogInformation("Wallet token acquired from DB");
-            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authToken.Token);
-            _cache.Set(TokenCacheKey,authToken.Token, authToken.ExpiryDate);
+            _client.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", authToken.Token);
+            _cache.Set(TokenCacheKey, authToken.Token, authToken.ExpiryDate);
         }
     }
-    
+
     private async Task LogTransaction(WalletTransaction data, string type, string customerId)
     {
-        if (data.ResponseHeader.ResponseCode != "00")
-        {
-            return;
-        }
-        
+        if (data.ResponseHeader.ResponseCode != "00") return;
+
         var user = _context.Users.FirstOrDefault(u => u.UserWalletId == customerId);
         if (user == null)
         {
@@ -124,7 +129,7 @@ public class WalletService : IWalletService
         });
         await _context.SaveChangesAsync();
     }
-    
+
     public async Task<CreateWalletResponse> CreateWalletAsync(CreateWalletRequest createWallet)
     {
         await EnsureAuthenticatedAsync();
@@ -132,28 +137,29 @@ public class WalletService : IWalletService
         try
         {
             var requestBody = JsonConvert.SerializeObject(createWallet);
-            var response = await _client.PostAsync(
-                "CreateAccount", 
-                new StringContent(
-                    requestBody,
-                    Encoding.UTF8,
-                    "application/json"));
+            _logger.LogInformation("Wallet CreateAccount request: {RequestBody}", requestBody);
+
+            var response = await _client.PostAsync("CreateAccount",
+                new StringContent(requestBody, Encoding.UTF8, "application/json"));
+
+            var rawContent = await response.Content.ReadAsStringAsync();
+            _logger.LogInformation("Wallet CreateAccount response [Status={StatusCode}]: {RawContent}",
+                (int)response.StatusCode, rawContent);
 
             if (!response.IsSuccessStatusCode)
             {
-                var error = await response.Content.ReadAsStringAsync();
-                var errorJson = JsonConvert.DeserializeObject<CreateWalletResponse>(error);
-                _logger.LogWarning("Wallet creation error: " + errorJson);
+                var errorJson = JsonConvert.DeserializeObject<CreateWalletResponse>(rawContent);
+                _logger.LogWarning("Wallet creation error: {@Error}", errorJson);
                 return errorJson!;
             }
-            
-            var json = await response.Content.ReadAsStringAsync();
-            var result = JsonConvert.DeserializeObject<CreateWalletResponse>(json);
-            _logger.LogInformation("Wallet endpoint hit successfully");
+
+            var result = JsonConvert.DeserializeObject<CreateWalletResponse>(rawContent);
+            _logger.LogInformation("Wallet created successfully: {CustomerId}", result?.AccountDetails.CustomerId);
             return result!;
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "CreateWallet failed");
             return FailedCreateWallet(ex.Message);
         }
     }
@@ -165,33 +171,35 @@ public class WalletService : IWalletService
         try
         {
             var requestBody = JsonConvert.SerializeObject(creditWallet);
-            
-            var response = await _client.PostAsync("Credit", 
+            _logger.LogInformation("Wallet Credit request: {RequestBody}", requestBody);
+
+            var response = await _client.PostAsync("Credit",
                 new StringContent(requestBody, Encoding.UTF8, "application/json"));
+
+            var rawContent = await response.Content.ReadAsStringAsync();
+            _logger.LogInformation("Wallet Credit response [Status={StatusCode}]: {RawContent}",
+                (int)response.StatusCode, rawContent);
 
             if (!response.IsSuccessStatusCode)
             {
-                var error = await response.Content.ReadAsStringAsync();
-                var errorJson = JsonConvert.DeserializeObject<WalletTransaction>(error);
-                _logger.LogWarning("Wallet credit error: " + errorJson);
+                var errorJson = JsonConvert.DeserializeObject<WalletTransaction>(rawContent);
+                _logger.LogWarning("Wallet credit error: {@Error}", errorJson);
                 return errorJson!;
             }
-            
-            var json = await response.Content.ReadAsStringAsync();
-            var result = JsonConvert.DeserializeObject<WalletTransaction>(json);
-            
-            if(result!.ResponseHeader.ResponseCode == "00")
-                _logger.LogInformation("Successfully credited wallet");
+
+            var result = JsonConvert.DeserializeObject<WalletTransaction>(rawContent);
+
+            if (result!.ResponseHeader.ResponseCode == "00")
+                _logger.LogInformation("Successfully credited wallet. New balance: {Balance}", result.Balance);
 
             await LogTransaction(result, "Credit", creditWallet.CustomerId!);
-            
             return result;
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "CreditWallet failed");
             return FailedTransaction(ex.Message);
         }
-        
     }
 
     public async Task<WalletTransaction> DebitWalletAsync(DebitWalletRequest debitWallet)
@@ -201,30 +209,33 @@ public class WalletService : IWalletService
         try
         {
             var requestBody = JsonConvert.SerializeObject(debitWallet);
+            _logger.LogInformation("Wallet Debit request: {RequestBody}", requestBody);
+
             var response = await _client.PostAsync("Debit",
                 new StringContent(requestBody, Encoding.UTF8, "application/json"));
 
+            var rawContent = await response.Content.ReadAsStringAsync();
+            _logger.LogInformation("Wallet Debit response [Status={StatusCode}]: {RawContent}",
+                (int)response.StatusCode, rawContent);
+
             if (!response.IsSuccessStatusCode)
             {
-                var error = await response.Content.ReadAsStringAsync();
-                var errorJson = JsonConvert.DeserializeObject<WalletTransaction>(error);
-                _logger.LogWarning("Wallet debit error: " + errorJson);
+                var errorJson = JsonConvert.DeserializeObject<WalletTransaction>(rawContent);
+                _logger.LogWarning("Wallet debit error: {@Error}", errorJson);
                 return errorJson!;
             }
-            
-            var json = await response.Content.ReadAsStringAsync();
-            var result = JsonConvert.DeserializeObject<WalletTransaction>(json);
-            
-            if(result!.ResponseHeader.ResponseCode == "00")
+
+            var result = JsonConvert.DeserializeObject<WalletTransaction>(rawContent);
+
+            if (result!.ResponseHeader.ResponseCode == "00")
                 _logger.LogInformation("Successfully debited wallet");
 
             await LogTransaction(result, "Debit", debitWallet.CustomerId);
-            
             return result;
-
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "DebitWallet failed");
             return FailedTransaction(ex.Message);
         }
     }
@@ -236,34 +247,36 @@ public class WalletService : IWalletService
         try
         {
             var requestBody = JsonConvert.SerializeObject(getBalance);
-            
+            _logger.LogInformation("Wallet GetBalance request: {RequestBody}", requestBody);
+
             var response = await _client.PostAsync("GetBalance",
                 new StringContent(requestBody, Encoding.UTF8, "application/json"));
-            
-            
+
+            var rawContent = await response.Content.ReadAsStringAsync();
+            _logger.LogInformation("Wallet GetBalance response [Status={StatusCode}]: {RawContent}",
+                (int)response.StatusCode, rawContent);
+
             if (!response.IsSuccessStatusCode)
             {
-                var error = await response.Content.ReadAsStringAsync();
-                var errorJson = JsonConvert.DeserializeObject<GetBalanceResponse>(error);
-                _logger.LogError("Error in Fetching Balance: {error}", errorJson);
+                var errorJson = JsonConvert.DeserializeObject<GetBalanceResponse>(rawContent);
+                _logger.LogError("Error in Fetching Balance: {@Error}", errorJson);
                 return errorJson!;
             }
-            var successfulResponse = await response.Content.ReadAsStringAsync();
-            var result = JsonConvert.DeserializeObject<GetBalanceResponse>(successfulResponse);
-            
-            _logger.LogInformation(result!.ResponseHeader.ResponseMessage);
-            if(result.ResponseHeader.ResponseCode == "00")
-                _logger.LogInformation("Successfully fetched balance");
+
+            var result = JsonConvert.DeserializeObject<GetBalanceResponse>(rawContent);
+
+            if (result!.ResponseHeader.ResponseCode == "00")
+                _logger.LogInformation("Successfully fetched balance: {Balance}", result.Balance);
 
             return result;
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex.Message);
+            _logger.LogError(ex, "GetBalance failed");
             return FailedGetBalance(ex.Message);
         }
     }
-    
+
     public async Task<GetTransactionResponse> GetTransactionAsync(GetTransactionRequest getTransaction)
     {
         await EnsureAuthenticatedAsync();
@@ -271,31 +284,33 @@ public class WalletService : IWalletService
         try
         {
             var requestBody = JsonConvert.SerializeObject(getTransaction);
+            _logger.LogInformation("Wallet GetTransaction request: {RequestBody}", requestBody);
 
             var response = await _client.PostAsync("GetTransaction",
                 new StringContent(requestBody, Encoding.UTF8, "application/json"));
 
+            var rawContent = await response.Content.ReadAsStringAsync();
+            _logger.LogInformation("Wallet GetTransaction response [Status={StatusCode}]: {RawContent}",
+                (int)response.StatusCode, rawContent);
+
             if (!response.IsSuccessStatusCode)
             {
-                var error = await response.Content.ReadAsStringAsync();
-                var errorJson = JsonConvert.DeserializeObject<GetTransactionResponse>(error);
-                _logger.LogWarning("Error in Fetching Transaction: " + errorJson);
+                var errorJson = JsonConvert.DeserializeObject<GetTransactionResponse>(rawContent);
+                _logger.LogWarning("Error in Fetching Transaction: {@Error}", errorJson);
                 return errorJson!;
             }
-            var json = await response.Content.ReadAsStringAsync();
-            var result = JsonConvert.DeserializeObject<GetTransactionResponse>(json);
-            
-            if(result!.ResponseHeader.ResponseCode == "00")
-            {
-                _logger.LogInformation("Successfully fetched transaction with ID {TransactionID}", result.TransactionDetails!.TransactionId);
-            }
-            
-            return result;
 
+            var result = JsonConvert.DeserializeObject<GetTransactionResponse>(rawContent);
+
+            if (result!.ResponseHeader.ResponseCode == "00")
+                _logger.LogInformation("Successfully fetched transaction {TransactionId}",
+                    result.TransactionDetails!.TransactionId);
+
+            return result;
         }
         catch (Exception ex)
-        { 
-            _logger.LogError(ex, "GetTransaction failed for {TransactionId}", getTransaction);
+        {
+            _logger.LogError(ex, "GetTransaction failed for {TransactionId}", getTransaction.TransactionId);
             return FailedGetTransaction(ex.Message);
         }
     }
@@ -307,36 +322,39 @@ public class WalletService : IWalletService
         try
         {
             var requestBody = JsonConvert.SerializeObject(refund);
+            _logger.LogInformation("Wallet DebitReversal request: {RequestBody}", requestBody);
 
             var response = await _client.PostAsync("DebitReversal",
                 new StringContent(requestBody, Encoding.UTF8, "application/json"));
 
+            var rawContent = await response.Content.ReadAsStringAsync();
+            _logger.LogInformation("Wallet DebitReversal response [Status={StatusCode}]: {RawContent}",
+                (int)response.StatusCode, rawContent);
+
             if (!response.IsSuccessStatusCode)
             {
-                var error = await response.Content.ReadAsStringAsync();
-                var errorJson = JsonConvert.DeserializeObject<RefundResponse>(error);
-                _logger.LogWarning("Error in Refund: " + errorJson);
+                var errorJson = JsonConvert.DeserializeObject<RefundResponse>(rawContent);
+                _logger.LogWarning("Error in Refund: {@Error}", errorJson);
                 return errorJson!;
             }
-            var json = await response.Content.ReadAsStringAsync();
-            var result = JsonConvert.DeserializeObject<RefundResponse>(json);
-            
-            if(result!.ResponseHeader.ResponseCode == "00")
+
+            var result = JsonConvert.DeserializeObject<RefundResponse>(rawContent);
+
+            if (result!.ResponseHeader.ResponseCode == "00")
             {
                 _logger.LogInformation("Successful refund");
+
                 var localTransaction = _context.Transactions
-                    .FirstOrDefault(transaction => transaction.ExternalReference == refund.TransactionId
-                                                   && transaction.Type == "Debit");
+                    .FirstOrDefault(t => t.ExternalReference == refund.TransactionId && t.Type == "Debit");
 
                 var originalTransaction = await GetTransactionAsync(new GetTransactionRequest
                 {
                     TransactionId = refund.TransactionId
                 });
-                
+
                 var amount = originalTransaction.TransactionDetails?.Amount ?? localTransaction?.Amount ?? 0m;
                 var userId = localTransaction?.UserId ?? 0;
                 var description = localTransaction?.Description ?? refund.Description;
-
 
                 _context.Transactions.Add(new Transaction
                 {
@@ -351,11 +369,10 @@ public class WalletService : IWalletService
                     CreatedAt = DateTime.Now,
                     CompletedAt = DateTime.Now
                 });
-
                 await _context.SaveChangesAsync();
             }
-            return result;
 
+            return result;
         }
         catch (Exception ex)
         {
@@ -368,36 +385,37 @@ public class WalletService : IWalletService
     {
         await EnsureAuthenticatedAsync();
         _logger.LogInformation("Get Transaction List");
-
         try
         {
             var requestBody = JsonConvert.SerializeObject(request);
+            _logger.LogInformation("Wallet GetTransactionList request: {RequestBody}", requestBody);
 
             var response = await _client.PostAsync("GetTransactionList",
                 new StringContent(requestBody, Encoding.UTF8, "application/json"));
 
+            var rawContent = await response.Content.ReadAsStringAsync();
+            _logger.LogInformation("Wallet GetTransactionList response [Status={StatusCode}]: {RawContent}",
+                (int)response.StatusCode, rawContent);
+
             if (!response.IsSuccessStatusCode)
             {
-                var error = await response.Content.ReadAsStringAsync();
-                var errorJson = JsonConvert.DeserializeObject<GetTransactionListResponse>(error);
-                _logger.LogWarning("Error getting transaction list " + errorJson);
+                var errorJson = JsonConvert.DeserializeObject<GetTransactionListResponse>(rawContent);
+                _logger.LogWarning("Error getting transaction list: {@Error}", errorJson);
                 return errorJson!;
             }
 
-            var result = await response.Content.ReadAsStringAsync();
-            var jsonResponse = JsonConvert.DeserializeObject<GetTransactionListResponse>(result);
+            var jsonResponse = JsonConvert.DeserializeObject<GetTransactionListResponse>(rawContent);
 
             if (jsonResponse?.ResponseHeader.ResponseCode == "00")
-            {
                 _logger.LogInformation("Successful Get Transaction List");
-                return jsonResponse;
-            }
-            _logger.LogInformation("Unsuccessful Get Transaction List");
+            else
+                _logger.LogInformation("Unsuccessful Get Transaction List");
+
             return jsonResponse!;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex,"Get Transaction Failed for Customer {CustomerId}", request.CustomerId);
+            _logger.LogError(ex, "GetTransactionList failed for Customer {CustomerId}", request.CustomerId);
             return FailedGetTransactionList(ex.Message);
         }
     }
@@ -409,35 +427,36 @@ public class WalletService : IWalletService
         try
         {
             var requestBody = JsonConvert.SerializeObject(request);
+            _logger.LogInformation("Wallet NameEnquiry request: {RequestBody}", requestBody);
 
             var response = await _client.PostAsync("NameEnquiry",
                 new StringContent(requestBody, Encoding.UTF8, "application/json"));
 
+            var rawContent = await response.Content.ReadAsStringAsync();
+            _logger.LogInformation("Wallet NameEnquiry response [Status={StatusCode}]: {RawContent}",
+                (int)response.StatusCode, rawContent);
+
             if (!response.IsSuccessStatusCode)
             {
-                var error = await response.Content.ReadAsStringAsync();
-                var errorJson = JsonConvert.DeserializeObject<WalletNameEnquiryResponse>(error);
-                _logger.LogError("Error in Name Enquiry: {error}", errorJson);
+                var errorJson = JsonConvert.DeserializeObject<WalletNameEnquiryResponse>(rawContent);
+                _logger.LogError("Error in Name Enquiry: {@Error}", errorJson);
                 return errorJson!;
             }
-            
-            var successfulResponse = await response.Content.ReadAsStringAsync();
-            var result = JsonConvert.DeserializeObject<WalletNameEnquiryResponse>(successfulResponse);
-            
-            _logger.LogInformation(result!.ResponseHeader.ResponseMessage);
-            if(result.ResponseHeader.ResponseCode == "00")
-                _logger.LogInformation("Successfull Name Enquiry");
+
+            var result = JsonConvert.DeserializeObject<WalletNameEnquiryResponse>(rawContent);
+
+            if (result!.ResponseHeader.ResponseCode == "00")
+                _logger.LogInformation("Successful Name Enquiry");
 
             return result;
-
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex,"Name enquiry failed for Customer {CustomerId}", request.CustomerId);
+            _logger.LogError(ex, "Name enquiry failed for Customer {CustomerId}", request.CustomerId);
             return FailedNameEnquiry(ex.Message);
         }
     }
-    
+
     private static WalletNameEnquiryResponse FailedNameEnquiry(string message) =>
         new()
         {
@@ -459,17 +478,18 @@ public class WalletService : IWalletService
             Pagination = null,
             TransactionDetailsList = null
         };
-    
+
     private static WalletTransaction FailedTransaction(string message) =>
         new()
         {
             ResponseHeader = new ResponseHeader { ResponseCode = "99", ResponseMessage = message },
-            Amount       = 0,
-            Balance      = 0,
-            Description  = message,
+            Amount = 0,
+            Balance = 0,
+            Description = message,
             TransactionId = "",
-            TraceId      = ""
+            TraceId = ""
         };
+
     private static GetBalanceResponse FailedGetBalance(string message) =>
         new()
         {
@@ -490,8 +510,9 @@ public class WalletService : IWalletService
             ResponseHeader = new ResponseHeader { ResponseCode = "99", ResponseMessage = message },
             Amount = null
         };
+
     private static CreateWalletResponse FailedCreateWallet(string message) =>
-        new ()
+        new()
         {
             ResponseHeader = new ResponseHeader { ResponseCode = "99", ResponseMessage = message },
             AccountDetails = null!
