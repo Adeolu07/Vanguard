@@ -7,7 +7,7 @@ namespace _Tripfinity;
 
 public class Program
 {
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
         builder.Services.AddScoped<IAuthService, AuthService>();
@@ -48,12 +48,14 @@ public class Program
         builder.Services.AddControllers();
         var app = builder.Build();
         app.UseExceptionHandler();
-        
-        // using (var scope = app.Services.CreateScope())
-        // {
-        //     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        //     dbContext.Database.EnsureCreated();
-        // }
+
+
+        using var scope = app.Services.CreateScope();
+        var seeder = new DataSeeder(
+            scope.ServiceProvider.GetRequiredService<AppDbContext>(),
+            scope.ServiceProvider.GetRequiredService<IWalletService>());
+
+        await seeder.SeedAsync();
         app.UseStaticFiles();
         app.UseSession();
 
@@ -70,6 +72,7 @@ public class Program
             context.Response.ContentType = "text/html";
             await context.Response.SendFileAsync("wwwroot/404.html");
         });
-        app.Run();
+        
+        await app.RunAsync();
     }
 }

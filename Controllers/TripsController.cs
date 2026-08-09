@@ -29,6 +29,14 @@ public class TripsController : ParentController
     // GET /Trips/{type}
     public async Task<IActionResult> Index(string type, int page = 1, int pageSize = 4)
     {
+        string? viewPath = type.ToLower() switch
+        {
+            "bus"     => "~/Views/BusTrips/Index.cshtml",
+            "railway" => "~/Views/RailwayTrips/Index.cshtml",
+            "taxi"    => "~/Views/TaxiTrips/Index.cshtml",
+            _         => null
+        };
+
         object? model = type.ToLower() switch
         {
             "bus"     => await _listingService.GetActiveBusTripsAsync(page, pageSize),
@@ -36,8 +44,13 @@ public class TripsController : ParentController
             "taxi"    => await _listingService.GetActiveTaxiTripsAsync(page, pageSize),
             _         => null
         };
-        if (model is null) return NotFound();
-        return View($"~/Views/{type}Trips/Wallet.cshtml", model);
+
+        if (model is null || viewPath is null)
+            return NotFound();
+
+        return View(viewPath, model);
+        
+        
     }
 
     // GET /Trips/{type}/{tripId}/Book

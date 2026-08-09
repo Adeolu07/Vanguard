@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"] – Admin</title>
+    <link rel="stylesheet" href="~/css/admin.css" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+<nav class="admin-nav">
+    <a href="/admin">Dashboard</a>
+    <a href="/admin/trips">Trips</a>
+    <a href="/admin/bookings">Bookings</a>
+    <a href="/admin/wallet">Wallet</a>
+</nav>
+<div class="admin-container">
+    @RenderBody()
+</div>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

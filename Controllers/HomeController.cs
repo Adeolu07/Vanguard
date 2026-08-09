@@ -48,15 +48,22 @@ public class HomeController : ParentController
         if (!IsAuthenticated) 
             return RedirectToLogin();
 
-        var user = await _passenger.GetPassengerAsync(UserId!.Value);
-        if (user is null) 
+        var genericUser = await _passenger.GetUserByIdAsync(UserId!.Value);
+        if (genericUser is null) 
             return RedirectToLogin();
 
-        ViewBag.FirstName = user.FirstName;
-        ViewBag.WalletBalance = await _passenger.GetWalletBalanceAsync(user.UserWalletId);
+        if (genericUser.Role == "Admin")
+            return RedirectToAction("Index", "Admin");
+
+        var passenger = await _passenger.GetPassengerAsync(UserId.Value);
+        if (passenger is null)
+            return RedirectToLogin();
+
+        ViewBag.FirstName = genericUser.FirstName;
+        ViewBag.WalletBalance = await _passenger.GetWalletBalanceAsync(genericUser.UserWalletId);
         
         
-        var bookings = await _passenger.GetUpcomingBookingsAsync(user.Id);
+        var bookings = await _passenger.GetUpcomingBookingsAsync(genericUser.Id);
         return View(bookings);
     }
     
