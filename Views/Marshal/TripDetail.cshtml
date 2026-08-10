@@ -1,0 +1,73 @@
+@model _Tripfinity.Models.ViewModels.TripDetailViewModel
+@{
+    ViewData["Title"] = "Trip Details";
+    Layout = "_MarshalLayout";
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/marshal-portal.css" />
+}
+
+<div class="marshal-create">
+    <header class="page-header">
+        <h2>@Model.Route</h2>
+        <a href="/marshal/trips" class="btn-secondary">← Back to My Trips</a>
+    </header>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <div class="trip-meta">
+        <p><strong>Departure:</strong> @Model.DepartureTime.ToString("g")</p>
+        <p><strong>Status:</strong> @Model.Status</p>
+    </div>
+
+    @if (Model.Status == "Inactive" && Model.DepartureTime > DateTime.Now)
+    {
+        <form asp-action="CommenceTrip" asp-route-id="@Model.TripId" method="post" class="mb-3">
+            <button type="submit" class="btn-primary">🚀 Commence Trip</button>
+        </form>
+    }
+    
+    @if (Model.Status == "InProgress")
+    {
+        <form asp-action="EndTrip" asp-route-id="@Model.TripId" method="post" class="mb-3">
+            <button type="submit" class="btn-danger">🏁 End Trip</button>
+        </form>
+    }
+
+    <h3>Passengers (@Model.Passengers.Count)</h3>
+    @if (!Model.Passengers.Any())
+    {
+        <p>No bookings for this trip yet.</p>
+    }
+    else
+    {
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Passenger</th>
+                <th>Seats</th>
+                <th>Booking</th>
+                <th>Ticket</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var p in Model.Passengers)
+            {
+                <tr>
+                    <td>@p.PassengerName</td>
+                    <td>@p.Seats</td>
+                    <td>@p.BookingStatus</td>
+                    <td>@p.TicketStatus</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+</div>

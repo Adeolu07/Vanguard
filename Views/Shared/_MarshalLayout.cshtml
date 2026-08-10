@@ -4,12 +4,17 @@
     var headerTitle = ViewData["Title"] as string ?? "Marshal Portal";
     var vehicleType = Context.Session.GetString("marshalVehicleType") ?? "Bus";
 }
+@section Styles {
+    <link rel="stylesheet" href="~/css/booking-page.css" />
+    <link rel="stylesheet" href="~/css/dashboard.css" />
+}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@headerTitle – Tripfinity Marshal</title>
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
