@@ -35,7 +35,7 @@
         </div>
         <div class="mb-3">
             <label asp-for="PickupTime" class="form-label"></label>
-            <input asp-for="PickupTime" type="datetime-local" class="form-control" />
+            <input asp-for="PickupTime" type="datetime-local" class="form-control" step="60"/>
             <span asp-validation-for="PickupTime" class="text-danger"></span>
         </div>
         <button type="submit" class="btn btn-primary">Create Trip</button>
@@ -43,6 +43,6 @@
     </form>
 </div>
 
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
+@* @section Scripts { *@
+@*     <partial name="_ValidationScriptsPartial" /> *@
+@* } *@

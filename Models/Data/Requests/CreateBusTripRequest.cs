@@ -10,7 +10,9 @@ public class CreateBusTripRequest : IValidatableObject
     [Required, Range(100,50000)] public decimal Price { get; set; }
     [Required, Range(1,50)] public int TotalSeats { get; set; }
     [Required, Range(1,50)] public int AvailableSeats { get; set; }
-    [Required, FutureTime(60)] public DateTime DepartureTime { get; set; }
+    [Required, FutureTime(60)] 
+    [DisplayFormat(DataFormatString = "{0:yyyy-MM-ddTHH:mm}", ApplyFormatInEditMode = true)]
+    public DateTime DepartureTime { get; set; }
 
     public IEnumerable<ValidationResult> Validate(ValidationContext context)
     {

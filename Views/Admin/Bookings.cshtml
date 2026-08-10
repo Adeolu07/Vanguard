@@ -5,16 +5,25 @@
 }
 <h1>All Bookings</h1>
 <table class="table">
+    <thead>
     <tr><th>User</th><th>Type</th><th>Trip</th><th>Seats</th><th>Amount</th><th>Status</th></tr>
+    </thead>
+    <tbody>
     @foreach (var b in Model)
     {
         <tr>
             <td>@b.User?.FirstName</td>
             <td>@b.TransportType</td>
-            <td>@b.BusTrip??@b.TaxiTrip??@b.RailwayTripId</td>
+            <td>
+                @if (b.BusTrip != null) { <text>Bus: @b.BusTrip.From → @b.BusTrip.Destination</text> }
+                else if (b.RailwayTrip != null) { <text>Railway: @b.RailwayTrip.From → @b.RailwayTrip.Destination</text> }
+                else if (b.TaxiTrip != null) { <text>Taxi: @b.TaxiTrip.PickupLocation → @b.TaxiTrip.DropoffLocation</text> }
+                else { <span class="text-muted">N/A</span> }
+            </td>
             <td>@b.NumberOfSeats</td>
             <td>₦@b.TotalAmount</td>
             <td>@b.Status</td>
         </tr>
     }
+    </tbody>
 </table>
