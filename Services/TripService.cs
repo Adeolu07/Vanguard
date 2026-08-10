@@ -2,6 +2,7 @@ using System.Transactions;
 using _Tripfinity.Interfaces;
 using _Tripfinity.Models.Data;
 using _Tripfinity.Models.Data.Requests;
+using _Tripfinity.Models.Enums;
 using _Tripfinity.Models.Tables;
 using Microsoft.EntityFrameworkCore;
 

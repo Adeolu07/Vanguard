@@ -15,7 +15,7 @@ ViewData["ActiveNav"] = "Wallet";
         display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000;
         justify-content: center; align-items: center;
     }
-    .modal-overlay.show { display: flex; }
+    
     .modal-box {
         background: white; border-radius: 16px; padding: 32px; width: 400px; box-shadow: 0 12px 40px rgba(0,0,0,0.15);
     }
@@ -62,7 +62,7 @@ ViewData["ActiveNav"] = "Wallet";
             <span class="page-indicator">Page @Model.CurrentPage of @Model.TotalPages</span>
         </div>
 
-        @if (!Model.Transactions.Any())
+        @if (!Model.Transactions!.Any())
         {
         <div class="empty-state">
             <div class="empty-icon">📭</div>
@@ -72,7 +72,7 @@ ViewData["ActiveNav"] = "Wallet";
         else
         {
         <div class="transaction-list">
-            @foreach (var txn in Model.Transactions)
+            @foreach (var txn in Model.Transactions!)
             {
             var typeClass = txn.TranType?.ToLower();
             var isCredit = typeClass == "credit";

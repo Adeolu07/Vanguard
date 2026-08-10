@@ -24,7 +24,7 @@
 
     <div class="table-wrapper">
         <div class="section-title">Transaction History</div>
-        @if (!Model.Transactions.Any())
+        @if (!Model.Transactions!.Any())
         {
             <div class="empty-state">
                 <div class="empty-icon">📭</div>
@@ -33,7 +33,7 @@
         }
         else
         {
-            @foreach (var txn in Model.Transactions)
+            @foreach (var txn in Model.Transactions!)
             {
                 var isCredit = txn.TranType?.ToLower() == "credit";
                 <div class="txn-row">

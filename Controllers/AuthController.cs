@@ -38,9 +38,10 @@ public class AuthController : Controller
             return View(model);
 
         var result = await _authService.SignInAsync(model.Email, model.Password);
-        if (!result.Success || result.User == null)
+      
+        if (result is null || !result.Success || result.User == null)
         {
-            ModelState.AddModelError("FailedLogin", result.Message);
+            ModelState.AddModelError("FailedLogin", result?.Message ?? "Login Failed");
             return View(model);
         }
 
@@ -63,9 +64,9 @@ public class AuthController : Controller
             return View(model);
 
         var result = await _authService.SignInAsync(model.Email, model.Password);
-        if (!result.Success || result.User == null)
+        if (result is null || !result.Success || result.User == null)
         {
-            ModelState.AddModelError("", result.Message);
+            ModelState.AddModelError("", result?.Message ?? "Login Failed");
             return View(model);
         }
 

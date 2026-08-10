@@ -1,4 +1,5 @@
 using _Tripfinity.Interfaces;
+using _Tripfinity.Models.Enums;
 using _Tripfinity.Services;
 using _Tripfinity.Utilities;
 using Microsoft.AspNetCore.Mvc;
