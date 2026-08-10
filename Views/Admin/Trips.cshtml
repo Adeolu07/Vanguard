@@ -4,38 +4,54 @@
 }
 <h1>All Trips</h1>
 
-<h2>🚌 Bus Trips</h2>
-<table class="table">
-    <tr><th>From</th><th>To</th><th>Price</th><th>Seats</th><th>Departure</th></tr>
-    @foreach (var t in (List<_Tripfinity.Models.Tables.BusTrip>)ViewBag.BusTrips)
-    {
-        <tr>
-            <td>@t.From</td><td>@t.Destination</td><td>₦@t.Price</td>
-            <td>@t.AvailableSeats/@t.TotalSeats</td><td>@t.DepartureTime</td>
-        </tr>
-    }
-</table>
+@if (ViewBag.BusTrips != null)
+{
+    <h2>🚌 Bus Trips</h2>
+    <table class="table">
+        <thead><tr><th>From</th><th>To</th><th>Price</th><th>Seats</th><th>Departure</th></tr></thead>
+        <tbody>
+        @foreach (var t in (List<_Tripfinity.Models.Tables.BusTrip>)ViewBag.BusTrips)
+        {
+            <tr>
+                <td>@t.From</td><td>@t.Destination</td><td>₦@t.Price</td>
+                <td>@t.AvailableSeats/@t.TotalSeats</td><td>@t.DepartureTime</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
 
-<h2>🚆 Railway Trips</h2>
-<table class="table">
-    <tr><th>From</th><th>To</th><th>Price</th><th>Seats</th><th>Departure</th></tr>
-    @foreach (var t in (List<_Tripfinity.Models.Tables.RailwayTrip>)ViewBag.RailwayTrips)
-    {
-        <tr>
-            <td>@t.From</td><td>@t.Destination</td><td>₦@t.Price</td>
-            <td>@t.AvailableSeats/@t.TotalSeats</td><td>@t.DepartureTime</td>
-        </tr>
-    }
-</table>
+@if (ViewBag.RailwayTrips != null)
+{
+    <h2>🚆 Railway Trips</h2>
+    <table class="table">
+        <thead><tr><th>From</th><th>To</th><th>Price</th><th>Seats</th><th>Departure</th></tr></thead>
+        <tbody>
+        @foreach (var t in (List<_Tripfinity.Models.Tables.RailwayTrip>)ViewBag.RailwayTrips)
+        {
+            <tr>
+                <td>@t.From</td><td>@t.Destination</td><td>₦@t.Price</td>
+                <td>@t.AvailableSeats/@t.TotalSeats</td><td>@t.DepartureTime</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
 
-<h2>🚕 Taxi Trips</h2>
-<table class="table">
-    <tr><th>Pickup</th><th>Dropoff</th><th>Price</th><th>Max Passengers</th><th>Pickup Time</th></tr>
-    @foreach (var t in (List<_Tripfinity.Models.Tables.TaxiTrip>)ViewBag.TaxiTrips)
-    {
-        <tr>
-            <td>@t.PickupLocation</td><td>@t.DropoffLocation</td><td>₦@t.Price</td>
-            <td>@t.MaxPassengers</td><td>@t.PickupTime</td>
-        </tr>
-    }
-</table>
+@if (ViewBag.TaxiTrips != null)
+{
+    <h2>🚕 Taxi Trips</h2>
+    <table class="table">
+        <thead><tr><th>Pickup</th><th>Dropoff</th><th>Price</th><th>Max Passengers</th><th>Pickup Time</th></tr></thead>
+        <tbody>
+        @foreach (var t in (List<_Tripfinity.Models.Tables.TaxiTrip>)ViewBag.TaxiTrips)
+        {
+            <tr>
+               
+                <td>@t.PickupLocation</td><td>@t.DropoffLocation</td><td>₦@t.Price</td>
+                <td>@t.MaxPassengers</td><td>@t.PickupTime</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}

@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace _Tripfinity.Services;
 
-public class AdminService: IAdminService
+public class AdminService : IAdminService
 {
     private readonly AppDbContext _context;
     private readonly IWalletService _walletService;
@@ -18,6 +18,7 @@ public class AdminService: IAdminService
         _context = context;
         _walletService = walletService;
     }
+
     public async Task<string?> GetAdminWalletIdAsync()
     {
         var admin = await _context.Users
@@ -27,7 +28,6 @@ public class AdminService: IAdminService
 
     public async Task<MarshalWalletViewModel> GetAdminWalletInfoAsync(string walletId, int page)
     {
-        // Reuse existing wallet service calls similar to MarshalService.GetWalletInfoAsync
         var balanceResp = await _walletService.GetBalanceAsync(new GetBalanceRequest { CustomerId = walletId });
         var balance = balanceResp?.Balance ?? 0;
 
@@ -73,27 +73,42 @@ public class AdminService: IAdminService
             HasPrevious = hasPrev
         };
     }
-    
+
     public async Task<bool> IsAdminAsync(int userId)
     {
         var user = await _context.Users.FindAsync(userId);
         return user?.Role == "Admin";
     }
 
-    public Task<List<BusTrip>> GetAllBusTripsAsync() =>
-        _context.BusTrips.OrderByDescending(t => t.CreatedAt).ToListAsync();
+    public async Task<List<BusTrip>> GetAllBusTripsAsync()
+    {
+        return await _context.BusTrips
+            .OrderByDescending(t => t.CreatedAt)
+            .ToListAsync();
+    }
 
-    public Task<List<RailwayTrip>> GetAllRailwayTripsAsync() =>
-        _context.RailwayTrips.OrderByDescending(t => t.CreatedAt).ToListAsync();
+    public async Task<List<RailwayTrip>> GetAllRailwayTripsAsync()
+    {
+        return await _context.RailwayTrips
+            .OrderByDescending(t => t.CreatedAt)
+            .ToListAsync();
+    }
 
-    public Task<List<TaxiTrip>> GetAllTaxiTripsAsync() =>
-        _context.TaxiTrips.OrderByDescending(t => t.CreatedAt).ToListAsync();
+    public async Task<List<TaxiTrip>> GetAllTaxiTripsAsync()
+    {
+        return await _context.TaxiTrips
+            .OrderByDescending(t => t.CreatedAt)
+            .ToListAsync();
+    }
 
-    public Task<List<Booking>> GetAllBookingsAsync() =>
-        _context.Bookings
+    public async Task<List<Booking>> GetAllBookingsAsync()
+    {
+        return await _context.Bookings
             .Include(b => b.User)
+            .Include(b => b.BusTrip)
+            .Include(b => b.RailwayTrip)
+            .Include(b => b.TaxiTrip)
             .OrderByDescending(b => b.BookingDate)
             .ToListAsync();
-    
-    
+    }
 }

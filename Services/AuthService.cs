@@ -213,9 +213,14 @@ public class AuthService : IAuthService
                 _logger.LogWarning("Wallet creation returned non-success for user {UserId}: {Code} - {Message}",
                     userId, createWalletResponse?.ResponseHeader?.ResponseCode,
                     createWalletResponse?.ResponseHeader?.ResponseMessage);
+                return false;
             }
         }
 
+        user.IsEmailConfirmed = true;
+        user.IsActive = true;
+        user.EmailConfirmationToken = null;
+        user.ConfirmationTokenExpiry = null;
         _context.Users.Update(user);
         await _context.SaveChangesAsync();
 

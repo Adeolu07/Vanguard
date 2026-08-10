@@ -53,7 +53,7 @@ public class HomeController : ParentController
             return RedirectToLogin();
 
         if (genericUser.Role == "Admin")
-            return RedirectToAction("Index", "Admin");
+            return RedirectToAction("Index","Admin");
 
         var passenger = await _passenger.GetPassengerAsync(UserId.Value);
         if (passenger is null)

@@ -3,75 +3,10 @@
     ViewData["ActiveNav"] = "Dashboard";
     Layout = "_MarshalLayout";
 }
-<style>
-    .marshal-dashboard {
-        max-width: 900px;
-        margin: 0 auto;
-    }
 
-    .dashboard-header {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        margin-bottom: 32px;
-    }
-
-    .header-greeting h1 {
-        font-size: 1.75rem;
-        font-weight: 700;
-        color: #0f254c;
-        margin: 0 0 4px 0;
-    }
-
-    .header-greeting p {
-        color: #64748b;
-        font-size: 0.9rem;
-    }
-
-    .action-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 16px;
-    }
-
-    .action-card {
-        background: #ffffff;
-        border-radius: 12px;
-        padding: 28px 24px;
-        text-decoration: none;
-        color: inherit;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-        transition: transform 0.15s, box-shadow 0.15s;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    .action-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 18px rgba(0,0,0,0.07);
-    }
-
-    .card-icon {
-        font-size: 2rem;
-        margin-bottom: 4px;
-    }
-
-    .action-card h3 {
-        font-size: 1.1rem;
-        font-weight: 700;
-        color: #0f254c;
-        margin: 0;
-    }
-
-    .action-card p {
-        font-size: 0.85rem;
-        color: #64748b;
-        line-height: 1.5;
-        margin: 0;
-    }
-</style>
-
+@section Styles{
+    <link rel="stylesheet" href="css/marshal-portal.css"/>
+}
 <div class="marshal-dashboard">
     <header class="dashboard-header">
         <div class="header-greeting">

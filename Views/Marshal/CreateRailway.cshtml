@@ -47,7 +47,7 @@
         </div>
         <div class="form-group">
             <label asp-for="DepartureTime"></label>
-            <input asp-for="DepartureTime" type="datetime-local" />
+            <input asp-for="DepartureTime" type="datetime-local" step="60"/>
             <span asp-validation-for="DepartureTime" class="text-danger"></span>
         </div>
         <div class="form-actions">
@@ -57,6 +57,6 @@
     </form>
 </div>
 
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
+@* @section Scripts { *@
+@*     <partial name="_ValidationScriptsPartial" /> *@
+@* } *@
