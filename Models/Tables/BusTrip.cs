@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using _Tripfinity.Models.Enums;
 
 namespace _Tripfinity.Models.Tables;
 
@@ -20,7 +21,8 @@ public class BusTrip
 
     public DateTime CreatedAt { get; set; }
 
-    public bool IsActive { get; set; } = true;
+    public TripStatus Status { get; set; } = TripStatus.Inactive;
+    public DateTime? CommencedAt { get; set; }
     public int MarshalId { get; set; }
     [Required] [MaxLength(50)] public string VehicleId { get; set; } = string.Empty;
 }

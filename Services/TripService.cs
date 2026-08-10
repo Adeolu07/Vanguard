@@ -107,6 +107,11 @@ public class TripService : ITripService
             marshalId, transportType, tripId, activeBookings.Count);
         return true;
     }
+    
+    
+    
+    
+    
 
     private async Task<bool> DeactivateTripAsync(TransportType transportType, int tripId, int marshalId)
     {
@@ -116,25 +121,143 @@ public class TripService : ITripService
                 var busTrip = await _context.BusTrips.FindAsync(tripId);
                 if (busTrip == null || busTrip.MarshalId != marshalId)  
                     return false;
-                busTrip.IsActive = false;
+                busTrip.Status = TripStatus.Cancelled;
                 break;
             case TransportType.Railway:
                 var railwayTrip = await _context.RailwayTrips.FindAsync(tripId);
                 if (railwayTrip == null || railwayTrip.MarshalId != marshalId) 
                     return false;
-                railwayTrip.IsActive = false;
+                railwayTrip.Status = TripStatus.Cancelled;
                 break;
             case TransportType.Taxi:
                 var taxiTrip = await _context.TaxiTrips.FindAsync(tripId);
                 if (taxiTrip == null || taxiTrip.MarshalId != marshalId) 
                     return false;
-                taxiTrip.IsActive = false;
+                taxiTrip.Status = TripStatus.Cancelled;
                 break;
             default:
                 return false;
         }
 
         await _context.SaveChangesAsync();
+        return true;
+    }
+    
+    public async Task<bool> CommenceTripAsync(TransportType transportType, int tripId, int marshalId)
+{
+    // Find the trip
+    object trip;
+    switch (transportType)
+    {
+        case TransportType.Bus:
+            trip = await _context.BusTrips.FirstOrDefaultAsync(t => t.Id == tripId && t.MarshalId == marshalId);
+            break;
+        case TransportType.Railway:
+            trip = await _context.RailwayTrips.FirstOrDefaultAsync(t => t.Id == tripId && t.MarshalId == marshalId);
+            break;
+        case TransportType.Taxi:
+            trip = await _context.TaxiTrips.FirstOrDefaultAsync(t => t.Id == tripId && t.MarshalId == marshalId);
+            break;
+        default:
+            return false;
+    }
+
+    if (trip == null)
+        return false;
+
+    // Check status
+    var currentStatus = trip switch
+    {
+        BusTrip b => b.Status,
+        RailwayTrip r => r.Status,
+        TaxiTrip t => t.Status,
+        _ => throw new InvalidOperationException()
+    };
+
+    if (currentStatus != TripStatus.Inactive)
+        return false; // already commenced, completed, or cancelled
+    
+    var departure = trip switch
+    {
+        BusTrip b => b.DepartureTime,
+        RailwayTrip r => r.DepartureTime,
+        TaxiTrip t => t.PickupTime,
+        _ => DateTime.MaxValue
+    };
+
+    if (DateTime.Now > departure)
+    {
+        _logger.LogWarning("Marshal {MarshalId} tried to commence {Type} trip {TripId} which has already departed",
+            marshalId, transportType, tripId);
+        return false;
+    }
+    
+    // Set status and CommencedAt
+    var now = DateTime.Now;
+    switch (trip)
+    {
+        case BusTrip b:
+            b.Status = TripStatus.InProgress;
+            b.CommencedAt = now;
+            break;
+        case RailwayTrip r:
+            r.Status = TripStatus.InProgress;
+            r.CommencedAt = now;
+            break;
+        case TaxiTrip t:
+            t.Status = TripStatus.InProgress;
+            t.CommencedAt = now;
+            break;
+    }
+    // Expire unvalidated tickets for this trip
+    var bookings = await GetActiveBookingsAsync(transportType, tripId);
+    foreach (var booking in bookings)
+    {
+        var ticket = await _context.Tickets.FirstOrDefaultAsync(t => t.BookingId == booking.Id);
+        if (ticket is { Status: TicketStatus.Issued })
+        {
+            ticket.Status = TicketStatus.Expired;
+        }
+    }
+    await _context.SaveChangesAsync();
+    _logger.LogInformation("Marshal {MarshalId} commenced {Type} trip {TripId}; unvalidated tickets expired", marshalId, transportType, tripId);
+    return true;
+}
+    
+    // Add this method anywhere in the class (e.g., right after CommenceTripAsync):
+
+    public async Task<bool> EndTripAsync(TransportType transportType, int tripId, int marshalId)
+    {
+        object? trip = transportType switch
+        {
+            TransportType.Bus => await _context.BusTrips.FirstOrDefaultAsync(t => t.Id == tripId && t.MarshalId == marshalId),
+            TransportType.Railway => await _context.RailwayTrips.FirstOrDefaultAsync(t => t.Id == tripId && t.MarshalId == marshalId),
+            TransportType.Taxi => await _context.TaxiTrips.FirstOrDefaultAsync(t => t.Id == tripId && t.MarshalId == marshalId),
+            _ => null
+        };
+
+        if (trip == null) return false;
+
+        var currentStatus = trip switch
+        {
+            BusTrip b => b.Status,
+            RailwayTrip r => r.Status,
+            TaxiTrip t => t.Status,
+            _ => throw new InvalidOperationException()
+        };
+
+        if (currentStatus != TripStatus.InProgress)
+            return false; // only in‑progress trips can be ended
+
+        switch (trip)
+        {
+            case BusTrip b: b.Status = TripStatus.Completed; break;
+            case RailwayTrip r: r.Status = TripStatus.Completed; break;
+            case TaxiTrip t: t.Status = TripStatus.Completed; break;
+        }
+
+        await _context.SaveChangesAsync();
+        _logger.LogInformation("Marshal {MarshalId} ended {Type} trip {TripId}", marshalId, transportType, tripId);
         return true;
     }
 
@@ -153,5 +276,7 @@ public class TripService : ITripService
 
         return await query.ToListAsync();
     }
+    
+    
     
 }

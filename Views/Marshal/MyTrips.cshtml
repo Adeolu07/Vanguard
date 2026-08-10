@@ -1,10 +1,11 @@
 @model IEnumerable<object>
 @using _Tripfinity.Models.Tables
+@using _Tripfinity.Models.Enums
 @{
-  ViewData["Title"] = "My Trips";
-  ViewData["ActiveNav"] = "My Trips";
-  var vehicleType = ViewBag.VehicleType as string ?? "";
-  Layout = "_MarshalLayout";
+    ViewData["Title"] = "My Trips";
+    ViewData["ActiveNav"] = "My Trips";
+    var vehicleType = ViewBag.VehicleType as string ?? "";
+    Layout = "_MarshalLayout";
 }
 @section Styles {
     <link rel="stylesheet" href="~/css/marshal-portal.css" />
@@ -41,52 +42,52 @@
             {
                 @foreach (var trip in Model.Cast<TaxiTrip>())
                 {
-                    <div class="trip-card">
+                    <a href="/marshal/trips/@trip.Id" class="trip-card">
                         <div class="trip-route">@trip.PickupLocation <span>→</span> @trip.DropoffLocation</div>
                         <div class="trip-meta">
                             <span>🕒 @trip.PickupTime.ToString("g")</span>
                             <span>👥 @trip.MaxPassengers max</span>
                             <span>₦@trip.Price.ToString("N0")</span>
                         </div>
-                        <div class="trip-status @(trip.IsActive ? "active" : "inactive")">
-                            @(trip.IsActive ? "Active" : "Inactive")
+                        <div class="trip-status @trip.Status.ToString().ToLower()">
+                            @trip.Status
                         </div>
-                        @if (trip.IsActive)
+                        @if (trip.Status == TripStatus.Inactive)
                         {
-                            <form asp-action="CancelTrip" method="post" class="cancel-form">
+                            <form asp-action="CancelTrip" method="post" class="cancel-form" onclick="event.stopPropagation();">
                                 <input type="hidden" name="transportType" value="Taxi" />
                                 <input type="hidden" name="tripId" value="@trip.Id" />
                                 <input type="text" name="reason" placeholder="Reason" required />
                                 <button type="submit" class="btn-danger">Cancel</button>
                             </form>
                         }
-                    </div>
+                    </a>
                 }
             }
             else
             {
                 @foreach (dynamic trip in Model)
                 {
-                    <div class="trip-card">
+                    <a href="/marshal/trips/@trip.Id" class="trip-card">
                         <div class="trip-route">@trip.From <span>→</span> @trip.Destination</div>
                         <div class="trip-meta">
                             <span>🕒 @trip.DepartureTime.ToString("g")</span>
                             <span>💺 @trip.AvailableSeats / @trip.TotalSeats</span>
                             <span>₦@trip.Price.ToString("N0")</span>
                         </div>
-                        <div class="trip-status @(trip.IsActive ? "active" : "inactive")">
-                            @(trip.IsActive ? "Active" : "Inactive")
+                        <div class="trip-status @trip.Status.ToString().ToLower()">
+                            @trip.Status
                         </div>
-                        @if (trip.IsActive)
+                        @if (trip.Status == TripStatus.Inactive)
                         {
-                            <form asp-action="CancelTrip" method="post" class="cancel-form">
+                            <form asp-action="CancelTrip" method="post" class="cancel-form" onclick="event.stopPropagation();">
                                 <input type="hidden" name="transportType" value="@vehicleType" />
                                 <input type="hidden" name="tripId" value="@trip.Id" />
                                 <input type="text" name="reason" placeholder="Reason" required />
                                 <button type="submit" class="btn-danger">Cancel</button>
                             </form>
                         }
-                    </div>
+                    </a>
                 }
             }
         </div>

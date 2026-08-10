@@ -4,6 +4,12 @@
     ViewData["Title"] = "Book Train";
 }
 
+@section Styles
+{
+    <link rel="stylesheet" href="~/css/booking-page.css" />
+    <link rel="stylesheet" href="~/css/dashboard.css" />
+}
+
 <a href="/Home/Dashboard" style="display: inline-block; margin-bottom: 16px; color: #64748b; text-decoration: none; font-size: 13px; font-weight: 500;">← Back to Dashboard</a>
 
 @if (TempData["Error"] != null)
