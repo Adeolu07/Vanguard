@@ -3,13 +3,12 @@ using _Tripfinity.Models.Tables;
 using _Tripfinity.Models.Data;
 using _Tripfinity.Models.Data.Requests;
 using _Tripfinity.Models.Data.Response;
+using _Tripfinity.Models.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace _Tripfinity.Services;
 
-public enum TransportType { Railway, Taxi, Bus }
-public enum TicketStatus { Issued, Validated, Expired, Cancelled }
-public enum BookingStatus { Pending, Confirmed, Cancelled, Failed }
+
 
 public class BookingService : IBookingService
 {

@@ -61,10 +61,19 @@ public class MarshalService : IMarshalService
         {
             var marshal = await _context.Users.FindAsync(userId);
             if (marshal is not { Role: "Marshal" } || string.IsNullOrWhiteSpace(marshal.UserWalletId))
-                return null;
+                return new MarshalWalletViewModel
+                {
+                    WalletId = null,
+                    Balance = 0,
+                    Transactions = new List<TransactionDetailsList>(),
+                    CurrentPage = page,
+                    TotalPages = 1,
+                    HasNext = false,
+                    HasPrevious = false
+                };
 
             var balanceResp = await _wallet.GetBalanceAsync(new GetBalanceRequest { CustomerId = marshal.UserWalletId });
-            var balance = balanceResp?.Balance ?? 0;
+            var balance = balanceResp.Balance;
 
             var transactions = new List<TransactionDetailsList>();
             var totalPages = 1;
@@ -81,7 +90,7 @@ public class MarshalService : IMarshalService
                 }
             });
 
-            if (listResp?.TransactionDetailsList != null)
+            if (listResp.TransactionDetailsList != null)
             {
                 transactions = listResp.TransactionDetailsList
                     .Select(d => new TransactionDetailsList

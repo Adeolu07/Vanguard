@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
-using _Tripfinity.Services;
+using _Tripfinity.Models.Enums;
+
 
 namespace _Tripfinity.Models.Data.Requests;
 

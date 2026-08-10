@@ -1,3 +1,4 @@
+using _Tripfinity.Models.Enums;
 using _Tripfinity.Models.Tables;
 using _Tripfinity.Services;
 
