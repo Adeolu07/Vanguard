@@ -1,5 +1,6 @@
 using _Tripfinity.Interfaces;
 using System.Net.Mail;
+using _Tripfinity.Interfaces;
 using Resend;
 
 namespace _Tripfinity.Services;
