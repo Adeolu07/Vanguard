@@ -1,33 +1,32 @@
-@{
-@model _Tripfinity.Views.PaginatedList<_Tripfinity.Models.Tables.RailwayTrip>
+@model _Tripfinity.Views.PaginatedList<_Tripfinity.Models.Tables.RailwayTrip>;
 @{
     Layout = "_DashboardLayout";
     ViewData["Title"] = "Railway Trips";
 }
-@section Styles {
-    <link rel="stylesheet" href="~/css/bus-trips.css" />
+  @section Styles {
+      <link rel="stylesheet" href="~/css/bus-trips.css" />
     
-}
+  }
 
-<section class="page-title-section">
-    <div class="breadcrumbs">Passenger Dashboard > Book a Train</div>
-    <h1>Available Railway Trips</h1>
-    <p>Real-time inter-city rail schedules.</p>
-</section>
+  <section class="page-title-section">
+      <div class="breadcrumbs">Passenger Dashboard > Book a Train</div>
+      <h1>Available Railway Trips</h1>
+      <p>Real-time inter-city rail schedules.</p>
+      </section>
 
-<div id="trips-container">
-    @if (!Model.Any())
-    {
-        <p>No trips available right now.</p>
-    }
-    else
-    {
-        <div class="trip-options">
-            @foreach (var trip in Model)
-            {
-                var formattedDate = trip.DepartureTime.ToString("MM/dd/yyyy");
-                var formattedTime = trip.DepartureTime.ToString("hh:mm tt");
-                <div class="trip-card">
+      <div id="trips-container">
+              @if (!Model.Any())
+  {
+      <p>No trips available right now.</p>
+  }
+  else
+  {
+      <div class="trip-options">
+          @foreach (var trip in Model)
+      {
+          var formattedDate = trip.DepartureTime.ToString("MM/dd/yyyy");
+          var formattedTime = trip.DepartureTime.ToString("hh:mm tt");
+          <div class="trip-card">
                     <div class="trip-card-icon">🚆</div>
                     <div class="route-display">
                         <h2>@trip.From</h2>
@@ -50,32 +49,32 @@
                     </div>
                     <a href="/Trips/Railway/@trip.Id/Book" class="btn-book-action">Book Now ></a>
                 </div>
-            }
-        </div>
-    }
-</div>
+      }
+      </div>
+  }
+  </div>
 
-@if (Model.TotalPages > 1)
-{
-    <div class="pagination">
+      @if (Model.TotalPages > 1)
+  {
+      <div class="pagination">
         @if (Model.HasPreviousPage)
-        {
-            <a href="/Trips/Railway?page=@(Model.PageIndex - 1)" class="page-btn">Previous</a>
-        }
+      {
+          <a href="/Trips/Railway?page=@(Model.PageIndex - 1)" class="page-btn">Previous</a>
+      }
         @for (int i = 1; i <= Model.TotalPages; i++)
-        {
-            if (i == Model.PageIndex)
-            {
-                <span class="page-num active">@i</span>
-            }
-            else
-            {
-                <a href="/Trips/Railway?page=@i" class="page-num">@i</a>
-            }
-        }
+      {
+          if (i == Model.PageIndex)
+          {
+              <span class="page-num active">@i</span>
+          }
+          else
+          {
+              <a href="/Trips/Railway?page=@i" class="page-num">@i</a>
+          }
+      }
         @if (Model.HasNextPage)
-        {
-            <a href="/Trips/Railway?page=@(Model.PageIndex + 1)" class="page-btn">Next ></a>
-        }
+      {
+          <a href="/Trips/Railway?page=@(Model.PageIndex + 1)" class="page-btn">Next ></a>
+      }
     </div>
-}
+  }
