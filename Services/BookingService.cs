@@ -7,9 +7,6 @@ using _Tripfinity.Models.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace _Tripfinity.Services;
-
-
-
 public class BookingService : IBookingService
 {
     private readonly AppDbContext _context;
@@ -40,7 +37,7 @@ public class BookingService : IBookingService
             .Include(b => b.User)
             .FirstOrDefaultAsync(b => b.Id == id && b.TransportType == transportType);
 
-    public async Task<List<Booking>> GetRecentBookings(int userId, TransportType transportType) =>
+    public async Task<List<Booking>> GetFiveRecentBookings(int userId, TransportType transportType) =>
         await _context.Bookings
             .Where(b => b.UserId == userId && b.TransportType == transportType)
             .OrderByDescending(b => b.BookingDate)

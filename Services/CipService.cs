@@ -40,7 +40,7 @@ public class CipService : ICipService
             var rawContent = await response.Content.ReadAsStringAsync();
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogWarning("Name Enquiry returned {status}", response.StatusCode);
+                _logger.LogWarning("Name Enquiry returned {status}", (int)response.StatusCode);
                 var errorWrapper = JsonConvert.DeserializeObject<NameEnquiryWrapper>(rawContent);
                 return errorWrapper!;
             }
