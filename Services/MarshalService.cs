@@ -56,65 +56,22 @@ public class MarshalService : IMarshalService
         var marshal = await _context.Users.FindAsync(marshalId.Value);
         return marshal?.UserWalletId;
     }
-    
-     public async Task<MarshalWalletViewModel> GetWalletInfoAsync(int userId, int page = 1)
-        {
-            var marshal = await _context.Users.FindAsync(userId);
-            if (marshal is not { Role: "Marshal" } || string.IsNullOrWhiteSpace(marshal.UserWalletId))
-                return new MarshalWalletViewModel
-                {
-                    WalletId = null,
-                    Balance = 0,
-                    Transactions = new List<TransactionDetailsList>(),
-                    CurrentPage = page,
-                    TotalPages = 1,
-                    HasNext = false,
-                    HasPrevious = false
-                };
 
-            var balanceResp = await _wallet.GetBalanceAsync(new GetBalanceRequest { CustomerId = marshal.UserWalletId });
-            var balance = balanceResp.Balance;
-
-            var transactions = new List<TransactionDetailsList>();
-            var totalPages = 1;
-            bool hasNext = false, hasPrev = false;
-
-            var listResp = await  _wallet.GetTransactionList(new GetTransactionListRequest
-            {
-                CustomerId = marshal.UserWalletId,
-                SearchDetails = new SearchDetails
-                {
-                    Page = page,
-                    ItemsPerPage = 10,
-                    DateRange = new DateRange { Start = DateTime.Now.AddMonths(-3), End = DateTime.Now }
-                }
-            });
-
-            if (listResp.TransactionDetailsList != null)
-            {
-                transactions = listResp.TransactionDetailsList
-                    .Select(d => new TransactionDetailsList
-                    {
-                        TranType = d.TranType,
-                        Amount = d.Amount,
-                        Description = d.Description,
-                        TransactionId = d.TransactionId,
-                        SessionId = d.SessionId
-                    }).ToList();
-                totalPages = listResp.Pagination?.TotalPages ?? 1;
-                hasNext = listResp.Pagination?.HasNext ?? false;
-                hasPrev = listResp.Pagination?.HasPrevious ?? false;
-            }
-
+    public async Task<MarshalWalletViewModel> GetWalletInfoAsync(int userId, int page = 1)
+    {
+        var marshal = await _context.Users.FindAsync(userId);
+        if (marshal is not { Role: "Marshal" } || string.IsNullOrWhiteSpace(marshal.UserWalletId))
             return new MarshalWalletViewModel
             {
-                WalletId = marshal.UserWalletId,
-                Balance = balance,
-                Transactions = transactions,
+                WalletId = null,
+                Balance = 0,
+                Transactions = new List<TransactionDetailsList>(),
                 CurrentPage = page,
-                TotalPages = totalPages,
-                HasNext = hasNext,
-                HasPrevious = hasPrev
+                TotalPages = 1,
+                HasNext = false,
+                HasPrevious = false
             };
-        }
+
+        return await _wallet.BuildWalletInfoAsync(marshal.UserWalletId, page);
+    }
 }

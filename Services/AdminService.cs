@@ -26,53 +26,8 @@ public class AdminService : IAdminService
         return admin?.UserWalletId;
     }
 
-    public async Task<MarshalWalletViewModel> GetAdminWalletInfoAsync(string walletId, int page)
-    {
-        var balanceResp = await _walletService.GetBalanceAsync(new GetBalanceRequest { CustomerId = walletId });
-        var balance = balanceResp?.Balance ?? 0;
-
-        var transactions = new List<TransactionDetailsList>();
-        var totalPages = 1;
-        bool hasNext = false, hasPrev = false;
-
-        var listResp = await _walletService.GetTransactionList(new GetTransactionListRequest
-        {
-            CustomerId = walletId,
-            SearchDetails = new SearchDetails
-            {
-                Page = page,
-                ItemsPerPage = 10,
-                DateRange = new DateRange { Start = DateTime.Now.AddMonths(-3), End = DateTime.Now }
-            }
-        });
-
-        if (listResp?.TransactionDetailsList != null)
-        {
-            transactions = listResp.TransactionDetailsList
-                .Select(d => new TransactionDetailsList
-                {
-                    TranType = d.TranType,
-                    Amount = d.Amount,
-                    Description = d.Description,
-                    TransactionId = d.TransactionId,
-                    SessionId = d.SessionId
-                }).ToList();
-            totalPages = listResp.Pagination?.TotalPages ?? 1;
-            hasNext = listResp.Pagination?.HasNext ?? false;
-            hasPrev = listResp.Pagination?.HasPrevious ?? false;
-        }
-
-        return new MarshalWalletViewModel
-        {
-            WalletId = walletId,
-            Balance = balance,
-            Transactions = transactions,
-            CurrentPage = page,
-            TotalPages = totalPages,
-            HasNext = hasNext,
-            HasPrevious = hasPrev
-        };
-    }
+    public Task<MarshalWalletViewModel> GetAdminWalletInfoAsync(string walletId, int page) =>
+        _walletService.BuildWalletInfoAsync(walletId, page);
 
     public async Task<bool> IsAdminAsync(int userId)
     {
@@ -80,27 +35,12 @@ public class AdminService : IAdminService
         return user?.Role == "Admin";
     }
 
-    public async Task<List<BusTrip>> GetAllBusTripsAsync()
+    public async Task<List<T>> GetAllTripsAsync<T>() where T : class, ITrip
     {
-        return await _context.BusTrips
-            .OrderByDescending(t => t.CreatedAt)
-            .ToListAsync();
+        var trips = await _context.Set<T>().ToListAsync();
+        return trips.OrderByDescending(trip=> trip.CreatedAt).ToList();
     }
-
-    public async Task<List<RailwayTrip>> GetAllRailwayTripsAsync()
-    {
-        return await _context.RailwayTrips
-            .OrderByDescending(t => t.CreatedAt)
-            .ToListAsync();
-    }
-
-    public async Task<List<TaxiTrip>> GetAllTaxiTripsAsync()
-    {
-        return await _context.TaxiTrips
-            .OrderByDescending(t => t.CreatedAt)
-            .ToListAsync();
-    }
-
+    
     public async Task<List<Booking>> GetAllBookingsAsync()
     {
         return await _context.Bookings

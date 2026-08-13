@@ -3,7 +3,7 @@ using _Tripfinity.Models.Enums;
 
 namespace _Tripfinity.Models.Tables;
 
-public class RailwayTrip
+public class RailwayTrip : ITrip
 {
     public int Id { get; set; }
 

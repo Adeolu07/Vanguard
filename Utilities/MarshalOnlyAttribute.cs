@@ -17,7 +17,7 @@ public class MarshalOnlyAttribute : ActionFilterAttribute
         }
 
         // Optional: pass the id to the controller via a property
-        context.HttpContext.Items["MarshalId"] = marshalId.Value;
+        context.HttpContext.Items["marshalId"] = marshalId.Value;
 
         base.OnActionExecuting(context);
     }
