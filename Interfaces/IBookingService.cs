@@ -1,7 +1,6 @@
 using _Tripfinity.Models.Tables;
 using _Tripfinity.Models.Data.Response;
 using _Tripfinity.Models.Enums;
-using _Tripfinity.Services;
 
 namespace _Tripfinity.Interfaces
 {
