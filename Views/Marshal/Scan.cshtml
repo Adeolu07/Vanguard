@@ -5,14 +5,10 @@
 }
 @section Styles {
     <link rel="stylesheet" href="~/css/marshal-portal.css" />
+    <link rel="stylesheet" href="~/css/marshal-scan.css" />
 }
 
-<div class="marshal-scan">
-    <header class="page-header">
-        <h2>Scan Ticket</h2>
-        <p>Enter the QR token from the passenger's ticket to validate it.</p>
-    </header>
-
+<div class="content">
     @if (TempData["Success"] != null)
     {
         <div class="alert alert-success">@TempData["Success"]</div>
@@ -22,15 +18,18 @@
         <div class="alert alert-danger">@TempData["Error"]</div>
     }
 
-    <form asp-action="Scan" method="post" class="scan-form">
-        <input type="text" name="qrToken" placeholder="Enter QR token..." autofocus required />
-        <button type="submit" class="btn-primary">Validate</button>
-    </form>
+    <div class="scan-card">
+        <form asp-action="Scan" method="post">
+            <label>Enter QR token manually</label>
+            <input type="text" name="qrToken" placeholder="E.g. TF-8892-XP9" autofocus required />
+            <button type="submit" class="btn-validate">✓ Validate</button>
+        </form>
+    </div>
 
     @if (ViewBag.ValidatedTicket != null)
     {
         var ticket = (_Tripfinity.Models.Tables.Ticket)ViewBag.ValidatedTicket;
-        <div class="validated-ticket">
+        <div class="result-card">
             <div class="ticket-confirmed">✓ Ticket Validated</div>
             <div class="ticket-details">
                 <div><strong>Reference:</strong> @ticket.TicketReference</div>

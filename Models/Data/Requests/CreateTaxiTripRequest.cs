@@ -13,3 +13,4 @@ public class CreateTaxiTripRequest
     [DisplayFormat(DataFormatString = "{0:yyyy-MM-ddTHH:mm}", ApplyFormatInEditMode = true)]
     public DateTime PickupTime { get; set; }
 }
+

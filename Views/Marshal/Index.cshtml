@@ -1,20 +1,17 @@
+@model _Tripfinity.Models.ViewModels.MarshalDashboardViewModel?
 @{
     ViewData["Title"] = "Marshal Dashboard";
     ViewData["ActiveNav"] = "Dashboard";
     Layout = "_MarshalLayout";
+    var vehicleType = (ViewBag.VehicleType as string)?.ToLower();
 }
 
-@section Styles{
-    <link rel="stylesheet" href="css/marshal-portal.css"/>
+@section Styles {
+    <link rel="stylesheet" href="~/css/marshal-portal.css" />
+    <link rel="stylesheet" href="~/css/marshal-dashboard.css" />
 }
-<div class="marshal-dashboard">
-    <header class="dashboard-header">
-        <div class="header-greeting">
-            <h1>Welcome back, @ViewBag.FirstName</h1>
-            <p>@ViewBag.VehicleType — @ViewBag.VehicleId</p>
-        </div>
-    </header>
 
+<div class="content">
     @if (TempData["Success"] != null)
     {
         <div class="alert-success">@TempData["Success"]</div>
@@ -24,26 +21,70 @@
         <div class="alert-danger">@TempData["Error"]</div>
     }
 
-    <div class="action-grid">
-        <a href="/marshal/trips" class="action-card">
-            <div class="card-icon">📋</div>
-            <h3>My Trips</h3>
-            <p>View & manage your scheduled trips</p>
-        </a>
-        <a href="/marshal/scan" class="action-card">
-            <div class="card-icon">📱</div>
-            <h3>Scan Ticket</h3>
-            <p>Validate passenger QR codes</p>
-        </a>
-        <a href="/marshal/create/@ViewBag.VehicleType.ToString().ToLower()" class="action-card">
-            <div class="card-icon">➕</div>
-            <h3>Create Trip</h3>
-            <p>Schedule a new @ViewBag.VehicleType trip</p>
-        </a>
-        <a href="/marshal/wallet" class="action-card">
-            <div class="card-icon">💰</div>
-            <h3>Wallet</h3>
-            <p>View balance & cash out</p>
-        </a>
+    <div class="welcome-row">
+        <div>
+            <h2>Welcome, @ViewBag.FirstName!</h2>
+            <div class="vehicle-line">
+                🚌 Vehicle: <span class="vehicle-tag">@ViewBag.VehicleId (@ViewBag.VehicleType)</span>
+            </div>
+        </div>
+        <div class="welcome-actions">
+            <a href="/marshal/create/@vehicleType" class="btn btn-primary">+ Create Trip</a>
+            <a href="/marshal/scan" class="btn btn-primary">⛝ Scan QR Code</a>
+            <a href="/marshal/trips" class="btn btn-secondary">View My Trips</a>
+        </div>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-label">TRIPS ASSIGNED <span>🚏</span></div>
+            <div class="stat-value">@(ViewBag.TripsAssigned ?? 4)</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">TICKETS SCANNED <span>🎫</span></div>
+            <div class="stat-value">@(ViewBag.TicketsScanned ?? 124)</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">PENDING VALIDATIONS <span>📋</span></div>
+            <div class="stat-value">@(ViewBag.PendingValidations ?? 8)</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            Recent Tickets
+            <a href="/marshal/trips" class="view-all">View All →</a>
+        </div>
+        @if (Model.Tickets.Any())
+        {
+            <table class="tickets-table">
+                <thead>
+                <tr>
+                    <th>Reference</th>
+                    <th>Passenger</th>
+                    <th>Trip Time</th>
+                    <th>Fare</th>
+                    <th>Status</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var ticket in Model.Tickets)
+                {
+                    <tr>
+                        <td>@ticket.TicketReference</td>
+                        <td>@(ticket.Booking?.User != null ? $"{ticket.Booking.User.FirstName} {ticket.Booking.User.LastName}" : "Unknown")</td>
+                        <td>@ticket.TripTime.ToString("g")</td>
+                        <td>₦@ticket.Fare.ToString("N2")</td>
+                        <td>@ticket.Status</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p>No tickets yet</p>
+        }
+        
     </div>
 </div>

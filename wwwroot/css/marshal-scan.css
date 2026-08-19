@@ -1,0 +1,112 @@
+:root{
+    --navy:#0f1b3d;
+    --navy-2:#16214a;
+    --border:#dfe2e9;
+    --text:#0f1b3d;
+    --text-muted:#6b7280;
+    --text-faint:#9aa0ab;
+}
+
+.content{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:60px 40px;
+    gap:24px;
+}
+.alert{
+    width:100%;
+    max-width:380px;
+    box-sizing:border-box;
+    padding:12px 16px;
+    border-radius:10px;
+    font-weight:500;
+}
+.alert-success{
+    background:#dcfce7;
+    color:#166534;
+    border:1px solid #bbf7d0;
+}
+.alert-danger{
+    background:#fef2f2;
+    color:#991b1b;
+    border:1px solid #fecaca;
+}
+.scan-card{
+    width:100%;
+    max-width:380px;
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:24px;
+    box-shadow:0 1px 3px rgba(15,27,61,0.05);
+    box-sizing:border-box;
+}
+.scan-card label{
+    display:block;
+    font-size:14px;
+    font-weight:600;
+    color:var(--text);
+    margin-bottom:12px;
+    font-family:monospace;
+}
+.scan-card input{
+    width:100%;
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:11px 14px;
+    font-size:14px;
+    font-family:monospace;
+    color:var(--text);
+    outline:none;
+    margin-bottom:16px;
+    box-sizing:border-box;
+}
+.scan-card input::placeholder{
+    color:#b5bac4;
+}
+.scan-card input:focus{
+    border-color:var(--navy);
+}
+.btn-validate{
+    width:100%;
+    background:var(--navy);
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    padding:13px;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+}
+.btn-validate:hover{
+    background:var(--navy-2);
+}
+.result-card{
+    width:100%;
+    max-width:380px;
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:24px;
+    box-sizing:border-box;
+}
+.result-card .ticket-confirmed{
+    font-weight:700;
+    color:#0f8a72;
+    margin-bottom:12px;
+    font-size:15px;
+}
+.result-card .ticket-details{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    font-size:14px;
+    color:var(--text-muted);
+}

@@ -1,6 +1,5 @@
 @model IEnumerable<object>
 @using _Tripfinity.Models.Tables
-@using _Tripfinity.Models.Enums
 @{
     ViewData["Title"] = "My Trips";
     ViewData["ActiveNav"] = "My Trips";
@@ -8,15 +7,11 @@
     Layout = "_MarshalLayout";
 }
 @section Styles {
-    <link rel="stylesheet" href="~/css/marshal-portal.css" />
+    <link rel="stylesheet" href="~/css/marshal-portal.css"/>
+    <link rel="stylesheet" href="~/css/marshal-trips.css"/>
 }
 
-<div class="marshal-trips">
-    <header class="page-header">
-        <h2>My @vehicleType Trips</h2>
-        <a href="/marshal/create/@vehicleType.ToLower()" class="btn-primary">+ New Trip</a>
-    </header>
-
+<div class="content">
     @if (TempData["Success"] != null)
     {
         <div class="alert alert-success">@TempData["Success"]</div>
@@ -26,70 +21,77 @@
         <div class="alert alert-danger">@TempData["Error"]</div>
     }
 
-    @if (!Model.Any())
-    {
-        <div class="empty-state">
-            <div class="empty-icon">🗺️</div>
-            <h3>No trips yet</h3>
-            <p>Create your first trip to get started.</p>
-            <a href="/marshal/create/@vehicleType.ToLower()" class="btn-primary">Create Trip</a>
+    <div class="header-row">
+        <div>
+            <h2>Manage Trips</h2>
+            <p>View and manage all your assigned bus, taxi, and railway trips.</p>
         </div>
-    }
-    else
-    {
-        <div class="trips-grid">
-            @if (string.Equals(vehicleType, "Taxi", StringComparison.OrdinalIgnoreCase))
-            {
-                @foreach (var trip in Model.Cast<TaxiTrip>())
-                {
-                    <a href="/marshal/trips/@trip.Id" class="trip-card">
-                        <div class="trip-route">@trip.PickupLocation <span>→</span> @trip.DropoffLocation</div>
-                        <div class="trip-meta">
-                            <span>🕒 @trip.PickupTime.ToString("g")</span>
-                            <span>👥 @trip.MaxPassengers max</span>
-                            <span>₦@trip.Price.ToString("N0")</span>
-                        </div>
-                        <div class="trip-status @trip.Status.ToString().ToLower()">
-                            @trip.Status
-                        </div>
-                        @if (trip.Status == TripStatus.Inactive)
-                        {
-                            <form asp-action="CancelTrip" method="post" class="cancel-form" onclick="event.stopPropagation();">
-                                <input type="hidden" name="transportType" value="Taxi" />
-                                <input type="hidden" name="tripId" value="@trip.Id" />
-                                <input type="text" name="reason" placeholder="Reason" required />
-                                <button type="submit" class="btn-danger">Cancel</button>
-                            </form>
-                        }
-                    </a>
-                }
-            }
-            else
-            {
-                @foreach (dynamic trip in Model)
-                {
-                    <a href="/marshal/trips/@trip.Id" class="trip-card">
-                        <div class="trip-route">@trip.From <span>→</span> @trip.Destination</div>
-                        <div class="trip-meta">
-                            <span>🕒 @trip.DepartureTime.ToString("g")</span>
-                            <span>💺 @trip.AvailableSeats / @trip.TotalSeats</span>
-                            <span>₦@trip.Price.ToString("N0")</span>
-                        </div>
-                        <div class="trip-status @trip.Status.ToString().ToLower()">
-                            @trip.Status
-                        </div>
-                        @if (trip.Status == TripStatus.Inactive)
-                        {
-                            <form asp-action="CancelTrip" method="post" class="cancel-form" onclick="event.stopPropagation();">
-                                <input type="hidden" name="transportType" value="@vehicleType" />
-                                <input type="hidden" name="tripId" value="@trip.Id" />
-                                <input type="text" name="reason" placeholder="Reason" required />
-                                <button type="submit" class="btn-danger">Cancel</button>
-                            </form>
-                        }
-                    </a>
-                }
-            }
+        <div class="filters">
+            <a class="filter-btn @(string.IsNullOrEmpty(vehicleType) ? "active" : "")" href="/marshal/trips">All</a>
+            <a class="filter-btn @(vehicleType == "Bus" ? "active" : "")" href="/marshal/trips?type=Bus">Bus</a>
+            <a class="filter-btn @(vehicleType == "Taxi" ? "active" : "")" href="/marshal/trips?type=Taxi">Taxi</a>
+            <a class="filter-btn @(vehicleType == "Railway" ? "active" : "")" href="/marshal/trips?type=Railway">Railway</a>
         </div>
-    }
+    </div>
+
+    <div class="table-card">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Type</th>
+                    <th>Route</th>
+                    <th>Departure</th>
+                    <th>Seats/Capacity</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr class="empty-row"><td colspan="6">No trips match this filter.</td></tr>
+                }
+                else if (string.Equals(vehicleType, "Taxi", StringComparison.OrdinalIgnoreCase))
+                {
+                    @foreach (var trip in Model.Cast<TaxiTrip>())
+                    {
+                        var taxiStatus = trip.Status.ToString();
+                        var taxiStatusClass = taxiStatus.Equals("Completed", StringComparison.OrdinalIgnoreCase) ? "completed" : "scheduled";
+                        <tr>
+                            <td class="id-cell">@trip.Id</td>
+                            <td class="type-cell type-Taxi">Taxi</td>
+                            <td>@trip.PickupLocation<span class="route-arrow">→</span>@trip.DropoffLocation</td>
+                            <td><div class="departure-time">@trip.PickupTime.ToString("g")</div></td>
+                            <td><div class="seats-cell"><span class="seats-label">@trip.MaxPassengers max</span></div></td>
+                            <td><span class="status-badge @taxiStatusClass"><span class="status-dot"></span>@taxiStatus</span></td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    @foreach (dynamic trip in Model)
+                    {
+                        var availableSeats = (int)trip.AvailableSeats;
+                        var totalSeats = (int)trip.TotalSeats;
+                        var fillPct = totalSeats > 0 ? availableSeats * 100 / totalSeats : 0;
+                        var tripStatus = trip.Status.ToString();
+                        var tripStatusClass = tripStatus.Equals("Completed", StringComparison.OrdinalIgnoreCase) ? "completed" : "scheduled";
+                        <tr>
+                            <td class="id-cell">@trip.Id</td>
+                            <td class="type-cell type-@vehicleType">@vehicleType</td>
+                            <td>@trip.From<span class="route-arrow">→</span>@trip.Destination</td>
+                            <td><div class="departure-time">@trip.DepartureTime.ToString("g")</div></td>
+                            <td>
+                                <div class="seats-cell">
+                                    <span class="seats-label">@availableSeats/@totalSeats</span>
+                                    <div class="bar-track"><div class="bar-fill" style="width:@fillPct%"></div></div>
+                                </div>
+                            </td>
+                            <td><span class="status-badge @tripStatusClass"><span class="status-dot"></span>@tripStatus</span></td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
 </div>

@@ -5,55 +5,57 @@
 }
 @section Styles {
     <link rel="stylesheet" href="~/css/marshal-portal.css" />
+    <link rel="stylesheet" href="~/css/marshal-create.css" />
 }
 
-<div class="marshal-create">
-    <header class="page-header">
+<div class="content">
+    <div class="page-title">
         <h2>Create Bus Trip</h2>
-    </header>
+        <p>Schedule a new route for your assigned vehicle.</p>
+    </div>
 
     @if (TempData["Error"] != null)
     {
         <div class="alert alert-danger">@TempData["Error"]</div>
     }
 
-    <form asp-action="CreateBus" method="post" class="create-form">
-        <div class="form-group">
-            <label asp-for="From"></label>
-            <input asp-for="From" placeholder="Departure city" />
-            <span asp-validation-for="From" class="text-danger"></span>
-        </div>
-        <div class="form-group">
-            <label asp-for="Destination"></label>
-            <input asp-for="Destination" placeholder="Arrival city" />
-            <span asp-validation-for="Destination" class="text-danger"></span>
-        </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label asp-for="Price">Price (₦)</label>
-                <input asp-for="Price" type="number" step="0.01" placeholder="0.00" />
+    <form asp-action="CreateBus" method="post" class="form-card">
+        <div class="form-grid">
+            <div class="field">
+                <label asp-for="From">From</label>
+                <input asp-for="From" placeholder="Enter starting station" />
+                <span asp-validation-for="From" class="text-danger"></span>
+            </div>
+            <div class="field">
+                <label asp-for="Destination">Destination</label>
+                <input asp-for="Destination" placeholder="Enter arrival station" />
+                <span asp-validation-for="Destination" class="text-danger"></span>
+            </div>
+            <div class="field full">
+                <label asp-for="DepartureTime">Departure Date/Time</label>
+                <input asp-for="DepartureTime" type="datetime-local" step="60" />
+                <span asp-validation-for="DepartureTime" class="text-danger"></span>
+            </div>
+            <div class="field">
+                <label asp-for="Price">Price Per Seat (₦)</label>
+                <div class="price-input">
+                    <span>₦</span>
+                    <input asp-for="Price" type="number" step="0.01" placeholder="0.00" />
+                </div>
                 <span asp-validation-for="Price" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="TotalSeats"></label>
-                <input asp-for="TotalSeats" type="number" placeholder="Total" />
+            <div class="field">
+                <label asp-for="TotalSeats">Total Seats</label>
+                <input asp-for="TotalSeats" type="number" placeholder="45" />
                 <span asp-validation-for="TotalSeats" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="AvailableSeats"></label>
+            <div class="field full">
+                <label asp-for="AvailableSeats">Available Seats</label>
                 <input asp-for="AvailableSeats" type="number" placeholder="Available" />
                 <span asp-validation-for="AvailableSeats" class="text-danger"></span>
             </div>
         </div>
-        <div class="form-group">
-            <label asp-for="DepartureTime"></label>
-            <input asp-for="DepartureTime" type="datetime-local" step="60" />
-            <span asp-validation-for="DepartureTime" class="text-danger"></span>
-        </div>
-        <div class="form-actions">
-            <button type="submit" class="btn-primary">Create Trip</button>
-            <a href="/marshal" class="btn-secondary">Cancel</a>
-        </div>
+        <button type="submit" class="btn-submit">Create Bus Trip</button>
     </form>
 </div>
 

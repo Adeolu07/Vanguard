@@ -8,6 +8,11 @@
         return;
     }
 
+    const pick = (obj, ...keys) => {
+        for (const k of keys) if (obj && obj[k] != null && obj[k] !== '') return obj[k];
+        return null;
+    };
+
     // ---- Balance refresh ----
     async function loadBalance(){
         try {
@@ -18,8 +23,10 @@
             });
             const data = await res.json();
             if (balance) {
-                balance.textContent = data.responseHeader?.responseCode === '00'
-                    ? '₦' + data.balance.toLocaleString()
+                const code = pick(data?.responseHeader ?? data?.ResponseHeader, 'responseCode', 'ResponseCode');
+                const bal = pick(data, 'balance', 'Balance');
+                balance.textContent = code === '00' && bal != null
+                    ? '₦' + Number(bal).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                     : '--';
             }
         } catch (err) {
@@ -119,7 +126,8 @@
 
         closeBtn.addEventListener('click', closeModal);
         overlay.addEventListener('click', function (e) {
-            if (e.target === overlay) closeModal();
+            if (e.target === overlay) 
+                closeModal();
         });
 
         printBtn.addEventListener('click', function () {
@@ -128,54 +136,78 @@
     }
 
     // ---- Fund wallet ----
-    function initFundButton() {
+    // ---- Fund wallet via bank transfer modal ----
+    function initFundWalletModal() {
         const fundBtn = document.getElementById('fundButton');
-        const amountEl = document.getElementById('fundAmount');
-        const descEl = document.getElementById('fundDescription');
+        const overlay = document.getElementById('fundModalOverlay');
+        const closeBtn = document.getElementById('fundModalClose');
+        const copyBtn = document.getElementById('copyAccountBtn');
         const msgEl = document.getElementById('fundMessage');
-        if (!fundBtn || !amountEl || !msgEl) 
+        if (!fundBtn || !overlay) 
             return;
 
-        fundBtn.addEventListener('click', async () => {
-            const amount = parseFloat(amountEl.value);
-            if (!amount || amount <= 0) {
-                msgEl.textContent = 'Please enter a valid amount.';
-                msgEl.className = 'fund-message error';
-                return;
-            }
+        function closeModal() {
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
 
-            fundBtn.disabled = true;
-            fundBtn.textContent = 'Processing…';
+        // Bind close handlers ONCE (these were missing)
+        closeBtn?.addEventListener('click', closeModal);
+        overlay.addEventListener('click', e => {
+            if (e.target === overlay) closeModal();
+        });
+
+        // Bind copy handler ONCE (was incorrectly inside the finally below)
+        copyBtn?.addEventListener('click', () => {
+            const value = document.getElementById('modalAccountNumber').textContent;
+            if (navigator.clipboard?.writeText) {
+                navigator.clipboard.writeText(value);
+            } else {
+                const ta = document.createElement('textarea');
+                ta.value = value;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+            }
+            copyBtn.textContent = 'Copied!';
+            setTimeout(() => (copyBtn.textContent = 'Copy'), 1500);
+        });
+
+        fundBtn.addEventListener('click', async () => {
             msgEl.textContent = '';
+            msgEl.className = 'fund-message';
+            fundBtn.disabled = true;
+            fundBtn.textContent = 'Loading…';
 
             try {
-                const traceId = crypto.randomUUID();
-                const res = await fetch('/api/wallet/credit', {
+                const res = await fetch('/api/wallet/nameenquiry', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        CustomerId: walletId,
-                        Amount: amount,
-                        Description: descEl.value.trim() || 'Fund wallet',
-                        TraceId:traceId
-                    })
+                    body: JSON.stringify({ customerId: walletId })
                 });
-                const data = await res.json();
+                const data = await res.json().catch(() => ({}));
 
-                if (res.ok && data.responseHeader && data.responseHeader.responseCode === '00') {
-                    msgEl.textContent = 'Funds added successfully!';
-                    msgEl.className = 'fund-message success';
-                    // Refresh balance display
-                    const newBalance = data.balance ?? (await fetchBalance(walletId));
-                    if (newBalance !== undefined) {
-                        document.getElementById('walletBalance').textContent =
-                            '₦' + parseFloat(newBalance).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
-                    }
-                    amountEl.value = '';
-                    descEl.value = '';
+                if (!res.ok) {
+                    const header = data.responseHeader ?? data.ResponseHeader;
+                    msgEl.textContent = header?.responseMessage || 'Unable to load account details.';
+                    msgEl.className = 'fund-message error';
+                    return;
+                }
+
+                const header = data.responseHeader ?? data.ResponseHeader;
+                const code = pick(header, 'responseCode', 'ResponseCode');
+                if (code === '00') {
+                    document.getElementById('modalAccountNumber').textContent = pick(data, 'accountNumber', 'AccountNumber') ?? '—';
+                    document.getElementById('modalBankName').textContent = pick(data, 'bankName', 'BankName') ?? '—';
+                    const firstName = pick(data, 'firstName', 'FirstName') ?? '';
+                    const lastName = pick(data, 'lastName', 'LastName') ?? '';
+                    document.getElementById('modalAccountName').textContent =
+                        `${firstName} ${lastName}`.trim() || '—';
+                    overlay.classList.add('active');
+                    document.body.style.overflow = 'hidden';
                 } else {
-                    const errMsg = data.responseHeader?.responseMessage || data.message || 'Credit failed.';
-                    msgEl.textContent = errMsg;
+                    msgEl.textContent = header?.responseMessage || 'Unable to load account details.';
                     msgEl.className = 'fund-message error';
                 }
             } catch (err) {
@@ -183,23 +215,13 @@
                 msgEl.className = 'fund-message error';
             } finally {
                 fundBtn.disabled = false;
-                fundBtn.textContent = 'Add Funds';
+                fundBtn.textContent = 'Fund Wallet';
             }
         });
-
-        async function fetchBalance(customerId) {
-            const res = await fetch('/api/wallet/balance', {
-                method: 'POST',
-                headers: { '2Content-Type': 'application/json' },
-                body: JSON.stringify({ customerId })
-            });
-            const data = await res.json();
-            return data.balance;
-        }
     }
-
+    
     // ---- Boot ----
     loadBalance().finally();
     initReceiptModal();
-    initFundButton();
+    initFundWalletModal();
 });

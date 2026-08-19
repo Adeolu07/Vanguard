@@ -88,7 +88,7 @@ public class AuthController : Controller
         var result = await _authService.RegisterMarshalAsync(model);
         if (!result.Success || result.User == null)
         {
-            ModelState.AddModelError("", "Unable to sign up");
+            ModelState.AddModelError("", result?.Message ?? "Unable to sign up");
             return View(model);
         }
 

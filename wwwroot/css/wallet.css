@@ -247,10 +247,10 @@
 
 .receipt-modal {
     background: #ffffff;
-    border-radius: 16px;
+    border-radius: 20px;
     width: 100%;
-    max-width: 380px;
-    padding: 28px;
+    max-width: 560px;
+    padding: 40px 44px;
     position: relative;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
 }
@@ -278,8 +278,8 @@
     margin-bottom: 20px;
 }
 .receipt-header .receipt-status-icon {
-    width: 52px;
-    height: 52px;
+    width: 64px;
+    height: 64px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -296,7 +296,7 @@
     color: #ef4444;
 }
 .receipt-header h2 {
-    font-size: 24px;
+    font-size: 30px;
     font-weight: 700;
     color: #0f172a;
 }
@@ -318,16 +318,17 @@
 }
 .receipt-body {
     border-top: 1px dashed #e2e8f0;
-    padding-top: 16px;
+    padding-top: 20px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 18px;
 }
 .receipt-row {
     display: flex;
     justify-content: space-between;
     gap: 12px;
-    font-size: 13px;
+    font-size: 15px;
+    padding: 4px 0;
 }
 .receipt-label {
     color: #94a3b8;
