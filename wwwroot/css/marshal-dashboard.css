@@ -1,0 +1,220 @@
+:root{
+    --navy:#0f1b3d;
+    --navy-2:#16214a;
+    --bg:#f6f7fb;
+    --card:#ffffff;
+    --border:#e4e7ee;
+    --text:#0f1b3d;
+    --text-muted:#6b7280;
+    --text-faint:#9aa0ab;
+    --teal-bg:#e6f6f3;
+    --teal-text:#0f8a72;
+    --red-bg:#fde9ea;
+    --red-text:#d64550;
+    --tag-bg:#eef1f7;
+    --tag-text:#3b4a6b;
+}
+
+.content{
+    padding:32px 40px;
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    gap:24px;
+}
+
+.alert-success,
+.alert-danger{
+    padding:12px 16px;
+    border-radius:10px;
+    font-weight:500;
+    margin-bottom:8px;
+}
+.alert-success{
+    background:#dcfce7;
+    color:#166534;
+    border:1px solid #bbf7d0;
+}
+.alert-danger{
+    background:#fef2f2;
+    color:#991b1b;
+    border:1px solid #fecaca;
+}
+
+.welcome-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    flex-wrap:wrap;
+    gap:16px;
+}
+.welcome-row h2{
+    margin:0 0 8px;
+    font-size:30px;
+    letter-spacing:-0.5px;
+    color:var(--text);
+}
+.vehicle-line{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:13px;
+    color:var(--text-muted);
+}
+.vehicle-tag{
+    background:var(--tag-bg);
+    color:var(--tag-text);
+    font-family:monospace;
+    padding:3px 8px;
+    border-radius:5px;
+    font-size:12px;
+    font-weight:600;
+}
+.welcome-actions{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+}
+.btn{
+    border:none;
+    border-radius:8px;
+    padding:11px 18px;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    text-decoration:none;
+    font-family:inherit;
+}
+.btn-primary{
+    background:var(--navy);
+    color:#fff;
+}
+.btn-primary:hover{
+    background:var(--navy-2);
+}
+.btn-secondary{
+    background:#fff;
+    color:var(--text);
+    border:1px solid var(--border);
+}
+.btn-secondary:hover{
+    border-color:#c7cbd6;
+}
+
+.stats-row{
+    display:flex;
+    gap:20px;
+    flex-wrap:wrap;
+}
+.stat-card{
+    flex:1;
+    min-width:200px;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:20px 22px;
+    box-sizing:border-box;
+}
+.stat-label{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-size:11px;
+    letter-spacing:1px;
+    color:var(--text-faint);
+    font-weight:700;
+    margin-bottom:14px;
+}
+.stat-value{
+    font-size:32px;
+    font-weight:700;
+    letter-spacing:-0.5px;
+    color:var(--text);
+}
+
+.card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:12px;
+    overflow:hidden;
+}
+.card-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:20px 24px;
+    font-weight:700;
+    font-size:15px;
+    color:var(--text);
+}
+.view-all{
+    color:var(--navy);
+    font-size:13px;
+    font-weight:600;
+    text-decoration:none;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+thead tr{
+    background:var(--bg);
+    border-top:1px solid var(--border);
+    border-bottom:1px solid var(--border);
+}
+th{
+    text-align:left;
+    padding:10px 24px;
+    font-size:11px;
+    letter-spacing:0.5px;
+    color:var(--text-faint);
+    font-weight:700;
+    text-transform:uppercase;
+}
+tbody td{
+    padding:14px 24px;
+    font-size:14px;
+    border-bottom:1px solid var(--border);
+    color:var(--text);
+}
+tbody tr:last-child td{
+    border-bottom:none;
+}
+.passenger{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+.avatar{
+    width:28px;
+    height:28px;
+    border-radius:50%;
+    background:#e2e5ee;
+    color:var(--text-muted);
+    font-size:11px;
+    font-weight:700;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+}
+.status{
+    display:inline-block;
+    padding:4px 10px;
+    border-radius:20px;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:0.3px;
+}
+.status.validated{
+    background:var(--teal-bg);
+    color:var(--teal-text);
+}
+.status.rejected{
+    background:var(--red-bg);
+    color:var(--red-text);
+}

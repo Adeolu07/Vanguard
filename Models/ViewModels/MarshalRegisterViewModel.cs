@@ -40,4 +40,13 @@ public class MarshalRegisterViewModel
     [MaxLength(50)]
     [Display(Name = "License ID")]
     public string LicenseId { get; set; } = string.Empty;
+    
+    [MaxLength(10, ErrorMessage = "Account number must be 10 digits")]
+    [MinLength(10, ErrorMessage = "Account number must be 10 digits")]
+    [Display(Name = "Account Number")]
+    public string? AccountNumber { get; set; }
+
+    [MaxLength(10)]
+    [Display(Name = "Bank")]
+    public string? BankCode { get; set; }
 }

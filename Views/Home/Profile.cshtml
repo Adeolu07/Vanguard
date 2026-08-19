@@ -1,3 +1,4 @@
+@using _Tripfinity.Utilities
 @model _Tripfinity.Models.Tables.User
 @{
     Layout = "_DashboardLayout";
@@ -64,15 +65,73 @@
                         </div>
                     }
                 </div>
-
-                <div class="profile-actions">
-                    <button type="button" id="editBtn" class="btn-primary">Edit Profile</button>
-                    <button type="submit" id="saveBtn" class="btn-primary" style="display:none;">Save Changes</button>
-                    <button type="button" id="cancelBtn" class="btn-secondary" style="display:none;">Cancel</button>
-                </div>
             </form>
+        </div>
+        
+        @if (Model.Role == "Marshal")
+                        {
+                            var bank = ViewBag.MarshalBankAccount;
+                            <div class="bank-account-section">
+                                <h3 class="bank-section-title">Payout Account</h3>
 
-            @if (TempData["Success"] != null)
+                                @if (bank != null)
+                                {
+                                    <div class="bank-summary">
+                                        <div class="bank-row">
+                                            <span class="field-label">Account Name</span>
+                                            <span class="bank-value">@bank.AccountName</span>
+                                        </div>
+                                        <div class="bank-row">
+                                            <span class="field-label">Account Number</span>
+                                            <span class="bank-value">@bank.AccountNumber</span>
+                                        </div>
+                                        <div class="bank-row">
+                                            <span class="field-label">Bank</span>
+                                            <span class="bank-value">@bank.BankName</span>
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <p class="field-hint">No payout account linked yet. Add one to receive trip earnings.</p>
+                                }
+
+                                <form asp-controller="Home" asp-action="AddBankAccount" method="post" class="bank-account-form" id="bankAccountForm">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" id="marshalFullName" value="@($"{Model.FirstName} {Model.LastName}".Trim())" />
+
+                                    <div class="detail-field">
+                                        <label class="field-label" for="accountNumber">Account Number</label>
+                                        <input name="accountNumber" id="accountNumber" class="field-input" placeholder="0123456789" maxlength="10" inputmode="numeric" autocomplete="off" />
+                                    </div>
+                                    <div class="detail-field">
+                                        <label class="field-label" for="bankCode">Bank</label>
+                                        <select name="bankCode" id="bankCode" class="field-input">
+                                            <option value="">-- Select Bank --</option>
+                                            @foreach (var bankOption in Banks.All)
+                                            {
+                                                <option value="@bankOption.Code">@bankOption.Name</option>
+                                            }
+                                        </select>
+                                    </div>
+
+                                    <div id="bankVerifyStatus" class="bank-verify-status" role="status"></div>
+
+                                    <div class="bank-account-actions">
+                                        <button type="button" id="verifyBankBtn" class="btn-secondary">Verify Account</button>
+                                        <button type="submit" id="saveBankBtn" class="btn-primary" disabled>Save Account</button>
+                                    </div>
+                                </form>
+                            </div>
+                        }
+        
+        <div class="profile-actions">
+            <button type="button" id="editBtn" class="btn-primary">Edit Profile</button>
+            <button type="submit" id="saveBtn" class="btn-primary" style="display:none;" form="profileForm">Save Changes</button>
+            <button type="button" id="cancelBtn" class="btn-secondary" style="display:none;">Cancel</button>
+        </div>
+
+        @if (TempData["Success"] != null)
             {
                 <div class="alert alert-success">@TempData["Success"]</div>
             }
@@ -84,33 +143,7 @@
 
         <a href="/Home/Dashboard" class="back-link">← Back to Dashboard</a>
     </div>
-</div>
 
 @section Scripts {
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const form = document.getElementById('profileForm');
-            const inputs = form.querySelectorAll('input[name]');
-            const editBtn = document.getElementById('editBtn');
-            const saveBtn = document.getElementById('saveBtn');
-            const cancelBtn = document.getElementById('cancelBtn');
-
-            editBtn.addEventListener('click', () => {
-                inputs.forEach(i => i.disabled = false);
-                editBtn.style.display = 'none';
-                saveBtn.style.display = 'inline-flex';
-                cancelBtn.style.display = 'inline-flex';
-            });
-
-            cancelBtn.addEventListener('click', () => {
-                inputs.forEach(i => {
-                    i.disabled = true;
-                    i.value = i.defaultValue;
-                });
-                saveBtn.style.display = 'none';
-                cancelBtn.style.display = 'none';
-                editBtn.style.display = 'inline-flex';
-            });
-        });
-    </script>
+    <script src="~/js/profile.js" asp-append-version="true"></script>
 }
