@@ -6,6 +6,8 @@ using _Tripfinity.Models.Data;
 using _Tripfinity.Models.Data.Requests;
 using _Tripfinity.Models.Data.Response;
 using _Tripfinity.Models.Tables;
+using _Tripfinity.Models.ViewModels;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
 
@@ -100,6 +102,61 @@ public class WalletService : IWalletService
                 new AuthenticationHeaderValue("Bearer", authToken.Token);
             _cache.Set(TokenCacheKey, authToken.Token, authToken.ExpiryDate);
         }
+    }
+
+    public async Task<MarshalWalletViewModel> BuildWalletInfoAsync(string walletId, int page)
+    {
+        var response = await GetBalanceAsync(new GetBalanceRequest
+        {
+            CustomerId = walletId
+        });
+
+        var balance = response.Balance;
+        
+        var transactions = new List<TransactionDetailsList>();
+        var totalPages = 1;
+        var hasNext = false;
+        var hasPrev = false;
+
+        var listResponse = await GetTransactionList(new GetTransactionListRequest
+        {
+            CustomerId = walletId,
+            SearchDetails = new SearchDetails
+            {
+                Page = page,
+                ItemsPerPage = 10,
+                DateRange = new DateRange { Start = DateTime.Now.AddMonths(-3), End = DateTime.Now }
+            }
+        });
+
+        if (listResponse.TransactionDetailsList != null)
+        { 
+            transactions = listResponse.TransactionDetailsList
+                .Select(d => new TransactionDetailsList
+                {
+                    TranType = d.TranType,
+                    Amount = d.Amount,
+                    Description = d.Description,
+                    TransactionId = d.TransactionId,
+                    SessionId = d.SessionId
+                }).ToList();
+
+            totalPages = listResponse.Pagination?.TotalPages ?? 1;
+            hasNext = listResponse.Pagination?.HasNext ?? false;
+            hasPrev = listResponse.Pagination?.HasPrevious ?? false;
+        }
+
+        return new MarshalWalletViewModel
+        {
+            WalletId = walletId,
+            Balance = balance,
+            Transactions = transactions,
+            CurrentPage = page,
+            TotalPages = totalPages,
+            HasNext = hasNext,
+            HasPrevious = hasPrev
+        };
+
     }
 
     private async Task LogTransaction(WalletTransaction data, string type, string customerId)

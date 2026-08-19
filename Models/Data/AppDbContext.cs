@@ -18,6 +18,7 @@ namespace _Tripfinity.Models.Data
         public DbSet<Ticket> Tickets { get; set; }
         public DbSet<AuthToken> AuthTokens { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
+        public DbSet<MarshalBankAccount> MarshalBankAccounts { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -94,6 +95,15 @@ namespace _Tripfinity.Models.Data
             builder.Entity<Transaction>()
                 .Property(transaction => transaction.Amount)
                 .HasPrecision(18, 2);
+            
+            builder.Entity<MarshalBankAccount>()
+                .HasKey(account => account.MarshalId);
+
+            builder.Entity<MarshalBankAccount>()
+                .HasOne(account => account.Marshal)
+                .WithOne()
+                .HasForeignKey<MarshalBankAccount>(account => account.MarshalId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

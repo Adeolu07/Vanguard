@@ -21,6 +21,8 @@ public class Program
         builder.Services.AddScoped<IMarshalService, MarshalService>();
         builder.Services.AddScoped<IPassengerService, PassengerService>();
         builder.Services.AddScoped<IAdminService, AdminService>();
+        builder.Services.AddScoped<AdminOnlyFilter>();
+        builder.Services.AddScoped<IPaymentService, PaymentService>();
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
         builder.Services.AddProblemDetails();
         builder.Services.AddHttpClient<IWalletService, WalletService>(client =>

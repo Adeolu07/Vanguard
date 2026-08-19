@@ -8,9 +8,7 @@ public interface IAdminService
     Task<string?> GetAdminWalletIdAsync();
     Task<MarshalWalletViewModel> GetAdminWalletInfoAsync(string walletId, int page);
     Task<bool> IsAdminAsync(int userId);
-    Task<List<BusTrip>> GetAllBusTripsAsync();
-    Task<List<RailwayTrip>> GetAllRailwayTripsAsync();
-    Task<List<TaxiTrip>> GetAllTaxiTripsAsync();
+    Task<List<T>> GetAllTripsAsync<T>() where T : class, ITrip;
     Task<List<Booking>> GetAllBookingsAsync();
 
 }

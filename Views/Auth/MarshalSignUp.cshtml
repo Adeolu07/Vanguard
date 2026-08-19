@@ -1,4 +1,5 @@
 ﻿@model _Tripfinity.Models.ViewModels.MarshalRegisterViewModel
+@using _Tripfinity.Utilities
 
 @{
     ViewData["Title"] = "Marshal Sign Up";
@@ -99,6 +100,26 @@
                     <input asp-for="LicenseId" placeholder="TX-992-004-B" />
                     <span asp-validation-for="LicenseId" class="error"></span>
                 </div>
+                
+                <div class="form-group">
+                    <label asp-for="AccountNumber">Account Number (optional)</label>
+                    <input asp-for="AccountNumber" placeholder="0123456789" />
+                    <span asp-validation-for="AccountNumber" class="error"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="BankCode">Bank (optional)</label>
+                    <select asp-for="BankCode" class="form-select">
+                        <option value="">-- Select Bank (optional) --</option>
+                        @foreach (var bank in Banks.All)
+                        {
+                            <option value="@bank.Code">@bank.Name</option>
+                        }
+                    </select>
+                    <span asp-validation-for="BankCode" class="error"></span>
+                </div>
+                <p class="field-hint">Optional — you can verify your account from your profile after sign up.</p>
+
 
                 <div class="action-container">
                     <button type="submit" class="btn-submit">Create Marshal Account</button>

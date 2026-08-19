@@ -1,4 +1,5 @@
 using _Tripfinity.Interfaces;
+using _Tripfinity.Models.Tables;
 using _Tripfinity.Models.ViewModels;
 using _Tripfinity.Utilities;
 using Microsoft.AspNetCore.Mvc;
@@ -6,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace _Tripfinity.Controllers;
 
 [Route("admin")]
-[RequireAuth]
+[ServiceFilter(typeof(AdminOnlyFilter))]
 public class AdminController : ParentController
 {
     private readonly IAdminService _adminService;
@@ -16,34 +17,15 @@ public class AdminController : ParentController
         _adminService = adminService;
     }
 
-    private async Task<IActionResult> RequireAdmin()
-    {
-        if (!IsAuthenticated)
-            return RedirectToAction("SignIn", "Auth");
-
-        bool isAdmin = await _adminService.IsAdminAsync(UserId!.Value);
-        if (!isAdmin)
-            return Forbid();
-
-        return null!; // signals OK
-    }
-
     [HttpGet]
-    public async Task<IActionResult> Index()
+    public IActionResult Index()
     {
-        var guard = await RequireAdmin();
-        if (guard != null) 
-            return guard;
-
         return View();
     }
-    
+
     [HttpGet("wallet")]
     public async Task<IActionResult> Wallet(int page = 1)
     {
-        var guard = await RequireAdmin();
-        if (guard != null) return guard;
-
         var walletId = await _adminService.GetAdminWalletIdAsync();
         if (walletId == null)
         {
@@ -58,13 +40,9 @@ public class AdminController : ParentController
     [HttpGet("trips")]
     public async Task<IActionResult> Trips()
     {
-        var guard = await RequireAdmin();
-        if (guard != null) 
-            return guard;
-
-        var buses = await _adminService.GetAllBusTripsAsync();
-        var rails = await _adminService.GetAllRailwayTripsAsync();
-        var taxis = await _adminService.GetAllTaxiTripsAsync();
+        var buses = await _adminService.GetAllTripsAsync<BusTrip>();
+        var rails = await _adminService.GetAllTripsAsync<RailwayTrip>();
+        var taxis = await _adminService.GetAllTripsAsync<TaxiTrip>();
 
         ViewBag.BusTrips = buses;
         ViewBag.RailwayTrips = rails;
@@ -76,9 +54,6 @@ public class AdminController : ParentController
     [HttpGet("bookings")]
     public async Task<IActionResult> Bookings()
     {
-        var guard = await RequireAdmin();
-        if (guard != null) return guard;
-
         var bookings = await _adminService.GetAllBookingsAsync();
         return View(bookings);
     }

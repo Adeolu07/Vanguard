@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using _Tripfinity.Interfaces;
+using _Tripfinity.Models.Data;
 using _Tripfinity.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,13 +10,13 @@ public class HomeController : ParentController
 {
     private readonly IPassengerService _passenger;
     private readonly ILogger<HomeController> _logger;
-    private readonly IWalletService _walletService;
+    private readonly IMarshalService _marshalService;
 
-    public HomeController(IPassengerService passenger, ILogger<HomeController> logger, IWalletService walletService)
+    public HomeController(IPassengerService passenger, ILogger<HomeController> logger , IMarshalService marshalService)
     {
         _passenger = passenger;
+        _marshalService = marshalService;
         _logger = logger;
-        _walletService = walletService;
     }
 
     public IActionResult Index()
@@ -74,6 +75,9 @@ public class HomeController : ParentController
         var user = await _passenger.GetUserByIdAsync(UserId!.Value);
         if (user is null) return RedirectToLogin();
 
+        if (user.Role == "Marshal")
+            ViewBag.MarshalBankAccount = await _marshalService.GetBankAccountAsync(user.Id);
+
         return View(user);
     }
     
@@ -94,6 +98,18 @@ public class HomeController : ParentController
             ? "Profile updated successfully."
             : "Failed to update profile.";
 
+        return RedirectToAction("Profile");
+    }
+    
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddBankAccount(string accountNumber, string bankCode)
+    {
+        var userId = HttpContext.Session.GetInt32("userId");
+        if (userId == null) return RedirectToAction("Login", "Auth");
+
+        var result = await _marshalService.AddBankAccountAsync(userId.Value, accountNumber, bankCode);
+        TempData[result.Success ? "Success" : "Error"] = result.Message;
         return RedirectToAction("Profile");
     }
 

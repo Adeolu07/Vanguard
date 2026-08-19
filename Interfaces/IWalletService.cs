@@ -1,5 +1,7 @@
 using _Tripfinity.Models.Data.Requests;
 using _Tripfinity.Models.Data.Response;
+using _Tripfinity.Models.ViewModels;
+
 namespace _Tripfinity.Interfaces;
 
 public interface IWalletService
@@ -13,5 +15,6 @@ public interface IWalletService
     Task<RefundResponse> RefundAsync(RefundRequest refund);
     Task<GetTransactionListResponse> GetTransactionList(GetTransactionListRequest request);
     Task EnsureAuthenticatedAsync();
+    Task<MarshalWalletViewModel> BuildWalletInfoAsync(string walletId, int page);
 
 }

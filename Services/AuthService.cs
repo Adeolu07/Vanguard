@@ -3,6 +3,7 @@ using _Tripfinity.Models.Data;
 using _Tripfinity.Models.Data.Requests;
 using _Tripfinity.Models.Tables;
 using _Tripfinity.Models.ViewModels;
+using _Tripfinity.Utilities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using QRCoder;
@@ -14,14 +15,16 @@ public class AuthService : IAuthService
     private readonly AppDbContext _context;
     private readonly IWalletService _walletService;
     private readonly IEmailService _emailService;
+    private readonly ICipService _cipService;
     private readonly ILogger<AuthService> _logger;
 
-    public AuthService(AppDbContext context, IWalletService walletService, IEmailService emailService,
+    public AuthService(AppDbContext context, IWalletService walletService, IEmailService emailService, ICipService cipService,
         ILogger<AuthService> logger)
     {
         _context = context;
         _walletService = walletService;
         _emailService = emailService;
+        _cipService = cipService;
         _logger = logger;
     }
 
@@ -58,44 +61,90 @@ public class AuthService : IAuthService
         return new AuthResponse { Success = true, Message = "Account created. Please confirm your email", User = user };
     }
 
-    public async Task<AuthResponse> RegisterMarshalAsync(MarshalRegisterViewModel model)
-    {
-        _logger.LogInformation("Registering new marshal");
-
-        var existingUser = await _context.Users.AnyAsync(u => u.Email == model.Email);
-        if (existingUser)
+            public async Task<AuthResponse> RegisterMarshalAsync(MarshalRegisterViewModel model)
         {
-            _logger.LogWarning("Marshal registration failed: email {Email} already exists", model.Email);
-            return new AuthResponse { Success = false, Message = "Email already exists" };
+            _logger.LogInformation("Registering new marshal");
+
+            var existingUser = await _context.Users.AnyAsync(u => u.Email == model.Email);
+            if (existingUser)
+            {
+                _logger.LogWarning("Marshal registration failed: email {Email} already exists", model.Email);
+                return new AuthResponse { Success = false, Message = "Email already exists" };
+            }
+
+            var accountNumber = model.AccountNumber?.Trim();
+            var bankCode = model.BankCode;
+
+            var hasAccount = !string.IsNullOrWhiteSpace(accountNumber);
+            var hasBank = !string.IsNullOrWhiteSpace(bankCode);
+            if (hasAccount != hasBank)
+                return new AuthResponse { Success = false, Message = "Provide both account number and bank, or leave both blank." };
+
+            string? verifiedAccountName = null;
+            if (hasAccount && hasBank)
+            {
+                var enquiry = await _cipService.AccountEnquiry(accountNumber!, bankCode!);
+
+                if (enquiry?.Data?.ResponseCode != "00" || string.IsNullOrWhiteSpace(enquiry?.Data?.AccountName))
+                {
+                    var reason = enquiry?.Message ?? enquiry?.Data?.ResponseMessage ?? "Name enquiry failed.";
+                    _logger.LogWarning("CIP name enquiry failed for {Account}: {Reason}", accountNumber, reason);
+                    return new AuthResponse { Success = false, Message = $"Could not verify account: {reason}" };
+                }
+
+                if (!NameMatching.Matches(enquiry.Data.AccountName, model.FirstName, model.LastName))
+                {
+                    _logger.LogWarning("Account name mismatch for {Email}: expected {Name}, got {AccountName}",
+                        model.Email, $"{model.FirstName} {model.LastName}", enquiry.Data.AccountName);
+                    return new AuthResponse { Success = false, Message = "Account name does not match your registered name." };
+                }
+
+                verifiedAccountName = enquiry.Data.AccountName;
+            }
+
+            var hasher = new PasswordHasher<User>();
+            var prefix = (model.VehicleType.Length >= 3 ? model.VehicleType[..3] : model.VehicleType).ToUpper();
+
+            var marshal = new User
+            {
+                Email = model.Email,
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                CreatedAt = DateTime.Now,
+                PhoneNumber = model.PhoneNumber,
+                Role = "Marshal",
+                VehicleType = model.VehicleType,
+                LicenseId = model.LicenseId,
+                VehicleId = $"VEH-{prefix}-{Guid.NewGuid().ToString("N")[..8].ToUpper()}",
+                IsActive = false,
+                IsEmailConfirmed = false,
+                EmailConfirmationToken = Guid.NewGuid().ToString(),
+                ConfirmationTokenExpiry = DateTime.Now.AddDays(1)
+            };
+
+            marshal.PasswordHash = hasher.HashPassword(marshal, model.Password);
+            _context.Users.Add(marshal);
+            await _context.SaveChangesAsync();
+
+            if (verifiedAccountName is not null)
+            {
+                _context.MarshalBankAccounts.Add(new MarshalBankAccount
+                {
+                    MarshalId = marshal.Id,
+                    FirstName = model.FirstName,
+                    LastName = model.LastName,
+                    AccountNumber = accountNumber!,
+                    BankCode = bankCode!,
+                    BankName = Banks.GetBankName(bankCode) ?? "",
+                    AccountName = verifiedAccountName,
+                    CreatedAt = DateTime.Now
+                });
+                await _context.SaveChangesAsync();
+            }
+
+            _logger.LogInformation("Marshal Account created: {Email}", marshal.Email);
+            return new AuthResponse { Success = true, Message = "Marshal account created", User = marshal };
         }
-
-        var hasher = new PasswordHasher<User>();
-        var prefix = (model.VehicleType.Length >= 3 ? model.VehicleType[..3] : model.VehicleType).ToUpper();
-
-        var marshal = new User
-        {
-            Email = model.Email,
-            FirstName = model.FirstName,
-            LastName = model.LastName,
-            CreatedAt = DateTime.Now,
-            PhoneNumber = model.PhoneNumber,
-            Role = "Marshal",
-            VehicleType = model.VehicleType,
-            LicenseId = model.LicenseId,
-            VehicleId = $"VEH-{prefix}-{Guid.NewGuid().ToString("N")[..8].ToUpper()}",
-            IsActive = false,
-            IsEmailConfirmed = false,
-            EmailConfirmationToken = Guid.NewGuid().ToString(),
-            ConfirmationTokenExpiry = DateTime.Now.AddDays(1)
-        };
-
-        marshal.PasswordHash = hasher.HashPassword(marshal, model.Password);
-        _context.Users.Add(marshal);
-        await _context.SaveChangesAsync();
-
-        _logger.LogInformation("Marshal Account created: {Email}", marshal.Email);
-        return new AuthResponse { Success = true, Message = "Marshal account created", User = marshal };
-    }
 
     public async Task<AuthResponse?> SignInAsync(string email, string password)
     {

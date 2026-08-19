@@ -19,17 +19,12 @@ public class MarshalController : Controller
     private readonly ITripService _trip;
     private readonly ITicketService _ticket;
     private readonly IMarshalService _marshalService;
-    private readonly ILogger<MarshalController> _logger;
-    private readonly AppDbContext _context;
 
-    public MarshalController(ITripService trip, ITicketService ticket, IMarshalService marshalService,
-        ILogger<MarshalController> logger, AppDbContext context)
+    public MarshalController(ITripService trip, ITicketService ticket, IMarshalService marshalService)
     {
-        _trip = trip;
+        _trip = trip;;
         _ticket = ticket;
         _marshalService = marshalService;
-        _logger = logger;
-        _context = context;
     }
 
     private int? MarshalId => HttpContext.Session.GetInt32("marshalId");
@@ -43,14 +38,16 @@ public class MarshalController : Controller
     {
         if (MarshalId is null)
             return RedirectToMarshalLogin();
+
+        var dashboard = await _marshalService.GetMarshalDashboardAsync(MarshalId.Value);
+        if (dashboard is null)
+            return RedirectToMarshalLogin();
         
-        var marshal = await _marshalService.GetMarshalAsync(MarshalId.Value);
-        
-        HttpContext.Session.SetInt32("userId", marshal!.Id);
-        ViewBag.FirstName = marshal!.FirstName;
-        ViewBag.VehicleType = marshal!.VehicleType;
-        ViewBag.VehicleId = marshal!.VehicleId;
-        return View();
+        HttpContext.Session.SetInt32("userId", dashboard!.MarshalId);
+        ViewBag.FirstName = dashboard!.FirstName;
+        ViewBag.VehicleType = dashboard!.VehicleType;
+        ViewBag.VehicleId = dashboard!.VehicleId;
+        return View(dashboard);
     }
 
     [HttpGet("create/{type}")]
@@ -119,8 +116,6 @@ public class MarshalController : Controller
         TempData["Success"] = "Taxi trip created.";
         return RedirectToAction("MyTrips");
     }
-    
-    
 
     [HttpGet("trips")]
     public async Task<IActionResult> MyTrips()
@@ -173,8 +168,7 @@ public class MarshalController : Controller
         var result = await _ticket.ValidateTicketAsync(qrToken, MarshalId.Value, MarshalVehicleId!);
 
         if (!result.Success)
-        {
-            // Handle duplicate scans separately for clearer feedback
+        { // Handle duplicate scans separately for clearer feedback
             if (result.Ticket?.Status == TicketStatus.Validated)
             {
                 TempData["Error"] = $"{result.Message} (Validated by Marshal {result.Ticket.ValidatedByMarshalId})";
@@ -190,7 +184,6 @@ public class MarshalController : Controller
             TempData["Success"] = $"Ticket {result.Ticket!.TicketReference} validated successfully!";
             ViewBag.ValidatedTicket = result.Ticket;
         }
-
         return View("Scan");
     }
 
@@ -202,150 +195,77 @@ public class MarshalController : Controller
             return RedirectToAction("MarshalSignIn", "Auth");
 
         var model = await _marshalService.GetWalletInfoAsync(userId.Value, page);
-        
-        if (string.IsNullOrEmpty(model.WalletId))
-        {
-            // Wallet not ready yet – build minimal fallback
-            var marshal = await _marshalService.GetMarshalAsync(userId.Value) ?? new User
-            {
-                FirstName = "Marshal",
-                LastName = "",
-                Email = "",
-            };
-
-            model = new MarshalWalletViewModel
-            {
-                WalletId = marshal.UserWalletId ?? "Not available",
-                Balance = 0,
-                Transactions = new List<TransactionDetailsList>(),
-                CurrentPage = 1,
-                TotalPages = 1,
-                HasNext = false,
-                HasPrevious = false
-            };
-
-            TempData["ErrorMessage"] = "Your wallet is being set up. Please check back soon, or contact support if this persists.";
-        }
-
         return View(model);
     }
     
-    [HttpGet("trips/{id:int}")]
-public async Task<IActionResult> TripDetail(int id)
-{
-    if (MarshalId is null || MarshalVehicleType is null)
-        return RedirectToMarshalLogin();
-
-    var type = MarshalVehicleType;
-    var marshalId = MarshalId.Value;
-
-    object? trip;
-    IEnumerable<Booking> bookings;
-    switch (type.ToLower())
+    [HttpGet("wallet/bankaccount")]
+    public async Task<IActionResult> BankAccount()
     {
-        case "bus":
-            trip = await _context.BusTrips.FirstOrDefaultAsync(t => t.Id == id && t.MarshalId == marshalId);
-            if (trip == null) return NotFound();
-            // bookings for this trip
-            bookings = await _context.Bookings
-                .Include(b => b.User)
-                .Include(b => b.BusTrip)
-                .Where(b => b.BusTripId == id)
-                .ToListAsync();
-            break;
-        case "railway":
-            trip = await _context.RailwayTrips.FirstOrDefaultAsync(t => t.Id == id && t.MarshalId == marshalId);
-            if (trip == null) return NotFound();
-            bookings = await _context.Bookings
-                .Include(b => b.User)
-                .Include(b => b.RailwayTrip)
-                .Where(b => b.RailwayTripId == id)
-                .ToListAsync();
-            break;
-        case "taxi":
-            trip = await _context.TaxiTrips.FirstOrDefaultAsync(t => t.Id == id && t.MarshalId == marshalId);
-            if (trip == null) return NotFound();
-            bookings = await _context.Bookings
-                .Include(b => b.User)
-                .Include(b => b.TaxiTrip)
-                .Where(b => b.TaxiTripId == id)
-                .ToListAsync();
-            break;
-        default:
-            return BadRequest("Unknown vehicle type");
+        var userId = HttpContext.Session.GetInt32("userId");
+        if (userId == null) return Unauthorized(new { message = "Not signed in." });
+
+        var account = await _marshalService.GetBankAccountAsync(userId.Value);
+        if (account == null) return NotFound(new { message = "No bank account linked. Add one from your profile." });
+
+        return Ok(new
+        {
+            accountNumber = account.AccountNumber,
+            accountName = account.AccountName,
+            bankName = account.BankName,
+            bankCode = account.BankCode
+        });
     }
-
-    var model = new TripDetailViewModel
-    {
-        TripId = id,
-        TransportType = type,
-        Route = trip switch
+    
+        [HttpPost("wallet/cashout")]
+        public async Task<IActionResult> CashOut([FromBody] CashoutRequest request)
         {
-            BusTrip b => $"{b.From} → {b.Destination}",
-            RailwayTrip r => $"{r.From} → {r.Destination}",
-            TaxiTrip t => $"{t.PickupLocation} → {t.DropoffLocation}",
-            _ => ""
-        },
-        DepartureTime = trip switch
-        {
-            BusTrip b => b.DepartureTime,
-            RailwayTrip r => r.DepartureTime,
-            TaxiTrip t => t.PickupTime,
-            _ => DateTime.MinValue
-        },
-        Status = trip switch
-        {
-            BusTrip b => b.Status.ToString(),
-            RailwayTrip r => r.Status.ToString(),
-            TaxiTrip t => t.Status.ToString(),
-            _ => ""
-        },
-        Passengers = bookings.Select(b => new TripPassenger
-        {
-            PassengerName = b.User != null ? $"{b.User.FirstName} {b.User.LastName}" : "Unknown",
-            Seats = b.NumberOfSeats,
-            BookingStatus = b.Status.ToString(),
-            HasTicket = _context.Tickets.Any(t => t.BookingId == b.Id),
-            TicketStatus = _context.Tickets
-                .Where(t => t.BookingId == b.Id)
-                .Select(t => t.Status.ToString())
-                .FirstOrDefault() ?? "None"
-        }).ToList()
-    };
+            var userId = HttpContext.Session.GetInt32("userId");
+            if (userId == null) return Unauthorized(new { message = "Not signed in." });
 
-    return View("TripDetail", model);
-}
+            var result = await _marshalService.CashOutAsync(userId.Value, request.Amount);
+            if (!result.Success) return BadRequest(new { message = result.Message });
 
-    [HttpPost("trips/{id:int}/commence")]
-    public async Task<IActionResult> CommenceTrip(int id)
-    {
-        if (MarshalId is null || MarshalVehicleType is null)
-            return RedirectToMarshalLogin();
-
-        if (!Enum.TryParse<TransportType>(MarshalVehicleType, out var transportType))
-            return BadRequest("Invalid vehicle type");
-
-        var success = await _trip.CommenceTripAsync(transportType, id, MarshalId.Value);
-        if (!success)
+            return Ok(new { success = true, message = result.Message });
+            
+        }
+    
+        [HttpGet("trips/{id:int}")]
+        public async Task<IActionResult> TripDetail(int id)
         {
-            TempData["Error"] = "Unable to commence trip. It may already be in progress or cancelled.";
+            if (MarshalId is null || MarshalVehicleType is null) return RedirectToMarshalLogin();
+
+            var model = await _marshalService.GetTripDetailAsync(id, MarshalId.Value, MarshalVehicleType);
+            if (model is null) return NotFound();
+
+            return View("TripDetail", model);
+        }
+        
+        
+
+        [HttpPost("trips/{id:int}/commence")]
+        public async Task<IActionResult> CommenceTrip(int id)
+        {
+            if (MarshalId is null || MarshalVehicleType is null) return RedirectToMarshalLogin();
+            if (!Enum.TryParse<TransportType>(MarshalVehicleType, out var transportType)) return BadRequest("Invalid vehicle type");
+
+            var success = await _trip.CommenceTripAsync(transportType, id, MarshalId.Value);
+            if (!success)
+            {
+                TempData["Error"] = "Unable to commence trip. It may already be in progress or cancelled.";
+                return RedirectToAction("TripDetail", new { id });
+            }
+
+            TempData["Success"] = "Trip commenced successfully. Unvalidated tickets are now expired.";
             return RedirectToAction("TripDetail", new { id });
         }
-
-        TempData["Success"] = "Trip commenced successfully. Unvalidated tickets are now expired.";
-        return RedirectToAction("TripDetail", new { id });
-    }
     
     // Add after the CommenceTrip action:
 
     [HttpPost("trips/{id:int}/end")]
     public async Task<IActionResult> EndTrip(int id)
     {
-        if (MarshalId is null || MarshalVehicleType is null)
-            return RedirectToMarshalLogin();
-
-        if (!Enum.TryParse<TransportType>(MarshalVehicleType, out var transportType))
-            return BadRequest("Invalid vehicle type");
+        if (MarshalId is null || MarshalVehicleType is null) return RedirectToMarshalLogin();
+        if (!Enum.TryParse<TransportType>(MarshalVehicleType, out var transportType)) return BadRequest("Invalid vehicle type");
 
         var success = await _trip.EndTripAsync(transportType, id, MarshalId.Value);
         if (!success)
@@ -357,5 +277,7 @@ public async Task<IActionResult> TripDetail(int id)
         TempData["Success"] = "Trip ended successfully.";
         return RedirectToAction("TripDetail", new { id });
     }
+    
+    
 
 }
