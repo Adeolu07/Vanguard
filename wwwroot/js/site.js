@@ -3,34 +3,40 @@
     const balance = document.getElementById('walletBalance');
 
     if (!walletId) {
-        if (balance) 
+        if (balance)
             balance.textContent = 'Wallet not linked';
         return;
     }
 
-    const pick = (obj, ...keys) => {
-        for (const k of keys) if (obj && obj[k] != null && obj[k] !== '') return obj[k];
-        return null;
-    };
+    async function postJson(url, body) {
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        let json = {};
+        try { json = await res.json(); } catch (e) { /* non-JSON body */ }
+        return json; // { success, data, error }
+    }
+
+    function money(value) {
+        return '₦' + Number(value || 0).toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
 
     // ---- Balance refresh ----
-    async function loadBalance(){
+    async function loadBalance() {
         try {
-            const res = await fetch('/api/wallet/balance', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ customerId: walletId })
-            });
-            const data = await res.json();
+            const result = await postJson('/api/wallet/balance', { customerId: walletId });
             if (balance) {
-                const code = pick(data?.responseHeader ?? data?.ResponseHeader, 'responseCode', 'ResponseCode');
-                const bal = pick(data, 'balance', 'Balance');
-                balance.textContent = code === '00' && bal != null
-                    ? '₦' + Number(bal).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                balance.textContent = result && result.success && result.data
+                    ? money(result.data.balance)
                     : '--';
             }
         } catch (err) {
-            if (balance) balance.textContent = 'Error';
+            if (balance) balance.textContent = '--';
         }
     }
 
@@ -45,7 +51,7 @@
         let debitDownIcon = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>';
 
         function openReceipt(data) {
-            let isCredit = data.type.toLowerCase() === 'credit';
+            let isCredit = (data.type || '').toLowerCase() === 'credit';
             let sign = isCredit ? '+' : '–';
 
             let statusIcon = document.getElementById('receiptStatusIcon');
@@ -68,17 +74,12 @@
                 sessionRow.style.display = 'none';
             }
 
-            // Sync hidden printable receipt
             document.getElementById('printAmount').textContent = sign + '₦' + data.amount;
             document.getElementById('printTypeLabel').textContent = data.type + ' Transaction';
             document.getElementById('printDescription').textContent = data.description || '—';
             document.getElementById('printTransactionId').textContent = data.transactionId || '—';
             document.getElementById('printSessionId').textContent = data.sessionId || '—';
-            if (data.sessionId) {
-                document.getElementById('printSessionRow').style.display = '';
-            } else {
-                document.getElementById('printSessionRow').style.display = 'none';
-            }
+            document.getElementById('printSessionRow').style.display = data.sessionId ? '' : 'none';
 
             overlay.classList.add('active');
             document.body.style.overflow = 'hidden';
@@ -98,35 +99,28 @@
                 const description = row.getAttribute('data-description') || '';
                 const sessionId = row.getAttribute('data-session-id') || '';
 
-                // Show placeholder data immediately
                 openReceipt({ type, amount, description, transactionId, sessionId });
 
-                // Fetch full details and update
-                fetch('/api/wallet/transaction', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ transactionId: transactionId })
-                })
-                    .then(res => res.json())
-                    .then(res => {
-                        if (res && res.transactionDetails) {
-                            const details = res.transactionDetails;
+                postJson('/api/wallet/transaction', { transactionId: transactionId })
+                    .then(result => {
+                        if (result && result.success && result.data) {
+                            const d = result.data;
                             openReceipt({
-                                type: details.tranType || type,
-                                amount: details.amount ? details.amount.toLocaleString() : amount,
-                                description: details.description || description,
-                                transactionId: details.transactionId || transactionId,
-                                sessionId: details.sessionId || sessionId
+                                type: d.type || type,
+                                amount: d.amount != null ? Number(d.amount).toLocaleString() : amount,
+                                description: d.description || description,
+                                transactionId: d.transactionId || transactionId,
+                                sessionId: d.sessionId || sessionId
                             });
                         }
                     })
-                    .catch(err => console.warn('API fetch failed', err));
+                    .catch(function () { /* keep placeholder data */ });
             });
         });
 
         closeBtn.addEventListener('click', closeModal);
         overlay.addEventListener('click', function (e) {
-            if (e.target === overlay) 
+            if (e.target === overlay)
                 closeModal();
         });
 
@@ -135,7 +129,6 @@
         });
     }
 
-    // ---- Fund wallet ----
     // ---- Fund wallet via bank transfer modal ----
     function initFundWalletModal() {
         const fundBtn = document.getElementById('fundButton');
@@ -143,7 +136,7 @@
         const closeBtn = document.getElementById('fundModalClose');
         const copyBtn = document.getElementById('copyAccountBtn');
         const msgEl = document.getElementById('fundMessage');
-        if (!fundBtn || !overlay) 
+        if (!fundBtn || !overlay)
             return;
 
         function closeModal() {
@@ -151,13 +144,11 @@
             document.body.style.overflow = '';
         }
 
-        // Bind close handlers ONCE (these were missing)
         closeBtn?.addEventListener('click', closeModal);
         overlay.addEventListener('click', e => {
             if (e.target === overlay) closeModal();
         });
 
-        // Bind copy handler ONCE (was incorrectly inside the finally below)
         copyBtn?.addEventListener('click', () => {
             const value = document.getElementById('modalAccountNumber').textContent;
             if (navigator.clipboard?.writeText) {
@@ -181,35 +172,19 @@
             fundBtn.textContent = 'Loading…';
 
             try {
-                const res = await fetch('/api/wallet/nameenquiry', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ customerId: walletId })
-                });
-                const data = await res.json().catch(() => ({}));
+                const result = await postJson('/api/wallet/nameenquiry', { customerId: walletId });
 
-                if (!res.ok) {
-                    const header = data.responseHeader ?? data.ResponseHeader;
-                    msgEl.textContent = header?.responseMessage || 'Unable to load account details.';
+                if (!result || !result.success || !result.data) {
+                    msgEl.textContent = (result && result.error) || 'Unable load account details.';
                     msgEl.className = 'fund-message error';
                     return;
                 }
 
-                const header = data.responseHeader ?? data.ResponseHeader;
-                const code = pick(header, 'responseCode', 'ResponseCode');
-                if (code === '00') {
-                    document.getElementById('modalAccountNumber').textContent = pick(data, 'accountNumber', 'AccountNumber') ?? '—';
-                    document.getElementById('modalBankName').textContent = pick(data, 'bankName', 'BankName') ?? '—';
-                    const firstName = pick(data, 'firstName', 'FirstName') ?? '';
-                    const lastName = pick(data, 'lastName', 'LastName') ?? '';
-                    document.getElementById('modalAccountName').textContent =
-                        `${firstName} ${lastName}`.trim() || '—';
-                    overlay.classList.add('active');
-                    document.body.style.overflow = 'hidden';
-                } else {
-                    msgEl.textContent = header?.responseMessage || 'Unable to load account details.';
-                    msgEl.className = 'fund-message error';
-                }
+                document.getElementById('modalAccountNumber').textContent = result.data.accountNumber || '—';
+                document.getElementById('modalBankName').textContent = result.data.bankName || '—';
+                document.getElementById('modalAccountName').textContent = result.data.accountName || '—';
+                overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
             } catch (err) {
                 msgEl.textContent = 'Network error. Please try again.';
                 msgEl.className = 'fund-message error';
@@ -219,9 +194,9 @@
             }
         });
     }
-    
+
     // ---- Boot ----
-    loadBalance().finally();
+    loadBalance();
     initReceiptModal();
     initFundWalletModal();
 });

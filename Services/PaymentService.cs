@@ -1,5 +1,6 @@
 using _Tripfinity.Interfaces;
 using _Tripfinity.Models.Data.Requests;
+using _Tripfinity.Models.Data.Response;
 using _Tripfinity.Models.Tables;
 
 namespace _Tripfinity.Services;
@@ -10,6 +11,8 @@ public class PaymentService : IPaymentService
     private readonly IMarshalService _marshalService;
     private readonly IAdminService _adminService;
     private readonly ILogger<PaymentService> _logger;
+    private static bool IsSuccess(WalletTransaction txn) =>
+        txn?.ResponseHeader?.ResponseCode == "00";
 
     public PaymentService(IWalletService walletService, IMarshalService marshalService, IAdminService adminService,
         ILogger<PaymentService> logger)
@@ -23,88 +26,91 @@ public class PaymentService : IPaymentService
 
     public async Task<PaymentResult> ProcessPaymentAsync(User user, Booking booking)
     {
-        var traceId = Guid.NewGuid().ToString("N");
-        var debit = await _walletService.DebitWalletAsync(new DebitWalletRequest
+        try
         {
-            Amount = booking.TotalAmount,
-            CustomerId = user.UserWalletId!,
-            Description = $"Tripfinity {booking.TransportType} booking #{booking.Id}",
-            TraceId = traceId
-        });
-        
-
-        if (debit.ResponseHeader.ResponseCode != "00")
-            return new PaymentResult
+            var traceId = Guid.NewGuid().ToString("N");
+            var debit = await _walletService.DebitWalletAsync(new DebitWalletRequest
             {
-                Success = false,
-                ErrorMessage = debit.ResponseHeader.ResponseMessage
-            };
-        
-        var marshalWalletId = await _marshalService.GetMarshalWalletIdAsync(booking);
-        var adminWalletId = await _adminService.GetAdminWalletIdAsync();
-
-        if (string.IsNullOrEmpty(marshalWalletId) || string.IsNullOrEmpty(adminWalletId))
-        {
-            // Refund user if marshal/admin wallet is not found
-            await _walletService.RefundAsync(new RefundRequest
-            {
+                Amount = booking.TotalAmount,
                 CustomerId = user.UserWalletId!,
-                TransactionId = debit.TransactionId,
-                Description = "Missing marshal/admin wallet – refunding"
+                Description = $"Tripfinity {booking.TransportType} booking #{booking.Id}",
+                TraceId = traceId
             });
-            return new PaymentResult { Success = false, ErrorMessage = "Unable to process payment split." };
-        }
 
-        // wallet is found
-        var marshalCredit = await _walletService.CreditWalletAsync(new CreditWalletRequest
-        {
-            Amount = booking.TotalAmount * 0.8m,
-            CustomerId = marshalWalletId,
-            Description = $"Earnings from booking #{booking.Id}",
-            TraceId = Guid.NewGuid().ToString("N")
-        });
+            if (!IsSuccess(debit))
+                return new PaymentResult
+                {
+                    Success = false,
+                    ErrorMessage = debit?.ResponseHeader?.ResponseMessage ?? "Payment failed."
+                };
 
-        var adminCredit = await _walletService.CreditWalletAsync(new CreditWalletRequest
-        {
-            Amount = booking.TotalAmount * 0.2m,
-            CustomerId = adminWalletId,
-            Description = $"Commission from booking #{booking.Id}",
-            TraceId = Guid.NewGuid().ToString("N")
-        });
+            var marshalWalletId = await _marshalService.GetMarshalWalletIdAsync(booking);
+            var adminWalletId = await _adminService.GetAdminWalletIdAsync();
 
-        if (marshalCredit.ResponseHeader.ResponseCode != "00" ||
-            adminCredit.ResponseHeader.ResponseCode != "00")
-        {
-            // Roll back: refund user fully if any of the credits fail
-            await _walletService.RefundAsync(new RefundRequest
+            if (string.IsNullOrEmpty(marshalWalletId) || string.IsNullOrEmpty(adminWalletId))
             {
-                CustomerId = user.UserWalletId,
-                TransactionId = debit.TransactionId,
-                Description = "Split failed – refunding"
+                await _walletService.RefundAsync(new RefundRequest
+                {
+                    CustomerId = user.UserWalletId!,
+                    TransactionId = debit.TransactionId,
+                    Description = "Missing marshal/admin wallet – refunding"
+                });
+                return new PaymentResult { Success = false, ErrorMessage = "Unable to process payment split." };
+            }
+
+            var marshalCredit = await _walletService.CreditWalletAsync(new CreditWalletRequest
+            {
+                Amount = booking.TotalAmount * 0.8m,
+                CustomerId = marshalWalletId,
+                Description = $"Earnings from booking #{booking.Id}",
+                TraceId = Guid.NewGuid().ToString("N")
             });
 
-            if (marshalCredit.ResponseHeader.ResponseCode == "00")
+            var adminCredit = await _walletService.CreditWalletAsync(new CreditWalletRequest
+            {
+                Amount = booking.TotalAmount * 0.2m,
+                CustomerId = adminWalletId,
+                Description = $"Commission from booking #{booking.Id}",
+                TraceId = Guid.NewGuid().ToString("N")
+            });
+
+            if (!IsSuccess(marshalCredit) || !IsSuccess(adminCredit))
+            {
                 await _walletService.RefundAsync(new RefundRequest
                 {
-                    CustomerId = marshalWalletId,
-                    TransactionId = marshalCredit.TransactionId,
-                    Description = "Reversal due to split failure"
+                    CustomerId = user.UserWalletId,
+                    TransactionId = debit.TransactionId,
+                    Description = "Split failed – refunding"
                 });
 
-            if (adminCredit.ResponseHeader.ResponseCode == "00")
-                await _walletService.RefundAsync(new RefundRequest
-                {
-                    CustomerId = adminWalletId,
-                    TransactionId = adminCredit.TransactionId,
-                    Description = "Reversal due to split failure"
-                });
+                if (IsSuccess(marshalCredit))
+                    await _walletService.RefundAsync(new RefundRequest
+                    {
+                        CustomerId = marshalWalletId,
+                        TransactionId = marshalCredit.TransactionId,
+                        Description = "Reversal due to split failure"
+                    });
 
-            booking.PaymentTransactionId = debit.TransactionId;
-            booking.PaymentTraceId = debit.TraceId;
-            return new PaymentResult { Success = false, ErrorMessage = "Payment split failed – wallet refunded." };
+                if (IsSuccess(adminCredit))
+                    await _walletService.RefundAsync(new RefundRequest
+                    {
+                        CustomerId = adminWalletId,
+                        TransactionId = adminCredit.TransactionId,
+                        Description = "Reversal due to split failure"
+                    });
+
+                booking.PaymentTransactionId = debit.TransactionId;
+                booking.PaymentTraceId = debit.TraceId;
+                return new PaymentResult { Success = false, ErrorMessage = "Payment split failed – wallet refunded." };
+            }
+
+            return new PaymentResult { Success = true };
         }
-
-        return new PaymentResult { Success = true };
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Payment processing failed for booking {BookingId}", booking.Id);
+            return new PaymentResult { Success = false, ErrorMessage = "Payment could not be processed. Please try again." };
+        }
         
     }
 

@@ -69,7 +69,8 @@ document.addEventListener('DOMContentLoaded', function () {
             if (message) setStatus(message, 'error');
         }
 
-        async function runVerification() {
+        async function runVerification()
+        {
             const accountNumber = accountNumberInput.value.trim();
             const bankCode = bankCodeSelect.value;
             const userName = marshalNameEl ? marshalNameEl.value.trim() : '';
@@ -92,25 +93,19 @@ document.addEventListener('DOMContentLoaded', function () {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ accountNumber, bankCode })
                 });
+                const result = await res.json().catch(() => ({}));
 
-                const data = await res.json().catch(() => ({}));
-                const payload = data && data.data ? data.data : null;
-
-                const responseCode = pick(payload, 'responseCode', 'ResponseCode');
-                const accountName = pick(payload, 'accountName', 'AccountName');
-                const responseMessage = pick(payload, 'responseMessage', 'ResponseMessage');
-                const fallbackMessage = pick(data, 'message', 'Message');
-
-                if (!res.ok || String(responseCode) !== '00') {
-                    disableSave(responseMessage || fallbackMessage || 'Name enquiry failed.');
+                if (!result || !result.success || !result.data) {
+                    disableSave((result && result.error) || 'Name enquiry failed.');
                     return;
                 }
 
+                const accountName = result.data.accountName;
                 if (namesMatch(userName, accountName)) {
                     setStatus('Account name matches: ' + accountName, 'success');
                     saveBankBtn.disabled = false;
                 } else {
-                    disableSave('Account name does not match your registered name.');
+                    disableSave('Account name "' + accountName + '" does not match your registered name.');
                 }
             } catch (err) {
                 disableSave('Network error. Please try again.');
