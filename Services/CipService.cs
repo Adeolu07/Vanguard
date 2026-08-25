@@ -41,19 +41,29 @@ public class CipService : ICipService
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning("Name Enquiry returned {status}", (int)response.StatusCode);
-                var errorWrapper = JsonConvert.DeserializeObject<NameEnquiryWrapper>(rawContent);
-                return errorWrapper!;
+                return NameEnquiryError($"Provider returned HTTP {(int)response.StatusCode}.");
             }
 
             var wrapper = JsonConvert.DeserializeObject<NameEnquiryWrapper>(rawContent);
 
-            _logger.LogInformation("Name Enquiry Successful for account {account}", wrapper!.Data!.AccountName);
+            if(wrapper?.Data == null)
+                return NameEnquiryError("Empty response from provider");
+
+            if (wrapper.Data.ResponseCode != "00")
+                return new NameEnquiryWrapper
+                {
+                    Data = wrapper.Data,
+                    Status = false,
+                    Message = wrapper.Data.ResponseMessage
+                };
+            
+            _logger.LogInformation("Name Enquiry Successful for account {Account}", wrapper.Data.AccountName);
             return wrapper;
         }
         catch (Exception ex)
         {
-            _logger.LogError("wtf happened");
-            return NameEnquiryError(ex.Message);
+            _logger.LogError(ex, "Account enquiry failed for account {Account}", accountNumber);
+            return NameEnquiryError("Could not reach the account enquiry service.");
         }
     }
     
