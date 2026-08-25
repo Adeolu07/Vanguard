@@ -7,6 +7,9 @@
 @section Styles {
     <link rel="stylesheet" href="~/css/dashboard.css" />
 }
+@section Scripts {
+    <script src="~/js/dashboard-balance.js"></script>
+}
 
 <section class="welcome-section">
     <span class="sub-brand">PASSENGER DASHBOARD</span>
@@ -20,8 +23,8 @@
         <h1 id="walletBalance">₦@(((decimal)ViewBag.WalletBalance).ToString("N2"))</h1>
         <button id="toggleBalance" class="eye-btn" type="button">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                <circle cx="12" cy="12" r="3" />
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
             </svg>
         </button>
     </div>
@@ -99,6 +102,3 @@
     }
 </section>
 
-@section Scripts {
-    <script src="~/js/dashboard-balance.js"></script>
-}

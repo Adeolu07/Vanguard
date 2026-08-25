@@ -4,26 +4,25 @@ public record BankOption(string Name, string Code);
 
 public static class Banks
 {
-    // NIBSS/NIP bank codes — adjust if your CIP provider expects a different format.
+    // CIP institution codes
     public static readonly IReadOnlyList<BankOption> All = new List<BankOption>
     {
         new("Novus Bank", "100067"),
-        new("Access Bank", "044"),
-        new("Ecobank Nigeria", "050"),
-        new("Fidelity Bank", "070"),
-        new("First Bank of Nigeria", "011"),
-        new("First City Monument Bank", "214"),
-        new("Guaranty Trust Bank", "058"),
-        new("Moniepoint Microfinance Bank", "50515"),
-        new("Opay Digital Services", "999992"),
-        new("Palmpay", "999991"),
-        new("Providus Bank", "101"),
-        new("Stanbic IBTC Bank", "221"),
-        new("Standard Chartered Bank", "068"),
-        new("Union Bank of Nigeria", "032"),
-        new("United Bank for Africa", "033"),
-        new("Wema Bank", "035"),
-        new("Zenith Bank", "057"),
+        new("Access Bank", "000014"),
+        new("Ecobank Nigeria", "000010"),
+        new("Fidelity Bank", "000007"),
+        new("First Bank of Nigeria", "000016"),
+        new("First City Monument Bank", "000003"),
+        new("Guaranty Trust Bank", "000013"),
+        new("Moniepoint Microfinance Bank", "090405"),
+        new("Opay Digital Services", "100004"),
+        new("Palmpay", "100033"),
+        new("Providus Bank", "000023"),
+        new("Stanbic IBTC Bank", "000012"),
+        new("Union Bank of Nigeria", "000018"),
+        new("United Bank for Africa", "000004"),
+        new("Wema Bank", "000017"),
+        new("Zenith Bank", "000015"),
     };
 
     public static string? GetBankName(string? code) =>
