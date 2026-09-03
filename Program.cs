@@ -11,6 +11,7 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
         builder.Services.AddScoped<IAuthService, AuthService>();
+        builder.Services.AddScoped<IFastChannelService, FastChannelService>();
         builder.Services.AddScoped<IBookingService, BookingService>();
         builder.Services.AddScoped<ICipService, CipService>();
         builder.Services.AddScoped<ITicketService, TicketService>();
@@ -23,17 +24,25 @@ public class Program
         builder.Services.AddScoped<IAdminService, AdminService>();
         builder.Services.AddScoped<AdminOnlyFilter>();
         builder.Services.AddScoped<IPaymentService, PaymentService>();
+        builder.Services.AddScoped<ExternalTokenStore>();
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
         builder.Services.AddProblemDetails();
         builder.Services.AddHttpClient<IWalletService, WalletService>(client =>
         {
-            client.BaseAddress = new Uri(builder.Configuration["WalletStation:baseUrl"] ?? "");
+            client.BaseAddress = new Uri(builder.Configuration["WalletStation:BaseUrl"] ?? "");
         });
         
         builder.Services.AddHttpClient<ICipService, CipService>(client =>
         {
-            client.BaseAddress = new Uri(builder.Configuration["CipService:baseUrl"] ?? "");
+            client.BaseAddress = new Uri(builder.Configuration["CipService:BaseUrl"] ?? "");
         });
+        
+        builder.Services.AddHttpClient<IFastChannelService, FastChannelService>(client =>
+        {
+            client.BaseAddress = new Uri(builder.Configuration["FastChannel:BaseUrl"] ?? "");
+        });
+        
+        
         builder.Services.AddMemoryCache();
         builder.Services.AddDbContext<AppDbContext>(options =>
         {
@@ -53,11 +62,10 @@ public class Program
 
 
         using var scope = app.Services.CreateScope();
-        var seeder = new DataSeeder(
-            scope.ServiceProvider.GetRequiredService<AppDbContext>(),
-            scope.ServiceProvider.GetRequiredService<IWalletService>());
-
-        await seeder.SeedAsync();
+        // var seeder = new DataSeeder(
+        //     scope.ServiceProvider.GetRequiredService<AppDbContext>(),
+        //     scope.ServiceProvider.GetRequiredService<IWalletService>());
+        
         app.UseStaticFiles();
         app.UseSession();
 

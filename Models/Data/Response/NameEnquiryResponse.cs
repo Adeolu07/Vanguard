@@ -16,7 +16,7 @@ public class NameEnquiryResponse
 
 public class NameEnquiryWrapper
 {
-    public NameEnquiryResponse? Data { get; set; } = default;
+    public NameEnquiryResponse? Data { get; set; }
     public bool Status { get; set; }
     public string Message { get; set; } = "";
 }

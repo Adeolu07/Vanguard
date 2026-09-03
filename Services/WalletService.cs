@@ -7,7 +7,7 @@ using _Tripfinity.Models.Data.Requests;
 using _Tripfinity.Models.Data.Response;
 using _Tripfinity.Models.Tables;
 using _Tripfinity.Models.ViewModels;
-using Microsoft.AspNetCore.Diagnostics;
+using _Tripfinity.Utilities;
 using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
 
@@ -18,90 +18,66 @@ public class WalletService : IWalletService
     private readonly HttpClient _client;
     private readonly ILogger<WalletService> _logger;
     private readonly IConfiguration _config;
-    private readonly IMemoryCache _cache;
+    private readonly ExternalTokenStore _tokenStore;
     private readonly AppDbContext _context;
-    private const string TokenCacheKey = "WalletToken";
 
     public WalletService(HttpClient client,
         ILogger<WalletService> logger, IConfiguration config,
-        AppDbContext context, IMemoryCache cache)
+        AppDbContext context, IMemoryCache cache,ExternalTokenStore tokenStore)
     {
         _logger = logger;
         _client = client;
         _config = config;
-        _cache = cache;
+        _tokenStore = tokenStore;
         _context = context;
     }
 
     public async Task EnsureAuthenticatedAsync()
     {
-        if (_cache.TryGetValue<string>(TokenCacheKey, out var cachedToken))
+        var token = await _tokenStore.GetTokenAsync(
+            ExternalTokenStore.Providers.WalletStation,AcquireTokenAsync);
+
+        _client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", token);
+    }
+    
+    private async Task<(string Token, DateTime ExpiryDate)> AcquireTokenAsync()
+    {
+        var authRequest = new AuthenticationRequest
         {
-            _client.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", cachedToken);
-            _logger.LogInformation("Wallet token found in cache");
-            return;
+            Username = _config["WalletStation:Username"]!,
+            Password = _config["WalletStation:Password"]!,
+        };
+
+        var requestBody = JsonConvert.SerializeObject(authRequest);
+        _logger.LogInformation("Wallet Auth request: {Request}", requestBody.Substring(0, 
+            Math.Min(requestBody.Length, 200)));
+
+        var response = await _client.PostAsync("Auth",
+            new StringContent(requestBody, Encoding.UTF8, "application/json"));
+
+        var rawContent = await response.Content.ReadAsStringAsync();
+        _logger.LogInformation("Wallet Auth response [Status={StatusCode}]",
+            (int)response.StatusCode);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogError("Wallet auth failed: {RawContent}", rawContent);
+            throw new InvalidOperationException("Unable to authenticate to wallet service.");
         }
 
-        var authToken = _context.AuthTokens.FirstOrDefault(t => t.ExpiryDate > DateTime.Now);
+        var result = JsonConvert.DeserializeObject<AuthenticationResponse>(rawContent);
 
-        if (authToken == null)
+        if (result?.ResponseHeader.ResponseCode == "00" && string.IsNullOrWhiteSpace(result.Token))
         {
-            var authRequest = new AuthenticationRequest
-            {
-                Username = _config["WalletStation:username"]!,
-                Password = _config["WalletStation:password"]!,
-            };
-
-            var requestBody = JsonConvert.SerializeObject(authRequest);
-            _logger.LogInformation("Wallet Auth request: {RequestBody}", requestBody);
-
-            var response = await _client.PostAsync("Auth",
-                new StringContent(requestBody, Encoding.UTF8, "application/json"));
-
-            var rawContent = await response.Content.ReadAsStringAsync();
-            _logger.LogInformation("Wallet Auth response [Status={StatusCode}]: {RawContent}",
-                (int)response.StatusCode, rawContent);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                _logger.LogError("Wallet auth failed: {Error}", rawContent);
-                throw new InvalidOperationException("Unable to authenticate to wallet service.");
-            }
-
-            var result = JsonConvert.DeserializeObject<AuthenticationResponse>(rawContent);
-
-            if (result?.ResponseHeader.ResponseCode == "00")
-            {
-                var expiryDate = DateTime.Parse(result.ExpiryDate);
-                AuthToken token = new AuthToken
-                {
-                    ExpiryDate = expiryDate,
-                    Token = result.Token!,
-                };
-
-                _client.DefaultRequestHeaders.Authorization =
-                    new AuthenticationHeaderValue("Bearer", result.Token);
-                _context.AuthTokens.Update(token);
-                await _context.SaveChangesAsync();
-
-                _cache.Set(TokenCacheKey, result.Token, expiryDate);
-                _logger.LogInformation("Wallet token acquired and cached");
-            }
-            else
-            {
-                _logger.LogError("Wallet auth returned non-success: {ResponseCode} {ResponseMessage}",
-                    result?.ResponseHeader.ResponseCode, result?.ResponseHeader.ResponseMessage);
-                throw new InvalidOperationException("Wallet authentication response not successful.");
-            }
+            _logger.LogError("Wallet auth returned success but token was empty.");
+            throw new InvalidOperationException("Wallet authentication token missing.");
         }
-        else
-        {
-            _logger.LogInformation("Wallet token acquired from DB");
-            _client.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", authToken.Token);
-            _cache.Set(TokenCacheKey, authToken.Token, authToken.ExpiryDate);
-        }
+
+        var expiryDate = DateTime.Parse(result!.ExpiryDate);
+        _logger.LogInformation("Wallet token acquired, valid until {Expiry}", expiryDate);
+
+        return (result.Token!, expiryDate);
     }
 
     public async Task<MarshalWalletViewModel> BuildWalletInfoAsync(string walletId, int page)
