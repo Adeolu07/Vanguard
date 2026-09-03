@@ -19,7 +19,7 @@ public class WalletApiController : ControllerBase
     }
 
     [HttpPost("auth")]
-    public async Task<IActionResult> Authenticate([FromBody] AuthenticationRequest request)
+    public async Task<IActionResult> Authenticate(AuthenticationRequest request)
     {
         try
         {
@@ -34,7 +34,7 @@ public class WalletApiController : ControllerBase
     }
 
     [HttpPost("create")]
-    public async Task<IActionResult> CreateWallet([FromBody] CreateWalletRequest request)
+    public async Task<IActionResult> CreateWallet(CreateWalletRequest request)
     {
         _logger.LogInformation("Creating wallet for {FirstName} {LastName}", request.FirstName, request.LastName);
         var response = await _walletService.CreateWalletAsync(request);
@@ -44,7 +44,7 @@ public class WalletApiController : ControllerBase
     }
 
     [HttpPost("credit")]
-    public async Task<IActionResult> CreditWallet([FromBody] CreditWalletRequest request)
+    public async Task<IActionResult> CreditWallet(CreditWalletRequest request)
     {
         _logger.LogInformation("Credit wallet for CustomerId: {CustomerId}", request.CustomerId);
         var response = await _walletService.CreditWalletAsync(request);
@@ -54,7 +54,7 @@ public class WalletApiController : ControllerBase
     }
 
     [HttpPost("debit")]
-    public async Task<IActionResult> DebitWallet([FromBody] DebitWalletRequest request)
+    public async Task<IActionResult> DebitWallet(DebitWalletRequest request)
     {
         _logger.LogInformation("Debit wallet for CustomerId: {CustomerId}", request.CustomerId);
         var response = await _walletService.DebitWalletAsync(request);
@@ -64,7 +64,7 @@ public class WalletApiController : ControllerBase
     }
 
     [HttpPost("refund")]
-    public async Task<IActionResult> Refund([FromBody] RefundRequest request)
+    public async Task<IActionResult> Refund(RefundRequest request)
     {
         _logger.LogInformation("Refund for TransactionId: {TransactionId}", request.TransactionId);
         var response = await _walletService.RefundAsync(request);
@@ -74,7 +74,7 @@ public class WalletApiController : ControllerBase
     }
 
     [HttpPost("balance")]
-    public async Task<IActionResult> GetBalance([FromBody] GetBalanceRequest request)
+    public async Task<IActionResult> GetBalance(GetBalanceRequest request)
     {
         _logger.LogInformation("Get balance for CustomerId: {CustomerId}", request.CustomerId);
         try
@@ -95,7 +95,7 @@ public class WalletApiController : ControllerBase
     }
 
     [HttpPost("transaction")]
-    public async Task<IActionResult> GetTransaction([FromBody] GetTransactionRequest request)
+    public async Task<IActionResult> GetTransaction(GetTransactionRequest request)
     {
         _logger.LogInformation("Get transaction for TransactionId: {TransactionId}", request.TransactionId);
 
@@ -123,7 +123,7 @@ public class WalletApiController : ControllerBase
     }
     
     [HttpPost("transactions")]
-    public async Task<IActionResult> GetTransactionList([FromBody] GetTransactionListRequest request)
+    public async Task<IActionResult> GetTransactionList(GetTransactionListRequest request)
     {
         _logger.LogInformation("Get transaction list for : {CustomerId}", request.CustomerId);
         var response = await _walletService.GetTransactionList(request);
@@ -131,7 +131,7 @@ public class WalletApiController : ControllerBase
     }
     
     [HttpPost("nameenquiry")]
-    public async Task<IActionResult> NameEnquiry( WalletNameEnquiryRequest request)
+    public async Task<IActionResult> NameEnquiry(WalletNameEnquiryRequest request)
     {
         _logger.LogInformation("Wallet name enquiry for CustomerId: {CustomerId}", request.CustomerId);
 

@@ -19,7 +19,7 @@ public class CipApi : ControllerBase
     }
     
     [HttpPost("nameenquiry")]
-    public async Task<IActionResult> NameEnquiry([FromBody] NameEnquiryDto dto)
+    public async Task<IActionResult> NameEnquiry(NameEnquiryDto dto)
     {
         try
         {

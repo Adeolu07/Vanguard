@@ -7,7 +7,7 @@ public class AuthenticationResponse
     public required string ExpiryDate { get; set; }
 }
 
-public class ResponseHeader
+public record ResponseHeader
 {
     public required string ResponseMessage { get; set; }
     public required string ResponseCode { get; set; }
