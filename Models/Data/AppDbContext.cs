@@ -16,8 +16,9 @@ namespace _Tripfinity.Models.Data
         public DbSet<RailwayTrip> RailwayTrips { get; set; }
         public DbSet<Booking> Bookings { get; set; }
         public DbSet<Ticket> Tickets { get; set; }
-        public DbSet<AuthToken> AuthTokens { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
+        
+        public DbSet<ExternalApiToken> ExternalApiTokens { get; set; }
         public DbSet<MarshalBankAccount> MarshalBankAccounts { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -83,9 +84,6 @@ namespace _Tripfinity.Models.Data
                 .HasForeignKey(ticket => ticket.BookingId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.Entity<AuthToken>()
-                .Property(token => token.Token);
-
             builder.Entity<Transaction>()
                 .HasOne(transaction => transaction.User)
                 .WithMany(user => user.Transactions)
@@ -104,6 +102,14 @@ namespace _Tripfinity.Models.Data
                 .WithOne()
                 .HasForeignKey<MarshalBankAccount>(account => account.MarshalId)
                 .OnDelete(DeleteBehavior.Restrict);
+            
+            builder.Entity<ExternalApiToken>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.Provider).IsUnique();
+                entity.Property(e => e.Provider).HasMaxLength(100).IsRequired();
+                entity.Property(e => e.Token).IsRequired();
+            });
         }
     }
 }

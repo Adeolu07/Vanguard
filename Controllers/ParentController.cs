@@ -3,6 +3,7 @@ using _Tripfinity.Models.Data.Requests;
 using _Tripfinity.Models.Data.Response;
 using _Tripfinity.Models.Tables;
 using Microsoft.AspNetCore.Mvc;
+using TransactionDetails = _Tripfinity.Models.Data.Response.TransactionDetails;
 
 namespace _Tripfinity.Controllers;
 

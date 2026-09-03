@@ -6,7 +6,7 @@ public class GetTransactionResponse
     public TransactionDetails? TransactionDetails { get; set; } 
 }
 
-public class TransactionDetails
+public abstract class TransactionDetails
 {
     public string? TranType { get; set; }
     public decimal Amount { get; set; }
