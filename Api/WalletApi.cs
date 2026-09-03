@@ -142,12 +142,13 @@ public class WalletApiController : ControllerBase
             if (response.ResponseHeader?.ResponseCode != "00")
                 return Ok(ApiResponse<WalletAccountInfo>.Fail(
                     response.ResponseHeader?.ResponseMessage ?? "Unable to load account details."));
-
+            
+            var accountNumber = response.AccountNumber ?? "";
+            var bankName = response.BankName ?? "Default Bank"; // Set a default or get from config
             var accountName = $"{response.FirstName} {response.LastName}".Trim();
+
             return Ok(ApiResponse<WalletAccountInfo>.Ok(new WalletAccountInfo(
-                response.AccountNumber ?? "",
-                response.BankName ?? "",
-                accountName)));
+                accountNumber, bankName, accountName)));
         }
         catch (Exception ex)
         {

@@ -1,5 +1,6 @@
 using System.Net.Http.Headers;
 using System.Text;
+using System.Text.Json.Nodes;
 using _Tripfinity.Interfaces;
 using _Tripfinity.Models;
 using _Tripfinity.Models.Data;
@@ -10,6 +11,7 @@ using _Tripfinity.Models.ViewModels;
 using _Tripfinity.Utilities;
 using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace _Tripfinity.Services;
 
@@ -465,21 +467,42 @@ public class WalletService : IWalletService
             var response = await _client.PostAsync("NameEnquiry",
                 new StringContent(requestBody, Encoding.UTF8, "application/json"));
 
+            
+            
             var rawContent = await response.Content.ReadAsStringAsync();
-            _logger.LogInformation("Wallet NameEnquiry response [Status={StatusCode}]: {RawContent}",
-                (int)response.StatusCode, rawContent);
-
-            if (!response.IsSuccessStatusCode)
+            var json = JObject.Parse(rawContent);
+            var header = json["responseHeader"]?.ToObject<ResponseHeader>();
+            
+            if (header?.ResponseCode != "00")
             {
-                var errorJson = JsonConvert.DeserializeObject<WalletNameEnquiryResponse>(rawContent);
-                _logger.LogError("Error in Name Enquiry: {@Error}", errorJson);
-                return errorJson!;
+                _logger.LogWarning("Name Enquiry unsuccessful: {ResponseCode} {ResponseMessage}",
+                    header?.ResponseCode, header?.ResponseMessage);
+                return FailedNameEnquiry(header?.ResponseMessage ?? "Unable to load account details.");
             }
 
-            var result = JsonConvert.DeserializeObject<WalletNameEnquiryResponse>(rawContent);
+            var accountDetails = json["accountDetails"] as JObject;
+            var virtualAccount = (accountDetails?["virtualAccounts"] as JArray)?.FirstOrDefault() as JObject;
 
-            if (result!.ResponseHeader.ResponseCode == "00")
-                _logger.LogInformation("Successful Name Enquiry");
+            if (virtualAccount == null)
+            {
+                _logger.LogWarning("Name Enquiry returned no virtual account.");
+                return FailedNameEnquiry("No virtual account found.");
+            }
+
+            var result = new WalletNameEnquiryResponse
+            {
+                ResponseHeader = header,
+                CustomerId = accountDetails?["customerId"]?.ToString() ?? "",
+                CustomerAlias = accountDetails?["customerAlias"]?.ToString() ?? "",
+                Bvn = accountDetails?["bvn"]?.ToString() ?? "",
+                AccountNumber = virtualAccount["accountNumber"]?.ToString() ?? "",
+                BankName = virtualAccount["bankName"]?.ToString() ?? "",
+                BankCode = virtualAccount["bankCode"]?.ToString() ?? "",
+                FirstName = virtualAccount["firstName"]?.ToString() ?? "",
+                LastName = virtualAccount["lastName"]?.ToString() ?? "",
+            };
+
+            _logger.LogInformation("Successful Name Enquiry for {AccountNumber}", result.FirstName+" " + result.LastName);
 
             return result;
         }

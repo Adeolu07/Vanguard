@@ -17,7 +17,6 @@
         <div class="balance-amount">₦@((Model?.Balance ?? 0).ToString("N2"))</div>
         <div class="btn-row">
             <button type="button" class="btn btn-primary" id="cashOutBtn">Cash Out</button>
-            <a href="#history" class="btn btn-secondary btn-link">Transaction History</a>
         </div>
         <div id="cashoutStatus" class="enquiry-result"></div>
         <span id="walletCustomerId" hidden>@Model?.WalletId</span>

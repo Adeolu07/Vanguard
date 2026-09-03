@@ -173,6 +173,7 @@
 
             try {
                 const result = await postJson('/api/wallet/nameenquiry', { customerId: walletId });
+                
 
                 if (!result || !result.success || !result.data) {
                     msgEl.textContent = (result && result.error) || 'Unable load account details.';
@@ -196,7 +197,7 @@
     }
 
     // ---- Boot ----
-    loadBalance();
+    loadBalance().then(r => console.log("done"));
     initReceiptModal();
     initFundWalletModal();
 });
