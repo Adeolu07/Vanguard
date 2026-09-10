@@ -11,6 +11,7 @@ public class ExternalTokenStore
     private readonly IMemoryCache _cache;
     private readonly ILogger<ExternalTokenStore> _logger;
     private static readonly SemaphoreSlim RefreshLock = new(1, 1);
+    public record ExternalApiCredential(string Token, string Key, DateTime ExpiryDate);
 
     public ExternalTokenStore(AppDbContext context, IMemoryCache cache, ILogger<ExternalTokenStore> logger)
     {
@@ -81,6 +82,80 @@ public class ExternalTokenStore
             RefreshLock.Release();
         }
     }
+    
+     public async Task<ExternalApiCredential> GetCredentialAsync(
+            string provider,
+            Func<Task<ExternalApiCredential>> acquireFreshCredential,
+            bool forceRefresh = false)
+        {
+            var cacheKey = $"Credential:{provider}";
+
+            if (!forceRefresh && _cache.TryGetValue(cacheKey, out ExternalApiCredential? cached) && cached is not null)
+            {
+                _logger.LogDebug("{Provider} credential from memory cache", provider);
+                return cached;
+            }
+
+            if (!forceRefresh)
+            {
+                var stored = await _context.ExternalApiTokens
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(t => t.Provider == provider && t.ExpiryDate > DateTime.Now);
+
+                if (stored is not null)
+                {
+                    var fromDb = new ExternalApiCredential(stored.Token, stored.Key ?? string.Empty, stored.ExpiryDate);
+                    _cache.Set(cacheKey, fromDb, stored.ExpiryDate - DateTime.Now);
+                    _logger.LogDebug("{Provider} credential from database", provider);
+                    return fromDb;
+                }
+            }
+
+            await RefreshLock.WaitAsync();
+            try
+            {
+                // Re-check after acquiring the lock (another request may have just refreshed).
+                if (!forceRefresh && _cache.TryGetValue(cacheKey, out ExternalApiCredential? cachedAfterLock) && cachedAfterLock is not null)
+                {
+                    _logger.LogDebug("{Provider} credential from memory cache (after lock)", provider);
+                    return cachedAfterLock;
+                }
+
+                var fresh = await acquireFreshCredential();
+
+                var existing = await _context.ExternalApiTokens.FirstOrDefaultAsync(t => t.Provider == provider);
+                if (existing is null)
+                {
+                    _context.ExternalApiTokens.Add(new ExternalApiToken
+                    {
+                        Provider = provider,
+                        Token = fresh.Token,
+                        Key = fresh.Key,
+                        ExpiryDate = fresh.ExpiryDate,
+                        CreatedAt = DateTime.Now,
+                        UpdatedAt = DateTime.Now
+                    });
+                }
+                else
+                {
+                    existing.Token = fresh.Token;
+                    existing.Key = fresh.Key;
+                    existing.ExpiryDate = fresh.ExpiryDate;
+                    existing.UpdatedAt = DateTime.Now;
+                }
+
+                await _context.SaveChangesAsync();
+
+                _cache.Set(cacheKey, fresh, fresh.ExpiryDate - DateTime.Now);
+                _logger.LogInformation("Acquired fresh {Provider} credential", provider);
+
+                return fresh;
+            }
+            finally
+            {
+                RefreshLock.Release();
+            }
+        }
 
     public static class Providers
     {

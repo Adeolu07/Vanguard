@@ -23,9 +23,9 @@ public class FastChannelApi : ControllerBase
     }
 
     [HttpPost("singlepost")]
-    public async Task<IActionResult> SinglePost(FcSinglePostReq req)
+    public async Task<IActionResult> SinglePost(TransactionDetails details)
     {
-        var (statusCode, res) = await _fastChannelService.SinglePostAsync(req);
+        var (statusCode, res) = await _fastChannelService.SinglePostAsync(details);
         return StatusCode((int)MapToHttpStatus(statusCode, res?.ResponseHeader.ResponseCode), res);
     }
 

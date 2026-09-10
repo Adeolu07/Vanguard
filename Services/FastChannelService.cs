@@ -1,11 +1,13 @@
 using System.Net;
 using System.Net.Http.Headers;
+using System.Security.Cryptography;
 using System.Text;
 using _Tripfinity.Interfaces;
 using _Tripfinity.Models.Data.Requests;
 using _Tripfinity.Models.Data.Response;
 using _Tripfinity.Utilities;
 using Newtonsoft.Json;
+using TransactionDetails = _Tripfinity.Models.Data.Requests.TransactionDetails;
 
 namespace _Tripfinity.Services;
 
@@ -27,27 +29,14 @@ public class FastChannelService : IFastChannelService
         _config = config;
         _tokenStore = tokenStore;
     }
-
-    /// <summary>
-    /// Ensures a valid bearer token for the configured FastChannel
-    /// integration credential is installed on the outgoing HTTP client.
-    /// </summary>
-    private async Task EnsureAuthenticatedAsync()
-    {
-        var token = await _tokenStore.GetTokenAsync(
-            ExternalTokenStore.Providers.FastChannel,
-            AcquireTokenAsync);
-
-        _client.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", token);
-    }
-
+    
     /// <summary>
     /// Calls the FastChannel Authentication endpoint using the client
     /// credential stored in configuration. Used when no unexpired token
     /// is found in cache or in the token store table.
     /// </summary>
-    private async Task<(string Token, DateTime ExpiryDate)> AcquireTokenAsync()
+
+    private async Task<ExternalTokenStore.ExternalApiCredential> AcquireCredentialAsync()
     {
         var authRequest = new FcAuthReq
         {
@@ -81,9 +70,9 @@ public class FastChannelService : IFastChannelService
 
         var expiry = DateTime.TryParse(parsed.ExpiryDate, out var expiryDate)
             ? expiryDate
-            : DateTime.Now.AddHours(1);
+            : DateTime.Now.AddYears(1);
 
-        return (parsed.Token, expiry);
+        return new ExternalTokenStore.ExternalApiCredential(parsed.Token, parsed.Key ?? string.Empty, expiry);
     }
 
     public async Task<(HttpStatusCode StatusCode, FcAuthRes? Response)> Authentication(FcAuthReq request)
@@ -117,38 +106,91 @@ public class FastChannelService : IFastChannelService
             return (HttpStatusCode.BadGateway, FailedAuth(ex.Message));
         }
     }
-
-    public async Task<(HttpStatusCode StatusCode, FcSinglePostRes? Response)> SinglePostAsync(FcSinglePostReq request)
+    
+    public async Task<(HttpStatusCode StatusCode, FcSinglePostRes? Response)> SinglePostAsync(
+        TransactionDetails details)
     {
         try
         {
-            await EnsureAuthenticatedAsync();
-            var req = JsonConvert.SerializeObject(request);
-            var res = await _client.PostAsync("SinglePost",
-                new StringContent(req, Encoding.UTF8, "application/json"));
-            var rawContent = await res.Content.ReadAsStringAsync();
-            _logger.LogInformation("Single Post response [Status={StatusCode}]:",
-                (int)res.StatusCode);
+            var credential =
+                await _tokenStore.GetCredentialAsync(ExternalTokenStore.Providers.FastChannel, AcquireCredentialAsync);
+            
+            var (statusCode, response) = await TrySinglePostAsync(details, credential);
 
-            var response = JsonConvert.DeserializeObject<FcSinglePostRes>(rawContent);
-
-            if (response is null)
+            if (response?.ResponseHeader.ResponseCode == "01")
             {
-                _logger.LogError("Failed to deserialize Single Post response: {RawContent}", rawContent);
-                return (res.StatusCode, FailedSinglePost(
-                    string.IsNullOrWhiteSpace(rawContent)
-                        ? $"FastChannel returned HTTP {(int)res.StatusCode}."
-                        : rawContent));
+                _logger.LogWarning("FastChannel SinglePost returned obsolete token; refreshing credential and retrying once.");
+                credential = await _tokenStore.GetCredentialAsync(
+                    ExternalTokenStore.Providers.FastChannel,
+                    AcquireCredentialAsync,
+                    forceRefresh: true);
+
+                return await TrySinglePostAsync(details, credential);
             }
 
-            _logger.LogInformation("Single Post processed");
-            return (res.StatusCode, response);
+            return (statusCode, response);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Single Post error");
             return (HttpStatusCode.BadGateway, FailedSinglePost(ex.Message));
         }
+    }
+    
+    private async Task<(HttpStatusCode StatusCode, FcSinglePostRes? Response)> TrySinglePostAsync(
+            TransactionDetails details,
+            ExternalTokenStore.ExternalApiCredential credential)
+        {
+            try
+            {
+                var merchantId = _config["FastChannel:MerchantId"]!;
+                var traceId = $"TRC-{Random.Shared.Next(0, 999999)}";
+                var timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                var signature = ComputeSha512Hex(merchantId + traceId + timestamp + credential.Key);
+
+                var request = new FcSinglePostReq
+                {
+                    TraceId = traceId,
+                    Timestamp = timestamp,
+                    Signature = signature,
+                    TransactionDetails = details
+                };
+
+                _client.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", credential.Token);
+
+                var req = JsonConvert.SerializeObject(request);
+                var res = await _client.PostAsync("SinglePost",
+                    new StringContent(req, Encoding.UTF8, "application/json"));
+                var rawContent = await res.Content.ReadAsStringAsync();
+                _logger.LogInformation("Single Post response [Status={StatusCode}], [ResponseCode={ResponseCode}]",
+                    (int)res.StatusCode, JsonConvert.DeserializeObject<FcSinglePostRes>(rawContent)?.ResponseHeader.ResponseCode);
+
+                var response = JsonConvert.DeserializeObject<FcSinglePostRes>(rawContent);
+
+                if (response is null)
+                {
+                    _logger.LogError("Failed to deserialize Single Post response: {RawContent}", rawContent);
+                    return (res.StatusCode, FailedSinglePost(
+                        string.IsNullOrWhiteSpace(rawContent)
+                            ? $"FastChannel returned HTTP {(int)res.StatusCode}."
+                            : rawContent));
+                }
+
+                _logger.LogInformation("Single Post processed");
+                return (res.StatusCode, response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Single Post send error");
+                return (HttpStatusCode.BadGateway, FailedSinglePost(ex.Message));
+            }
+        }
+    
+    private static string ComputeSha512Hex(string input)
+    {
+        var hash = SHA512.HashData(Encoding.UTF8.GetBytes(input));
+        return Convert.ToHexString(hash).ToLowerInvariant();
     }
 
     private static FcAuthRes FailedAuth(string message) =>
