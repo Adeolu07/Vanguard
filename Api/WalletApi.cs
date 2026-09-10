@@ -39,7 +39,7 @@ public class WalletApiController : ControllerBase
         _logger.LogInformation("Creating wallet for {FirstName} {LastName}", request.FirstName, request.LastName);
         var response = await _walletService.CreateWalletAsync(request);
         return response.ResponseHeader.ResponseCode == "00"
-            ? Ok(ApiResponse<string>.Ok(response.AccountDetails.CustomerId))
+            ? Ok(ApiResponse<string>.Ok(response.ToString()!))
             : Ok(ApiResponse<string>.Fail(response.ResponseHeader?.ResponseMessage ?? "Wallet creation failed."));
     }
 
@@ -49,7 +49,7 @@ public class WalletApiController : ControllerBase
         _logger.LogInformation("Credit wallet for CustomerId: {CustomerId}", request.CustomerId);
         var response = await _walletService.CreditWalletAsync(request);
         return response.ResponseHeader?.ResponseCode == "00"
-            ? Ok(ApiResponse<string>.Ok(response.TransactionId))
+            ? Ok(ApiResponse<string>.Ok(response.ToString()!))
             : Ok(ApiResponse<string>.Fail(response.ResponseHeader?.ResponseMessage ?? "Credit failed."));
     }
 

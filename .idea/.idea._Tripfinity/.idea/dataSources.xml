@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="@localhost" uuid="69ac79b9-da91-4df9-9d5a-bd4e93571fe6">
+    <data-source source="LOCAL" name="TripfinityDb@localhost" uuid="61f7cbd6-f2a7-46e4-95eb-51d1d9d7c78e">
       <driver-ref>sqlserver.jb</driver-ref>
       <synchronize>true</synchronize>
       <configured-by-url>true</configured-by-url>
       <jdbc-driver>com.jetbrains.jdbc.sqlserver.SqlServerDriver</jdbc-driver>
-      <jdbc-url>Server=localhost,1433;Initial Catalog=master;User Id=sa;Password=morakinyo@1;TrustServerCertificate=true</jdbc-url>
+      <jdbc-url>Server=localhost,1433;Initial Catalog=master;Database=TripfinityDb;User Id=sa;Password=morakinyo@1;TrustServerCertificate=true</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
   </component>

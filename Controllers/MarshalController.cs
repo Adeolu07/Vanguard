@@ -1,14 +1,9 @@
+using System.Net;
 using _Tripfinity.Interfaces;
-using _Tripfinity.Models.Data;
 using _Tripfinity.Models.Data.Requests;
-using _Tripfinity.Models.Data.Response;
 using _Tripfinity.Models.Enums;
-using _Tripfinity.Models.Tables;
-using _Tripfinity.Models.ViewModels;
-using _Tripfinity.Services;
 using _Tripfinity.Utilities;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace _Tripfinity.Controllers;
 
@@ -16,15 +11,18 @@ namespace _Tripfinity.Controllers;
 [MarshalOnly]
 public class MarshalController : Controller
 {
-    private readonly ITripService _trip;
-    private readonly ITicketService _ticket;
+    private readonly ITripService _tripService;
+    private readonly ITicketService _ticketService;
     private readonly IMarshalService _marshalService;
+    private readonly IFastChannelService _fastChannelService;
 
-    public MarshalController(ITripService trip, ITicketService ticket, IMarshalService marshalService)
+    public MarshalController(ITripService tripService, ITicketService ticketService, IMarshalService marshalService,
+        IFastChannelService fastChannelService)
     {
-        _trip = trip;;
-        _ticket = ticket;
+        _tripService = tripService;;
+        _ticketService = ticketService;
         _marshalService = marshalService;
+        _fastChannelService = fastChannelService;
     }
 
     private int? MarshalId => HttpContext.Session.GetInt32("marshalId");
@@ -55,7 +53,7 @@ public class MarshalController : Controller
     {
         if (MarshalId is null)
             return RedirectToMarshalLogin();
-
+    
         var now = DateTime.Now.AddTicks(-(DateTime.Now.Ticks % TimeSpan.TicksPerMinute));
         return type.ToLower() switch
         {
@@ -78,7 +76,12 @@ public class MarshalController : Controller
             return View("CreateBus", request);
         }
 
-        await _trip.CreateBusTripAsync(request, MarshalId.Value, MarshalVehicleId);
+        var busTrip = await _tripService.CreateBusTripAsync(request, MarshalId.Value, MarshalVehicleId);
+        if (busTrip is null)
+        {
+            TempData["Error"] = "Available seats cannot exceed total seats";
+            return View("CreateBus", request);
+        }
         TempData["Success"] = "Bus trip created.";
         return RedirectToAction("MyTrips");
     }
@@ -95,7 +98,12 @@ public class MarshalController : Controller
             return View("CreateRailway", request);
         }
 
-        await _trip.CreateRailwayTripAsync(request, MarshalId.Value, MarshalVehicleId);
+        var railwayTrip = await _tripService.CreateRailwayTripAsync(request, MarshalId.Value, MarshalVehicleId);
+        if (railwayTrip is null)
+        {
+            TempData["Error"] = "Available seats cannot exceed total seats.";
+            return View("CreateRailway", request);
+        }
         TempData["Success"] = "Railway trip created.";
         return RedirectToAction("MyTrips");
     }
@@ -112,7 +120,12 @@ public class MarshalController : Controller
             return View("CreateTaxi", req);
         }
 
-        await _trip.CreateTaxiTripAsync(req, MarshalId.Value, MarshalVehicleId);
+        var taxiTrip = await _tripService.CreateTaxiTripAsync(req, MarshalId.Value, MarshalVehicleId);
+        if (taxiTrip is null)
+        {
+            TempData["Error"] = "Passengers cannot exceed 4.";
+            return View("CreateTaxi", req);
+        }
         TempData["Success"] = "Taxi trip created.";
         return RedirectToAction("MyTrips");
     }
@@ -140,7 +153,7 @@ public class MarshalController : Controller
             return RedirectToAction("MyTrips");
         }
 
-        var ok = await _trip.CancelTripAsync(type, tripId, MarshalId.Value, reason);
+        var ok = await _tripService.CancelTripAsync(type, tripId, MarshalId.Value, reason);
         TempData[ok ? "Success" : "Error"] = ok ? "Trip cancelled." : "Trip not found.";
         return RedirectToAction("MyTrips");
     }
@@ -165,7 +178,7 @@ public class MarshalController : Controller
             return View("Scan");
         }
         
-        var result = await _ticket.ValidateTicketAsync(qrToken, MarshalId.Value, MarshalVehicleId!);
+        var result = await _ticketService.ValidateTicketAsync(qrToken, MarshalId.Value, MarshalVehicleId!);
 
         if (!result.Success)
         { // Handle duplicate scans separately for clearer feedback
@@ -222,11 +235,37 @@ public class MarshalController : Controller
             var userId = HttpContext.Session.GetInt32("userId");
             if (userId == null) return Unauthorized(new { message = "Not signed in." });
 
+            if (request.Amount <= 0) return BadRequest(new { message = "Enter a valid amount" });
+
+            // Server-side balance check — never trust the amount from the client.
+            var wallet = await _marshalService.GetWalletInfoAsync(userId.Value);
+
+            if (wallet.Balance < request.Amount)
+                return BadRequest(new { message = "Insufficient balance." });
+
+            var account = await _marshalService.GetBankAccountAsync(userId.Value);
+
+            if (account is null)
+                return BadRequest(new { message = "No bank account is linked. Add one from your profile" });
+
+            // The FastChannel service builds traceId, timestamp and signature internally.
+            var details = new TransactionDetails
+            {
+                CreditAccount = account.AccountNumber,
+                CreditAccountName = account.AccountName,
+                CreditBankCode = account.BankCode,
+                Narration = "Marshal wallet cashout",
+                Amount = request.Amount
+            };
+
+            var (statusCode, response) = await _fastChannelService.SinglePostAsync(details);
+            if (statusCode != HttpStatusCode.OK || response?.ResponseHeader?.ResponseCode != "00")
+                return BadRequest(new { message = response?.ResponseHeader?.ResponseMessage ?? "Cash out failed." });
+
             var result = await _marshalService.CashOutAsync(userId.Value, request.Amount);
             if (!result.Success) return BadRequest(new { message = result.Message });
 
             return Ok(new { success = true, message = result.Message });
-            
         }
     
         [HttpGet("trips/{id:int}")]
@@ -240,15 +279,13 @@ public class MarshalController : Controller
             return View("TripDetail", model);
         }
         
-        
-
         [HttpPost("trips/{id:int}/commence")]
         public async Task<IActionResult> CommenceTrip(int id)
         {
             if (MarshalId is null || MarshalVehicleType is null) return RedirectToMarshalLogin();
             if (!Enum.TryParse<TransportType>(MarshalVehicleType, out var transportType)) return BadRequest("Invalid vehicle type");
 
-            var success = await _trip.CommenceTripAsync(transportType, id, MarshalId.Value);
+            var success = await _tripService.CommenceTripAsync(transportType, id, MarshalId.Value);
             if (!success)
             {
                 TempData["Error"] = "Unable to commence trip. It may already be in progress or cancelled.";
@@ -258,26 +295,22 @@ public class MarshalController : Controller
             TempData["Success"] = "Trip commenced successfully. Unvalidated tickets are now expired.";
             return RedirectToAction("TripDetail", new { id });
         }
+        
     
-    // Add after the CommenceTrip action:
-
-    [HttpPost("trips/{id:int}/end")]
-    public async Task<IActionResult> EndTrip(int id)
-    {
-        if (MarshalId is null || MarshalVehicleType is null) return RedirectToMarshalLogin();
-        if (!Enum.TryParse<TransportType>(MarshalVehicleType, out var transportType)) return BadRequest("Invalid vehicle type");
-
-        var success = await _trip.EndTripAsync(transportType, id, MarshalId.Value);
-        if (!success)
+        [HttpPost("trips/{id:int}/end")]
+        public async Task<IActionResult> EndTrip(int id)
         {
-            TempData["Error"] = "Unable to end trip. It may already be completed or was never commenced.";
+            if (MarshalId is null || MarshalVehicleType is null) return RedirectToMarshalLogin();
+            if (!Enum.TryParse<TransportType>(MarshalVehicleType, out var transportType)) return BadRequest("Invalid vehicle type");
+
+            var success = await _tripService.EndTripAsync(transportType, id, MarshalId.Value);
+            if (!success)
+            {
+                TempData["Error"] = "Unable to end trip. It may already be completed or was never commenced.";
+                return RedirectToAction("TripDetail", new { id });
+            }
+
+            TempData["Success"] = "Trip ended successfully.";
             return RedirectToAction("TripDetail", new { id });
         }
-
-        TempData["Success"] = "Trip ended successfully.";
-        return RedirectToAction("TripDetail", new { id });
-    }
-    
-    
-
 }

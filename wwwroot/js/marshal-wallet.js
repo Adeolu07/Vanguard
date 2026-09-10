@@ -53,6 +53,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    
     cashOutBtn.addEventListener('click', async () => {
         // clear any previous state
         statusEl && (statusEl.textContent = '');
@@ -82,9 +83,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 bankAccount = result;
             }
 
-            $('cAccountName').textContent = bankAccount.accountName || '—';
-            $('cAccountNumber').textContent = bankAccount.accountNumber || '—';
-            $('cBankName').textContent = bankAccount.bankName || '—';
+            $('AccountName').textContent = bankAccount.accountName || '—';
+            $('AccountNumber').textContent = bankAccount.accountNumber || '—';
+            $('BankName').textContent = bankAccount.bankName || '—';
             cashoutModal.style.display = 'flex';
         } finally {
             cashOutBtn.disabled = false;
@@ -104,6 +105,7 @@ document.addEventListener('DOMContentLoaded', function () {
         confirmBtn.textContent = 'Processing…';
         messageEl.textContent = '';
 
+        // API call to cashout for marshal
         try {
             const res = await fetch('/marshal/wallet/cashout', {
                 method: 'POST',

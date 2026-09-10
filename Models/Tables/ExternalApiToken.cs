@@ -1,5 +1,3 @@
-using System;
-
 namespace _Tripfinity.Models.Tables;
 
 public class ExternalApiToken
@@ -9,6 +7,8 @@ public class ExternalApiToken
     public required string Provider { get; set; }
 
     public required string Token { get; set; }
+    
+    public string? Key{ get; set; }
 
     public DateTime ExpiryDate { get; set; }
 
