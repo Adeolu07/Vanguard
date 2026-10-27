@@ -1,11 +1,11 @@
 using System.Net;
-using _Tripfinity.Interfaces;
-using _Tripfinity.Models.Data.Requests;
-using _Tripfinity.Models.Enums;
-using _Tripfinity.Utilities;
+using Tripfinity.Interfaces;
+using Tripfinity.Models.Data.Requests;
+using Tripfinity.Models.Enums;
+using Tripfinity.Utilities;
 using Microsoft.AspNetCore.Mvc;
 
-namespace _Tripfinity.Controllers;
+namespace Tripfinity.Controllers;
 
 [Route("marshal")]
 [MarshalOnly]
@@ -167,18 +167,18 @@ public class MarshalController : Controller
     }
 
     [HttpPost("scan")]
-    public async Task<IActionResult> Scan(string qrToken)
+    public async Task<IActionResult> Scan(string ticketCode)
     {
         if (MarshalId is null)
             return RedirectToMarshalLogin();
 
-        if (string.IsNullOrWhiteSpace(qrToken))
+        if (string.IsNullOrWhiteSpace(ticketCode))
         {
-            TempData["Error"] = "No QR code provided.";
+            TempData["Error"] = "No ticket code provided.";
             return View("Scan");
         }
         
-        var result = await _ticketService.ValidateTicketAsync(qrToken, MarshalId.Value, MarshalVehicleId!);
+        var result = await _ticketService.ValidateTicketAsync(ticketCode.Trim(), MarshalId.Value, MarshalVehicleId!);
 
         if (!result.Success)
         { // Handle duplicate scans separately for clearer feedback

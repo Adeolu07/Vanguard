@@ -1,4 +1,4 @@
-namespace _Tripfinity.Utilities;
+namespace Tripfinity.Utilities;
 
 public static class NameMatching
 {

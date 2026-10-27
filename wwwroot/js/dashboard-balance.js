@@ -28,7 +28,10 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             const res = await fetch("/api/wallet/balance", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "RequestVerificationToken": (document.querySelector('meta[name="csrf-token"]') || {}).content || ""
+                },
                 body: JSON.stringify({ customerId: walletId })
             });
             const result = await res.json().catch(() => ({}));

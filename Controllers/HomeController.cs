@@ -1,10 +1,10 @@
 using System.Diagnostics;
-using _Tripfinity.Interfaces;
-using _Tripfinity.Models.Data;
-using _Tripfinity.Models.ViewModels;
+using Tripfinity.Interfaces;
+using Tripfinity.Models.Data;
+using Tripfinity.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 
-namespace _Tripfinity.Controllers;
+namespace Tripfinity.Controllers;
 
 public class HomeController : ParentController
 {
@@ -113,10 +113,43 @@ public class HomeController : ParentController
         return RedirectToAction("Profile");
     }
 
-    public IActionResult Error(int statusCode = 500, string title = "Error", string detail = "")
+    /// <summary>
+    /// Finishes wallet setup for a confirmed account whose wallet could not be
+    /// created at sign-up (wallet service unavailable). Safe to retry.
+    /// </summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateWallet()
     {
-        Response.StatusCode = statusCode;
-        ViewBag.StatusCode = statusCode;
+        if (!IsAuthenticated) return RedirectToLogin();
+
+        var result = await _passenger.CreateWalletIfMissingAsync(UserId!.Value);
+        TempData[result.Success ? "SuccessMessage" : "ErrorMessage"] = result.Message;
+
+        if (HttpContext.Session.GetString("Role") == "Marshal")
+            return RedirectToAction("Wallet", "Marshal");
+
+        return RedirectToAction("Wallet");
+    }
+
+    public IActionResult Error(int statusCode = 500)
+    {
+        // Only the status code is accepted from the caller: echoing free text from
+        // the query string would let anyone render arbitrary copy (e.g. a fake
+        // "session expired, sign in here" page) on our own domain.
+        var (code, title, detail) = statusCode switch
+        {
+            404 => (404, "Page not found",
+                "The page you are looking for might have been removed, had its name changed, or is temporarily unavailable."),
+            403 => (403, "Access denied", "You do not have permission to view this page."),
+            503 => (503, "Service unavailable",
+                "We're experiencing technical difficulties. Please try again in a few minutes."),
+            _ => (500, "Something went wrong",
+                "Something went wrong on our end. Please try again later or contact support if the problem persists.")
+        };
+
+        Response.StatusCode = code;
+        ViewBag.StatusCode = code;
         ViewBag.Title = title;
         ViewBag.Detail = detail;
         return View();

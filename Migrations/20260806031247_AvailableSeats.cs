@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace _Tripfinity.Migrations
+namespace Tripfinity.Migrations
 {
     /// <inheritdoc />
     public partial class AvailableSeats : Migration

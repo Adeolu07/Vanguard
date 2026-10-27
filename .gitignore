@@ -1,10 +1,26 @@
+# Build output
 bin/
 obj/
+
+# Secrets and local configuration
 appsettings.json
 appsettings.Development.json
+appsettings.*.local.json
+.env
+
+# Local databases
 *.db
 *.sqlite
-.env
+*.mdf
+*.ldf
+
+# IDE / machine-specific state
+.vs/
+.idea/
+*.user
+*.suo
+*.DotSettings.user
+
+# OS noise
 .DS_Store
-.vs
-appsettings.json
+Thumbs.db

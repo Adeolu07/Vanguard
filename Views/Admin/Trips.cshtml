@@ -10,7 +10,7 @@
     <table class="table">
         <thead><tr><th>From</th><th>To</th><th>Price</th><th>Seats</th><th>Departure</th></tr></thead>
         <tbody>
-        @foreach (var t in (List<_Tripfinity.Models.Tables.BusTrip>)ViewBag.BusTrips)
+        @foreach (var t in (List<Tripfinity.Models.Tables.BusTrip>)ViewBag.BusTrips)
         {
             <tr>
                 <td>@t.From</td><td>@t.Destination</td><td>₦@t.Price</td>
@@ -27,7 +27,7 @@
     <table class="table">
         <thead><tr><th>From</th><th>To</th><th>Price</th><th>Seats</th><th>Departure</th></tr></thead>
         <tbody>
-        @foreach (var t in (List<_Tripfinity.Models.Tables.RailwayTrip>)ViewBag.RailwayTrips)
+        @foreach (var t in (List<Tripfinity.Models.Tables.RailwayTrip>)ViewBag.RailwayTrips)
         {
             <tr>
                 <td>@t.From</td><td>@t.Destination</td><td>₦@t.Price</td>
@@ -44,7 +44,7 @@
     <table class="table">
         <thead><tr><th>Pickup</th><th>Dropoff</th><th>Price</th><th>Max Passengers</th><th>Pickup Time</th></tr></thead>
         <tbody>
-        @foreach (var t in (List<_Tripfinity.Models.Tables.TaxiTrip>)ViewBag.TaxiTrips)
+        @foreach (var t in (List<Tripfinity.Models.Tables.TaxiTrip>)ViewBag.TaxiTrips)
         {
             <tr>
                

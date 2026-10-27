@@ -1,7 +1,7 @@
-using _Tripfinity.Interfaces;
+using Tripfinity.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
-namespace _Tripfinity.Controllers;
+namespace Tripfinity.Controllers;
 
 public class TicketController : ParentController
 {

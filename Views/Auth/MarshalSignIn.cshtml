@@ -1,11 +1,11 @@
-﻿@model _Tripfinity.Models.ViewModels.LoginViewModel
+@model Tripfinity.Models.ViewModels.LoginViewModel
 @{
     Layout = "_AuthLayout";
     ViewData["Title"] = "Marshal Sign In";
 }
 
 @section Styles {
-    <link rel="stylesheet" href="~/css/MarshalSignIn.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/marshal-signin.css" asp-append-version="true" />
 }
 
 <div class="viewport-outer-container">
@@ -18,14 +18,14 @@
 
             @if (TempData["ErrorMessage"] != null)
             {
-                <div class="alert-summary">⚠️ @TempData["ErrorMessage"]</div>
+                <div class="alert-summary">?? @TempData["ErrorMessage"]</div>
             }
             @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
             {
                 <div class="alert-summary">
                     @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
                     {
-                        <div>⚠️ @error.ErrorMessage</div>
+                        <div>?? @error.ErrorMessage</div>
                     }
                 </div>
             }

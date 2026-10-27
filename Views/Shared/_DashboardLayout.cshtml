@@ -1,3 +1,4 @@
+﻿@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 @{
     var firstName = Context.Session.GetString("FirstName") ?? "User";
     var active = ViewData["ActiveNav"] as string ?? "Dashboard";
@@ -8,6 +9,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="csrf-token" content="@Antiforgery.GetAndStoreTokens(Context).RequestToken" />
     <title>@ViewData["Title"] - Tripfinity</title>
     <link rel="stylesheet" href="~/css/dashboard.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -51,10 +53,12 @@
         <main class="main-content">
             <header class="top-header">
                 <h2>@headerTitle</h2>
-                <a href="/Auth/Logout" class="btn-signout">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>
-                    Sign Out
-                </a>
+                <form method="post" asp-controller="Auth" asp-action="Logout">
+                    <button type="submit" class="btn-signout" style="background:none;border:0;cursor:pointer;font:inherit;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>
+                        Sign Out
+                    </button>
+                </form>
             </header>
 
             @RenderBody()

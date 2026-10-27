@@ -1,6 +1,6 @@
-using _Tripfinity.Models.Data.Response;
+using Tripfinity.Models.Data.Response;
 
-namespace _Tripfinity.Models.ViewModels;
+namespace Tripfinity.Models.ViewModels;
 
 public class TransactionsViewModel
 {

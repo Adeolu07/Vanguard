@@ -1,10 +1,10 @@
-using _Tripfinity.Interfaces;
-using _Tripfinity.Models.Enums;
-using _Tripfinity.Services;
-using _Tripfinity.Utilities;
+using Tripfinity.Interfaces;
+using Tripfinity.Models.Enums;
+using Tripfinity.Services;
+using Tripfinity.Utilities;
 using Microsoft.AspNetCore.Mvc;
 
-namespace _Tripfinity.Controllers;
+namespace Tripfinity.Controllers;
 
 [Route("Trips/{type}")]
 [RequireAuth]
@@ -72,6 +72,12 @@ public class TripsController : ParentController
     {
         _logger.LogInformation("POST: /Trips/{Type}/Book", type);
 
+        if (seats is < 1 or > 50)
+        {
+            TempData["Error"] = "You can book between 1 and 50 seats at a time.";
+            return RedirectToAction("Book", new { type, tripId });
+        }
+
         var result = await _bookingService.BookAsync(type, tripId, seats, UserId!.Value);
         if (!result.Success)
         {
@@ -87,8 +93,11 @@ public class TripsController : ParentController
     [HttpGet("{id}/Confirmation")]
     public async Task<IActionResult> Confirmation(string type, int id)
     {
-        var transport = Enum.Parse<TransportType>(type, true);
-        var booking = await _bookingService.GetBookingAsync(id, transport);
+        if (!Enum.TryParse<TransportType>(type, true, out var transport))
+            return NotFound();
+
+        // Ownership is enforced in the query: a passenger may only see their own booking.
+        var booking = await _bookingService.GetBookingAsync(id, transport, UserId);
         if (booking == null) return NotFound();
 
         ViewBag.PaymentTransaction = await FetchTransaction(_walletService, booking);

@@ -1,11 +1,11 @@
-using _Tripfinity.Models;
-using _Tripfinity.Models.Data;
-using _Tripfinity.Models.Data.Requests;
-using _Tripfinity.Models.Tables;
-using _Tripfinity.Models.ViewModels;
+using Tripfinity.Models;
+using Tripfinity.Models.Data;
+using Tripfinity.Models.Data.Requests;
+using Tripfinity.Models.Tables;
+using Tripfinity.Models.ViewModels;
 using Microsoft.AspNetCore.Identity.Data;
 
-namespace _Tripfinity.Interfaces;
+namespace Tripfinity.Interfaces;
 
 public interface IAuthService
 {

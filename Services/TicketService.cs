@@ -1,23 +1,29 @@
-using _Tripfinity.Interfaces;
-using _Tripfinity.Models;
-using _Tripfinity.Models.Data;
-using _Tripfinity.Models.Data.Response;
-using _Tripfinity.Models.Enums;
-using _Tripfinity.Models.Tables;
+using Tripfinity.Interfaces;
+using Tripfinity.Models;
+using Tripfinity.Models.Data;
+using Tripfinity.Models.Data.Response;
+using Tripfinity.Models.Enums;
+using Tripfinity.Models.Tables;
+using Tripfinity.Utilities;
 using Microsoft.EntityFrameworkCore;
 using QRCoder;
 
-namespace _Tripfinity.Services;
+namespace Tripfinity.Services;
 
 public class TicketService : ITicketService
 {
     private readonly AppDbContext _context;
     private readonly ILogger<TicketService> _logger;
+    private readonly TicketQrPayload _qrPayload;
+    private readonly bool _acceptLegacyUnsignedQr;
 
-    public TicketService(AppDbContext context, ILogger<TicketService> logger)
+    public TicketService(AppDbContext context, ILogger<TicketService> logger, TicketQrPayload qrPayload,
+        IConfiguration configuration)
     {
         _context = context;
         _logger = logger;
+        _qrPayload = qrPayload;
+        _acceptLegacyUnsignedQr = configuration.GetValue<bool>("Tickets:AcceptLegacyUnsignedQr");
     }
 
     public async Task<Ticket> IssueTicketAsync(Booking booking, string? vehicleId = null)
@@ -51,8 +57,28 @@ public class TicketService : ITicketService
         return ticket;
     }
 
-    public async Task<TicketValidationResult> ValidateTicketAsync(string ticketReference, int marshalId, string expectedVehicleId)
+    public async Task<TicketValidationResult> ValidateTicketAsync(string ticketCode, int marshalId, string expectedVehicleId)
     {
+        if (!_qrPayload.TryUnprotect(ticketCode, out var ticketReference))
+        {
+            // Tickets issued before QR signing carry the bare reference in the
+            // image. Honouring them is an explicit, opt-in migration escape hatch.
+            if (_acceptLegacyUnsignedQr && LooksLikeLegacyReference(ticketCode))
+            {
+                _logger.LogWarning("Accepting legacy unsigned QR payload for marshal {MarshalId}", marshalId);
+                ticketReference = ticketCode.Trim();
+            }
+            else
+            {
+                _logger.LogWarning("Rejected an invalid or unsigned ticket code for marshal {MarshalId}", marshalId);
+                return new TicketValidationResult
+                {
+                    Success = false,
+                    Message = "Ticket code is not valid. Ask the passenger to show their ticket again."
+                };
+            }
+        }
+
         // Look it up in the DB
         var ticket = await _context.Tickets.FirstOrDefaultAsync(t => t.TicketReference == ticketReference);
 
@@ -83,6 +109,27 @@ public class TicketService : ITicketService
             {
                 Success = false,
                 Message = $"Ticket already validated at {ticket.ValidatedAt:g} by Marshal {ticket.ValidatedByMarshalId}",
+                Ticket = ticket
+            };
+
+        //  only freshly issued tickets may be boarded
+        if (ticket.Status != TicketStatus.Issued)
+            return new TicketValidationResult
+            {
+                Success = false,
+                Message = $"Ticket can no longer be used ({ticket.Status}).",
+                Ticket = ticket
+            };
+
+        //  the booking behind the ticket must still be live
+        var booking = await _context.Bookings.AsNoTracking()
+            .FirstOrDefaultAsync(b => b.Id == ticket.BookingId);
+
+        if (booking is null || booking.Status != BookingStatus.Confirmed)
+            return new TicketValidationResult
+            {
+                Success = false,
+                Message = "Ticket is not attached to a confirmed booking.",
                 Ticket = ticket
             };
 
@@ -120,11 +167,21 @@ public class TicketService : ITicketService
 
     public byte[] GenerateQrCode(string ticketReference)
     {
+        // The QR carries a signed payload, not the raw reference: knowing the
+        // reference format must not be enough to produce a scannable code.
+        var payload = _qrPayload.Protect(ticketReference);
+
         using var generator = new QRCodeGenerator();
-        using var data = generator.CreateQrCode(ticketReference, QRCodeGenerator.ECCLevel.Q);
+        using var data = generator.CreateQrCode(payload, QRCodeGenerator.ECCLevel.Q);
         var png = new PngByteQRCode(data);
         return png.GetGraphic(20);
     }
+
+    private static bool LooksLikeLegacyReference(string? value) =>
+        value is not null
+        && value.Length is > 3 and <= 50
+        && value.StartsWith("TKT-", StringComparison.OrdinalIgnoreCase)
+        && value[4..].All(char.IsLetterOrDigit);
 
     private static DateTime ResolveTripTime(Booking booking)
     {

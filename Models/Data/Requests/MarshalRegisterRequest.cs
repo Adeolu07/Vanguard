@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace _Tripfinity.Models.Data.Requests;
+namespace Tripfinity.Models.Data.Requests;
 
 public class MarshalRegisterRequest
 {

@@ -1,7 +1,7 @@
-using _Tripfinity.Models.Data.Requests;
-using _Tripfinity.Models.Data.Response;
+using Tripfinity.Models.Data.Requests;
+using Tripfinity.Models.Data.Response;
 
-namespace _Tripfinity.Interfaces;
+namespace Tripfinity.Interfaces;
 
 public interface ICipService
 {

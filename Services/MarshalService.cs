@@ -1,13 +1,13 @@
-using _Tripfinity.Interfaces;
-using _Tripfinity.Models.Data;
-using _Tripfinity.Models.Data.Requests;
-using _Tripfinity.Models.Data.Response;
-using _Tripfinity.Models.Tables;
-using _Tripfinity.Models.ViewModels;
-using _Tripfinity.Utilities;
+using Tripfinity.Interfaces;
+using Tripfinity.Models.Data;
+using Tripfinity.Models.Data.Requests;
+using Tripfinity.Models.Data.Response;
+using Tripfinity.Models.Tables;
+using Tripfinity.Models.ViewModels;
+using Tripfinity.Utilities;
 using Microsoft.EntityFrameworkCore;
 
-namespace _Tripfinity.Services;
+namespace Tripfinity.Services;
 
 public class MarshalService : IMarshalService
 {
@@ -82,10 +82,12 @@ public class MarshalService : IMarshalService
         var marshal = await GetMarshalAsync(marshalId);
         if (marshal == null) return null;
 
+        var vehicleId = marshal.VehicleId;
+
         var tickets = await _context.Tickets
             .Include(t => t.Booking)
-            .ThenInclude(b => b.User)
-            .Where(t => t.VehicleId == marshal.VehicleId)
+            .ThenInclude(b => b!.User)
+            .Where(t => vehicleId != null && t.VehicleId == vehicleId)
             .OrderByDescending(t => t.TripTime)
             .Take(20)
             .ToListAsync();

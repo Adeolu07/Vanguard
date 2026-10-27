@@ -1,4 +1,4 @@
-namespace _Tripfinity.Interfaces;
+namespace Tripfinity.Interfaces;
 
 public interface IEmailService 
 {

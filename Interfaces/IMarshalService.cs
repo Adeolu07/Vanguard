@@ -1,8 +1,8 @@
-using _Tripfinity.Models.Data.Response;
-using _Tripfinity.Models.Tables;
-using _Tripfinity.Models.ViewModels;
+using Tripfinity.Models.Data.Response;
+using Tripfinity.Models.Tables;
+using Tripfinity.Models.ViewModels;
 
-namespace _Tripfinity.Interfaces;
+namespace Tripfinity.Interfaces;
 
 public interface IMarshalService
 {

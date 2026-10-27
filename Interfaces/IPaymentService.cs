@@ -1,6 +1,6 @@
-using _Tripfinity.Models.Tables;
+using Tripfinity.Models.Tables;
 
-namespace _Tripfinity.Interfaces;
+namespace Tripfinity.Interfaces;
 
 public interface IPaymentService
 {

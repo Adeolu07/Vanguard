@@ -1,4 +1,9 @@
 ﻿document.addEventListener('DOMContentLoaded', function () {
+    function csrfToken() {
+        const meta = document.querySelector('meta[name="csrf-token"]');
+        return meta ? meta.content : '';
+    }
+
     const walletId = document.getElementById('walletId')?.value;
     const balance = document.getElementById('walletBalance');
 
@@ -11,7 +16,10 @@
     async function postJson(url, body) {
         const res = await fetch(url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': csrfToken()
+            },
             body: JSON.stringify(body)
         });
         let json = {};
