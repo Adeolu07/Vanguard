@@ -1,4 +1,4 @@
-@model _Tripfinity.Models.ViewModels.TransactionsViewModel?
+@model Tripfinity.Models.ViewModels.TransactionsViewModel?
 @{
     Layout = "_DashboardLayout";
     ViewData["Title"] = "Wallet";
@@ -25,6 +25,9 @@
 @section Scripts {
     <script src="~/js/site.js"></script>
 }
+@{
+    var walletReady = !string.IsNullOrWhiteSpace(ViewBag.WalletId as string);
+}
 
 <section class="welcome-section">
     <span class="sub-brand">FINANCE</span>
@@ -32,16 +35,41 @@
     <p>Check your balance and add funds.</p>
 </section>
 
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+@if (!walletReady)
+{
+    <div class="fund-wallet">
+        <h4>Finish setting up your wallet</h4>
+        <p class="fund-note">
+            Your account is confirmed, but your wallet was not created yet — this happens when the
+            payment service is briefly unavailable. Setting it up takes a moment and is safe to retry.
+        </p>
+        <form method="post" asp-controller="Home" asp-action="CreateWallet">
+            <button type="submit" class="btn-fund">Set up my wallet</button>
+        </form>
+    </div>
+}
+
 <section class="balance-banner">
     <span class="balance-label">CURRENT BALANCE</span>
     <div class="balance-wrapper">
         <h1 id="walletBalance">₦@Model?.Balance.ToString("N2")</h1>
     </div>
     <div class="status-badge">
-        <span class="dot"></span> Active & Secure
+        <span class="dot"></span> @(walletReady ? "Active & Secure" : "Setup pending")
     </div>
 </section>
 
+@if (walletReady)
+{
 <div class="fund-wallet">
     <h4>Add Funds</h4>
     <p class="fund-note">Fund your wallet via bank transfer. Your wallet is credited automatically once payment reflects.</p>
@@ -49,6 +77,11 @@
     <input type="hidden" id="walletId" value="@ViewBag.WalletId" />
     <div id="fundMessage" class="fund-message"></div>
 </div>
+}
+else
+{
+    <input type="hidden" id="walletId" value="" />
+}
 
 <div class="fund-modal-overlay" id="fundModalOverlay">
     <div class="fund-modal">

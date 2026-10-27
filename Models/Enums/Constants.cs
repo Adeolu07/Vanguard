@@ -1,4 +1,4 @@
-namespace _Tripfinity.Models.Enums;
+namespace Tripfinity.Models.Enums;
 
 
 public enum TransportType { Railway, Taxi, Bus }

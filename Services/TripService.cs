@@ -1,12 +1,11 @@
-using System.Transactions;
-using _Tripfinity.Interfaces;
-using _Tripfinity.Models.Data;
-using _Tripfinity.Models.Data.Requests;
-using _Tripfinity.Models.Enums;
-using _Tripfinity.Models.Tables;
+using Tripfinity.Interfaces;
+using Tripfinity.Models.Data;
+using Tripfinity.Models.Data.Requests;
+using Tripfinity.Models.Enums;
+using Tripfinity.Models.Tables;
 using Microsoft.EntityFrameworkCore;
 
-namespace _Tripfinity.Services;
+namespace Tripfinity.Services;
 
 public class TripService : ITripService
 {
@@ -20,8 +19,6 @@ public class TripService : ITripService
         _bookingService = bookingService;
         _logger = logger;
     }
-
-    // ... existing code (all previous methods stay unchanged) ...
 
     // ── High‑level creators with DTO mapping ──
     public async Task<BusTrip?> CreateBusTripAsync(CreateBusTripRequest request, int marshalId, string vehicleId)
@@ -87,7 +84,6 @@ public class TripService : ITripService
         return trip;
         
     }
-// ... rest of existing code ...
 
     public async Task<bool> CancelTripAsync(TransportType transportType, int tripId, int marshalId, string reason)
     {
@@ -146,7 +142,7 @@ public class TripService : ITripService
     public async Task<bool> CommenceTripAsync(TransportType transportType, int tripId, int marshalId)
 {
     // Find the trip
-    object trip;
+    object? trip;
     switch (transportType)
     {
         case TransportType.Bus:
@@ -223,8 +219,6 @@ public class TripService : ITripService
     _logger.LogInformation("Marshal {MarshalId} commenced {Type} trip {TripId}; unvalidated tickets expired", marshalId, transportType, tripId);
     return true;
 }
-    
-    // Add this method anywhere in the class (e.g., right after CommenceTripAsync):
 
     public async Task<bool> EndTripAsync(TransportType transportType, int tripId, int marshalId)
     {

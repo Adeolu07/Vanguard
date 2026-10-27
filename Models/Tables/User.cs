@@ -1,7 +1,6 @@
 using System.ComponentModel.DataAnnotations;
-using NuGet.Protocol.Plugins;
 
-namespace _Tripfinity.Models.Tables;
+namespace Tripfinity.Models.Tables;
 
 public class User
 {

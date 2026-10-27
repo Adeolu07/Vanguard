@@ -1,14 +1,14 @@
-using _Tripfinity.Interfaces;
-using _Tripfinity.Models.Data;
-using _Tripfinity.Models.Data.Requests;
-using _Tripfinity.Models.Tables;
-using _Tripfinity.Models.ViewModels;
-using _Tripfinity.Utilities;
+using Tripfinity.Interfaces;
+using Tripfinity.Models.Data;
+using Tripfinity.Models.Data.Requests;
+using Tripfinity.Models.Tables;
+using Tripfinity.Models.ViewModels;
+using Tripfinity.Utilities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using QRCoder;
 
-namespace _Tripfinity.Services;
+namespace Tripfinity.Services;
 
 public class AuthService : IAuthService
 {
@@ -30,13 +30,18 @@ public class AuthService : IAuthService
 
     public async Task<AuthResponse> SignUpAsync(RegisterViewModel model)
     {
-        _logger.LogInformation("Passenger Signup for {Email}", model.Email);
-
         var existingUser = await _context.Users.AnyAsync(u => u.Email == model.Email);
         if (existingUser)
         {
-            _logger.LogWarning("Email already exists");
-            return new AuthResponse { Success = false, Message = "Email already exists" };
+            // Return the same shape as a successful signup: revealing that an
+            // address is registered turns this form into an enumeration oracle.
+            _logger.LogWarning("Passenger signup rejected: email already registered");
+            return new AuthResponse
+            {
+                Success = true,
+                Message = "Account created. Please confirm your email",
+                User = null
+            };
         }
 
         var hasher = new PasswordHasher<User>();
@@ -46,30 +51,33 @@ public class AuthService : IAuthService
             FirstName = model.FirstName,
             LastName = model.LastName,
             PhoneNumber = model.PhoneNumber,
-            CreatedAt = DateTime.Now,
+            CreatedAt = DateTime.UtcNow,
             IsActive = false,
             Role = "Passenger",
             EmailConfirmationToken = Guid.NewGuid().ToString(),
-            ConfirmationTokenExpiry = DateTime.Now.AddDays(1)
+            ConfirmationTokenExpiry = DateTime.UtcNow.AddDays(1)
         };
         user.PasswordHash = hasher.HashPassword(user, model.Password);
 
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation("Passenger account created: {Email}", user.Email);
+        _logger.LogInformation("Passenger account created: {UserId}", user.Id);
         return new AuthResponse { Success = true, Message = "Account created. Please confirm your email", User = user };
     }
 
             public async Task<AuthResponse> RegisterMarshalAsync(MarshalRegisterViewModel model)
         {
-            _logger.LogInformation("Registering new marshal");
-
             var existingUser = await _context.Users.AnyAsync(u => u.Email == model.Email);
             if (existingUser)
             {
-                _logger.LogWarning("Marshal registration failed: email {Email} already exists", model.Email);
-                return new AuthResponse { Success = false, Message = "Email already exists" };
+                _logger.LogWarning("Marshal registration rejected: email already registered");
+                return new AuthResponse
+                {
+                    Success = true,
+                    Message = "Marshal account created",
+                    User = null
+                };
             }
 
             var accountNumber = model.AccountNumber?.Trim();
@@ -88,14 +96,13 @@ public class AuthService : IAuthService
                 if (enquiry?.Data?.ResponseCode != "00" || string.IsNullOrWhiteSpace(enquiry?.Data?.AccountName))
                 {
                     var reason = enquiry?.Message ?? enquiry?.Data?.ResponseMessage ?? "Name enquiry failed.";
-                    _logger.LogWarning("CIP name enquiry failed for {Account}: {Reason}", accountNumber, reason);
+                        _logger.LogWarning("CIP name enquiry failed during marshal registration: {Reason}", reason);
                     return new AuthResponse { Success = false, Message = $"Could not verify account: {reason}" };
                 }
 
                 if (!NameMatching.Matches(enquiry.Data.AccountName, model.FirstName, model.LastName))
                 {
-                    _logger.LogWarning("Account name mismatch for {Email}: expected {Name}, got {AccountName}",
-                        model.Email, $"{model.FirstName} {model.LastName}", enquiry.Data.AccountName);
+                    _logger.LogWarning("Account name mismatch while registering user");
                     return new AuthResponse { Success = false, Message = "Account name does not match your registered name." };
                 }
 
@@ -110,7 +117,7 @@ public class AuthService : IAuthService
                 Email = model.Email,
                 FirstName = model.FirstName,
                 LastName = model.LastName,
-                CreatedAt = DateTime.Now,
+                CreatedAt = DateTime.UtcNow,
                 PhoneNumber = model.PhoneNumber,
                 Role = "Marshal",
                 VehicleType = model.VehicleType,
@@ -119,7 +126,7 @@ public class AuthService : IAuthService
                 IsActive = false,
                 IsEmailConfirmed = false,
                 EmailConfirmationToken = Guid.NewGuid().ToString(),
-                ConfirmationTokenExpiry = DateTime.Now.AddDays(1)
+                ConfirmationTokenExpiry = DateTime.UtcNow.AddDays(1)
             };
 
             marshal.PasswordHash = hasher.HashPassword(marshal, model.Password);
@@ -137,43 +144,56 @@ public class AuthService : IAuthService
                     BankCode = bankCode!,
                     BankName = Banks.GetBankName(bankCode) ?? "",
                     AccountName = verifiedAccountName,
-                    CreatedAt = DateTime.Now
+                    CreatedAt = DateTime.UtcNow
                 });
                 await _context.SaveChangesAsync();
             }
 
-            _logger.LogInformation("Marshal Account created: {Email}", marshal.Email);
+            _logger.LogInformation("Marshal account created: {UserId}", marshal.Id);
             return new AuthResponse { Success = true, Message = "Marshal account created", User = marshal };
         }
 
     public async Task<AuthResponse?> SignInAsync(string email, string password)
     {
-
-        _logger.LogInformation("User sign in");
-
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
-        if (user == null)
+
+        // Always compare against a hash so a missing account and a wrong password
+        // take the same path and return the same message.
+        var hasher = new PasswordHasher<User>();
+        var verification = user is null
+            ? PasswordVerificationResult.Failed
+            : hasher.VerifyHashedPassword(user, user.PasswordHash, password);
+
+        if (user is null || verification == PasswordVerificationResult.Failed)
         {
-            _logger.LogWarning("Sign in failed: user {Email} not found", email);
-            return new AuthResponse { Success = false, Message = "User not found" };
+            _logger.LogWarning("Sign-in failed: invalid credentials");
+            return new AuthResponse { Success = false, Message = "Invalid email or password." };
         }
 
         if (!user.IsEmailConfirmed)
         {
-            _logger.LogWarning("Sign-in failed: email {Email} not confirmed", email);
-            return new AuthResponse { Success = false, Message = "Please confirm your Email" };
+            _logger.LogWarning("Sign-in refused: email not confirmed for user {UserId}", user.Id);
+            return new AuthResponse { Success = false, Message = "Please confirm your email address before signing in." };
         }
 
-        var hasher = new PasswordHasher<User>();
-        var result = hasher.VerifyHashedPassword(user, user.PasswordHash, password);
-        if (result != PasswordVerificationResult.Success)
+        if (!user.IsActive)
         {
-            _logger.LogInformation("Sign-in failed: invalid credentials for: {Email}", email);
-            return new AuthResponse { Success = false, Message = "Invalid credentials" };
+            _logger.LogWarning("Sign-in refused: inactive account {UserId}", user.Id);
+            return new AuthResponse { Success = false, Message = "Invalid email or password." };
         }
 
-        _logger.LogInformation("User {Email} signed in successfully", email);
-        return new AuthResponse { Success = true, Message = "Sign in successful", User = user };
+        if (verification == PasswordVerificationResult.SuccessRehashNeeded)
+        {
+            user.PasswordHash = hasher.HashPassword(user, password);
+            await _context.SaveChangesAsync();
+        }
+
+        _logger.LogInformation("User {UserId} signed in", user.Id);
+        return new AuthResponse { 
+            Success = true, 
+            Message = "Sign in successful", 
+            User = user 
+        };
     }
 
     public async Task<bool> EmailExistsAsync(string email)
@@ -183,7 +203,12 @@ public class AuthService : IAuthService
 
     public async Task SetUserSession(HttpContext httpContext, User user)
     {
+        // Discard any pre-authentication session so a fixated session id cannot
+        // be reused after sign-in.
+        httpContext.Session.Clear();
+
         httpContext.Session.SetInt32("userId", user.Id);
+        httpContext.Session.SetString("FirstName", user.FirstName);
         httpContext.Session.SetString("Username", user.FirstName);
         httpContext.Session.SetString("Role", user.Role!);
         if (user.Role == "Marshal")
@@ -211,10 +236,13 @@ public class AuthService : IAuthService
     {
         _logger.LogInformation("Email confirmation for user {UserId}", userId);
 
+        if (string.IsNullOrWhiteSpace(token))
+            return false;
+
         var user = await _context.Users.FindAsync(userId);
         if (user == null)
         {
-            _logger.LogWarning("Email confirmation for user {UserId} failed, not found", userId);
+            _logger.LogWarning("Email confirmation failed: user {UserId} not found", userId);
             return false;
         }
 
@@ -224,22 +252,17 @@ public class AuthService : IAuthService
             return true;
         }
 
-        if (user.EmailConfirmationToken != token)
+        if (user.EmailConfirmationToken is null || !TokenEquals(user.EmailConfirmationToken, token))
         {
             _logger.LogInformation("Confirmation failed: token mismatch for user {UserId}", userId);
             return false;
         }
 
-        if (user.ConfirmationTokenExpiry < DateTime.Now)
+        if (user.ConfirmationTokenExpiry < DateTime.UtcNow)
         {
             _logger.LogWarning("Confirmation failed: token expired for user {UserId}", userId);
             return false;
         }
-
-        user.IsEmailConfirmed = true;
-        user.IsActive = true;
-        user.EmailConfirmationToken = null;
-        user.ConfirmationTokenExpiry = null;
 
         if (string.IsNullOrEmpty(user.UserWalletId))
         {
@@ -252,17 +275,20 @@ public class AuthService : IAuthService
             };
 
             var createWalletResponse = await _walletService.CreateWalletAsync(createWalletRequest);
-            if (createWalletResponse?.ResponseHeader?.ResponseCode == "00")
+            if (createWalletResponse?.ResponseHeader?.ResponseCode == "00"
+                && !string.IsNullOrEmpty(createWalletResponse.AccountDetails?.CustomerId))
             {
                 user.UserWalletId = createWalletResponse.AccountDetails.CustomerId;
                 _logger.LogInformation("Wallet Creation Successful for user with id {UserId}", userId);
             }
             else
             {
-                _logger.LogWarning("Wallet creation returned non-success for user {UserId}: {Code} - {Message}",
+                // A wallet-service outage must not cost the user their account:
+                // confirm the email anyway and let them finish wallet setup from
+                // the wallet page once the service recovers.
+                _logger.LogWarning("Wallet creation deferred for user {UserId}: {Code} - {Message}",
                     userId, createWalletResponse?.ResponseHeader?.ResponseCode,
                     createWalletResponse?.ResponseHeader?.ResponseMessage);
-                return false;
             }
         }
 
@@ -277,27 +303,36 @@ public class AuthService : IAuthService
         return true;
     }
 
+    private static bool TokenEquals(string expected, string provided)
+    {
+        var expectedBytes = System.Text.Encoding.UTF8.GetBytes(expected);
+        var providedBytes = System.Text.Encoding.UTF8.GetBytes(provided);
+        return expectedBytes.Length == providedBytes.Length
+               && System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(expectedBytes, providedBytes);
+    }
+
     public async Task<AuthResponse> ForgotPasswordAsync(string email, string resetLinkTemplate)
     {
-        _logger.LogInformation("Forgot password for {Email}", email);
+        // The same message is returned whether or not the address exists.
+        const string genericMessage = "If an account exists for that address, a reset link has been sent.";
 
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
-        
         if (user is null)
         {
-            return new AuthResponse { Success = false, Message = "You do not have an account with us sir/ma" };
+            _logger.LogWarning("Password reset requested for an unknown address");
+            return new AuthResponse { Success = true, Message = genericMessage };
         }
 
-        user.PasswordResetToken = Guid.NewGuid().ToString();
-        user.PasswordResetTokenExpiry = DateTime.Now.AddHours(1);
+        user.PasswordResetToken = Guid.NewGuid().ToString("N");
+        user.PasswordResetTokenExpiry = DateTime.UtcNow.AddHours(1);
         await _context.SaveChangesAsync();
 
         var resetLink = resetLinkTemplate.Replace("__TOKEN__", user.PasswordResetToken);
 
-        await _emailService.SendPasswordResetEmailAsync(email, resetLink);
+        await _emailService.SendPasswordResetEmailAsync(user.Email, resetLink);
 
-        _logger.LogInformation("Password reset email sent to {Email}", email);
-        return new AuthResponse { Success = true, Message = "A reset password link has been sent to your mail" };
+        _logger.LogInformation("Password reset email sent to user {UserId}", user.Id);
+        return new AuthResponse { Success = true, Message = genericMessage };
     }
 
     public async Task<bool> ValidatePasswordResetTokenAsync(string email, string token)
@@ -305,9 +340,10 @@ public class AuthService : IAuthService
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
         if (user == null) return false;
 
-        return user.PasswordResetToken == token &&
-               user.PasswordResetTokenExpiry.HasValue &&
-               user.PasswordResetTokenExpiry > DateTime.Now;
+        return user.PasswordResetToken is not null
+               && TokenEquals(user.PasswordResetToken, token)
+               && user.PasswordResetTokenExpiry.HasValue
+               && user.PasswordResetTokenExpiry > DateTime.UtcNow;
     }
 
     public async Task<AuthResponse> ResetPasswordAsync(string email, string token, string newPassword)

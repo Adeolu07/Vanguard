@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 
-namespace _Tripfinity.Views;
+namespace Tripfinity.Utilities;
+
 
 public class PaginatedList<T> : List<T>
 {

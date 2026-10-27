@@ -1,9 +1,9 @@
 using System.Net;
-using _Tripfinity.Models.Data.Requests;
-using _Tripfinity.Models.Data.Response;
-using TransactionDetails = _Tripfinity.Models.Data.Requests.TransactionDetails;
+using Tripfinity.Models.Data.Requests;
+using Tripfinity.Models.Data.Response;
+using TransactionDetails = Tripfinity.Models.Data.Requests.TransactionDetails;
 
-namespace _Tripfinity.Interfaces;
+namespace Tripfinity.Interfaces;
 
 public interface IFastChannelService
 {

@@ -20,15 +20,15 @@
 
     <div class="scan-card">
         <form asp-action="Scan" method="post">
-            <label>Enter QR token manually</label>
-            <input type="text" name="qrToken" placeholder="E.g. TF-8892-XP9" autofocus required />
+            <label>Scan or paste the ticket code</label>
+            <input type="text" name="ticketCode" placeholder="Scan the passenger's QR code" autofocus required />
             <button type="submit" class="btn-validate">✓ Validate</button>
         </form>
     </div>
 
     @if (ViewBag.ValidatedTicket != null)
     {
-        var ticket = (_Tripfinity.Models.Tables.Ticket)ViewBag.ValidatedTicket;
+        var ticket = (Tripfinity.Models.Tables.Ticket)ViewBag.ValidatedTicket;
         <div class="result-card">
             <div class="ticket-confirmed">✓ Ticket Validated</div>
             <div class="ticket-details">

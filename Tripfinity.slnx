@@ -1,0 +1,4 @@
+<Solution>
+    <Project Path="Tripfinity.csproj"/>
+    <Project Path="tests/Tripfinity.Tests/Tripfinity.Tests.csproj"/>
+</Solution>

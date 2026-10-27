@@ -1,13 +1,13 @@
-using _Tripfinity.Models.Tables;
-using _Tripfinity.Models.Data.Response;
-using _Tripfinity.Models.Enums;
+using Tripfinity.Models.Tables;
+using Tripfinity.Models.Data.Response;
+using Tripfinity.Models.Enums;
 
-namespace _Tripfinity.Interfaces
+namespace Tripfinity.Interfaces
 {
     public interface IBookingService
     {
         
-        Task<Booking?> GetBookingAsync(int id, TransportType transportType);
+        Task<Booking?> GetBookingAsync(int id, TransportType transportType, int? ownerUserId = null);
         
         // IBookingService.cs additions:
         Task<object?> GetTripAsync(string type, int tripId);

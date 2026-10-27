@@ -90,7 +90,10 @@ document.addEventListener('DOMContentLoaded', function () {
             try {
                 const res = await fetch('/api/cip/nameenquiry', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': (document.querySelector('meta[name="csrf-token"]') || {}).content || ''
+                    },
                     body: JSON.stringify({ accountNumber, bankCode })
                 });
                 const result = await res.json().catch(() => ({}));

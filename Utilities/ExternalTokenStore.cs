@@ -1,23 +1,47 @@
-using _Tripfinity.Models.Data;
-using _Tripfinity.Models.Tables;
+using System.Security.Cryptography;
+using Tripfinity.Models.Data;
+using Tripfinity.Models.Tables;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 
-namespace _Tripfinity.Utilities;
+namespace Tripfinity.Utilities;
 
 public class ExternalTokenStore
 {
     private readonly AppDbContext _context;
     private readonly IMemoryCache _cache;
     private readonly ILogger<ExternalTokenStore> _logger;
+    private readonly IDataProtector _protector;
     private static readonly SemaphoreSlim RefreshLock = new(1, 1);
     public record ExternalApiCredential(string Token, string Key, DateTime ExpiryDate);
 
-    public ExternalTokenStore(AppDbContext context, IMemoryCache cache, ILogger<ExternalTokenStore> logger)
+    public ExternalTokenStore(AppDbContext context, IMemoryCache cache, ILogger<ExternalTokenStore> logger,
+        IDataProtectionProvider dataProtectionProvider)
     {
         _context = context;
         _cache = cache;
         _logger = logger;
+        _protector = dataProtectionProvider.CreateProtector("Tripfinity.ExternalApiTokens.v1");
+    }
+
+    // Partner bearer tokens and signing keys must never be readable straight out
+    // of a database backup, so they are encrypted at rest with Data Protection.
+    private string Protect(string value) => string.IsNullOrEmpty(value) ? value : _protector.Protect(value);
+
+    private string Unprotect(string value)
+    {
+        if (string.IsNullOrEmpty(value)) return value;
+
+        try
+        {
+            return _protector.Unprotect(value);
+        }
+        catch (CryptographicException)
+        {
+            // Row written before encryption was introduced.
+            return value;
+        }
     }
 
     /// <summary>
@@ -41,9 +65,10 @@ public class ExternalTokenStore
 
         if (stored is not null)
         {
-            _cache.Set(cacheKey, stored.Token, stored.ExpiryDate - DateTime.Now);
+            var plaintext = Unprotect(stored.Token);
+            _cache.Set(cacheKey, plaintext, stored.ExpiryDate - DateTime.Now);
             _logger.LogDebug("{Provider} token from database", provider);
-            return stored.Token;
+            return plaintext;
         }
 
         await RefreshLock.WaitAsync();
@@ -57,7 +82,7 @@ public class ExternalTokenStore
                 _context.ExternalApiTokens.Add(new ExternalApiToken
                 {
                     Provider = provider,
-                    Token = freshToken,
+                    Token = Protect(freshToken),
                     ExpiryDate = expiresAt,
                     CreatedAt = DateTime.Now,
                     UpdatedAt = DateTime.Now
@@ -65,7 +90,7 @@ public class ExternalTokenStore
             }
             else
             {
-                existing.Token = freshToken;
+                existing.Token = Protect(freshToken);
                 existing.ExpiryDate = expiresAt;
                 existing.UpdatedAt = DateTime.Now;
             }
@@ -104,7 +129,10 @@ public class ExternalTokenStore
 
                 if (stored is not null)
                 {
-                    var fromDb = new ExternalApiCredential(stored.Token, stored.Key ?? string.Empty, stored.ExpiryDate);
+                    var fromDb = new ExternalApiCredential(
+                        Unprotect(stored.Token),
+                        Unprotect(stored.Key ?? string.Empty),
+                        stored.ExpiryDate);
                     _cache.Set(cacheKey, fromDb, stored.ExpiryDate - DateTime.Now);
                     _logger.LogDebug("{Provider} credential from database", provider);
                     return fromDb;
@@ -129,8 +157,8 @@ public class ExternalTokenStore
                     _context.ExternalApiTokens.Add(new ExternalApiToken
                     {
                         Provider = provider,
-                        Token = fresh.Token,
-                        Key = fresh.Key,
+                        Token = Protect(fresh.Token),
+                        Key = Protect(fresh.Key),
                         ExpiryDate = fresh.ExpiryDate,
                         CreatedAt = DateTime.Now,
                         UpdatedAt = DateTime.Now
@@ -138,8 +166,8 @@ public class ExternalTokenStore
                 }
                 else
                 {
-                    existing.Token = fresh.Token;
-                    existing.Key = fresh.Key;
+                    existing.Token = Protect(fresh.Token);
+                    existing.Key = Protect(fresh.Key);
                     existing.ExpiryDate = fresh.ExpiryDate;
                     existing.UpdatedAt = DateTime.Now;
                 }

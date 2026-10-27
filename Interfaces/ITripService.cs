@@ -1,8 +1,8 @@
-using _Tripfinity.Models.Data.Requests;
-using _Tripfinity.Models.Enums;
-using _Tripfinity.Models.Tables;
+using Tripfinity.Models.Data.Requests;
+using Tripfinity.Models.Enums;
+using Tripfinity.Models.Tables;
 
-namespace _Tripfinity.Interfaces;
+namespace Tripfinity.Interfaces;
 
 public interface ITripService
 

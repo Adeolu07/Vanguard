@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 
-namespace _Tripfinity.Utilities;
+namespace Tripfinity.Utilities;
 
 public class GlobalExceptionHandler : IExceptionHandler
 {
@@ -35,9 +35,8 @@ public class GlobalExceptionHandler : IExceptionHandler
             return true;
         }
 
-        // Browser request → redirect to our error page
-        var url = $"/Home/Error?statusCode={statusCode}&title={Uri.EscapeDataString(title)}&detail={Uri.EscapeDataString(detail)}";
-        httpContext.Response.Redirect(url);
+        // Browser request → redirect to our error page (status code only)
+        httpContext.Response.Redirect($"/Home/Error?statusCode={statusCode}");
         return true;
     }
 

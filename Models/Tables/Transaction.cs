@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace _Tripfinity.Models.Tables;
+namespace Tripfinity.Models.Tables;
 
 public class Transaction
 {

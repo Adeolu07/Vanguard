@@ -1,6 +1,6 @@
-using _Tripfinity.Models.Tables;
+using Tripfinity.Models.Tables;
 
-namespace _Tripfinity.Models.ViewModels;
+namespace Tripfinity.Models.ViewModels;
 
 public class TicketIndexViewModel
 {

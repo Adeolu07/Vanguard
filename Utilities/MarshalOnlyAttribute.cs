@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
-namespace _Tripfinity.Utilities;
+namespace Tripfinity.Utilities;
 
 public class MarshalOnlyAttribute : ActionFilterAttribute
 {

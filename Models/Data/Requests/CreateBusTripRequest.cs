@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
-using _Tripfinity.Utilities;
+using Tripfinity.Utilities;
 
-namespace _Tripfinity.Models.Data.Requests;
+namespace Tripfinity.Models.Data.Requests;
 
 public class CreateBusTripRequest : IValidatableObject
 {

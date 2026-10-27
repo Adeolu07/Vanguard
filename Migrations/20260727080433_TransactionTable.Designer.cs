@@ -5,11 +5,11 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using _Tripfinity.Models.Data;
+using Tripfinity.Models.Data;
 
 #nullable disable
 
-namespace _Tripfinity.Migrations
+namespace Tripfinity.Migrations
 {
     [DbContext(typeof(AppDbContext))]
     [Migration("20260727080433_TransactionTable")]
@@ -25,7 +25,7 @@ namespace _Tripfinity.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("_Tripfinity.Models.AuthToken", b =>
+            modelBuilder.Entity("Tripfinity.Models.AuthToken", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -45,7 +45,7 @@ namespace _Tripfinity.Migrations
                     b.ToTable("AuthTokens");
                 });
 
-            modelBuilder.Entity("_Tripfinity.Models.Tables.Booking", b =>
+            modelBuilder.Entity("Tripfinity.Models.Tables.Booking", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -111,7 +111,7 @@ namespace _Tripfinity.Migrations
                     b.ToTable("Bookings");
                 });
 
-            modelBuilder.Entity("_Tripfinity.Models.Tables.BusTrip", b =>
+            modelBuilder.Entity("Tripfinity.Models.Tables.BusTrip", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -192,7 +192,7 @@ namespace _Tripfinity.Migrations
                         });
                 });
 
-            modelBuilder.Entity("_Tripfinity.Models.Tables.RailwayTrip", b =>
+            modelBuilder.Entity("Tripfinity.Models.Tables.RailwayTrip", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -271,7 +271,7 @@ namespace _Tripfinity.Migrations
                         });
                 });
 
-            modelBuilder.Entity("_Tripfinity.Models.Tables.TaxiTrip", b =>
+            modelBuilder.Entity("Tripfinity.Models.Tables.TaxiTrip", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -338,7 +338,7 @@ namespace _Tripfinity.Migrations
                         });
                 });
 
-            modelBuilder.Entity("_Tripfinity.Models.Tables.Ticket", b =>
+            modelBuilder.Entity("Tripfinity.Models.Tables.Ticket", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -399,7 +399,7 @@ namespace _Tripfinity.Migrations
                     b.ToTable("Tickets");
                 });
 
-            modelBuilder.Entity("_Tripfinity.Models.Tables.Transaction", b =>
+            modelBuilder.Entity("Tripfinity.Models.Tables.Transaction", b =>
                 {
                     b.Property<int>("TransactionId")
                         .ValueGeneratedOnAdd()
@@ -454,7 +454,7 @@ namespace _Tripfinity.Migrations
                     b.ToTable("Transactions");
                 });
 
-            modelBuilder.Entity("_Tripfinity.Models.Tables.User", b =>
+            modelBuilder.Entity("Tripfinity.Models.Tables.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -590,24 +590,24 @@ namespace _Tripfinity.Migrations
                         });
                 });
 
-            modelBuilder.Entity("_Tripfinity.Models.Tables.Booking", b =>
+            modelBuilder.Entity("Tripfinity.Models.Tables.Booking", b =>
                 {
-                    b.HasOne("_Tripfinity.Models.Tables.BusTrip", "BusTrip")
+                    b.HasOne("Tripfinity.Models.Tables.BusTrip", "BusTrip")
                         .WithMany()
                         .HasForeignKey("BusTripId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("_Tripfinity.Models.Tables.RailwayTrip", "RailwayTrip")
+                    b.HasOne("Tripfinity.Models.Tables.RailwayTrip", "RailwayTrip")
                         .WithMany()
                         .HasForeignKey("RailwayTripId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("_Tripfinity.Models.Tables.TaxiTrip", "TaxiTrip")
+                    b.HasOne("Tripfinity.Models.Tables.TaxiTrip", "TaxiTrip")
                         .WithMany()
                         .HasForeignKey("TaxiTripId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("_Tripfinity.Models.Tables.User", "User")
+                    b.HasOne("Tripfinity.Models.Tables.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -622,36 +622,36 @@ namespace _Tripfinity.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("_Tripfinity.Models.Tables.BusTrip", b =>
+            modelBuilder.Entity("Tripfinity.Models.Tables.BusTrip", b =>
                 {
-                    b.HasOne("_Tripfinity.Models.Tables.User", null)
+                    b.HasOne("Tripfinity.Models.Tables.User", null)
                         .WithMany("BusTrips")
                         .HasForeignKey("MarshalId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("_Tripfinity.Models.Tables.RailwayTrip", b =>
+            modelBuilder.Entity("Tripfinity.Models.Tables.RailwayTrip", b =>
                 {
-                    b.HasOne("_Tripfinity.Models.Tables.User", null)
+                    b.HasOne("Tripfinity.Models.Tables.User", null)
                         .WithMany("RailwayTrips")
                         .HasForeignKey("MarshalId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("_Tripfinity.Models.Tables.TaxiTrip", b =>
+            modelBuilder.Entity("Tripfinity.Models.Tables.TaxiTrip", b =>
                 {
-                    b.HasOne("_Tripfinity.Models.Tables.User", null)
+                    b.HasOne("Tripfinity.Models.Tables.User", null)
                         .WithMany("TaxiTrips")
                         .HasForeignKey("MarshalId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("_Tripfinity.Models.Tables.Ticket", b =>
+            modelBuilder.Entity("Tripfinity.Models.Tables.Ticket", b =>
                 {
-                    b.HasOne("_Tripfinity.Models.Tables.Booking", "Booking")
+                    b.HasOne("Tripfinity.Models.Tables.Booking", "Booking")
                         .WithMany()
                         .HasForeignKey("BookingId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -660,9 +660,9 @@ namespace _Tripfinity.Migrations
                     b.Navigation("Booking");
                 });
 
-            modelBuilder.Entity("_Tripfinity.Models.Tables.Transaction", b =>
+            modelBuilder.Entity("Tripfinity.Models.Tables.Transaction", b =>
                 {
-                    b.HasOne("_Tripfinity.Models.Tables.User", "User")
+                    b.HasOne("Tripfinity.Models.Tables.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -671,7 +671,7 @@ namespace _Tripfinity.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("_Tripfinity.Models.Tables.User", b =>
+            modelBuilder.Entity("Tripfinity.Models.Tables.User", b =>
                 {
                     b.Navigation("BusTrips");
 

@@ -1,4 +1,4 @@
-namespace _Tripfinity.Models.Data.Response;
+namespace Tripfinity.Models.Data.Response;
 
 public class NameEnquiryResponse
 {

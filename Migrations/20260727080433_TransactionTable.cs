@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace _Tripfinity.Migrations
+namespace Tripfinity.Migrations
 {
     /// <inheritdoc />
     public partial class TransactionTable : Migration

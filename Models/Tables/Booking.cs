@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
-using _Tripfinity.Models.Enums;
-using _Tripfinity.Services;
-namespace _Tripfinity.Models.Tables;
+using Tripfinity.Models.Enums;
+using Tripfinity.Services;
+namespace Tripfinity.Models.Tables;
 
 public class Booking
 {

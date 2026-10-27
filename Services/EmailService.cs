@@ -1,7 +1,7 @@
-using _Tripfinity.Interfaces;
+using Tripfinity.Interfaces;
 using Resend;
 
-namespace _Tripfinity.Services;
+namespace Tripfinity.Services;
 
 public class EmailService : IEmailService
 {
@@ -16,40 +16,46 @@ public class EmailService : IEmailService
 
     public async Task SendEmailAsync(string email, string subject, string htmlMessage)
     {
+        var apiKey = _config["Resend:apiKey"];
+        var fromEmail = _config["Resend:fromEmail"];
+
+        if (string.IsNullOrWhiteSpace(apiKey) || string.IsNullOrWhiteSpace(fromEmail))
+        {
+            _logger.LogError("Email delivery is not configured (missing Resend:apiKey or Resend:fromEmail)");
+            return;
+        }
+
         try
         {
-            var apiKey = _config["Resend:apiKey"];
-            var fromEmail = _config["Resend:fromEmail"];
-
-            IResend resend = ResendClient.Create(apiKey!);
+            IResend resend = ResendClient.Create(apiKey);
             var response = await resend.EmailSendAsync(new EmailMessage
             {
-                From = fromEmail!,
+                From = fromEmail,
                 To = email,
                 Subject = subject,
                 HtmlBody = htmlMessage,
             });
-            
 
-            if (!response.Success)
+            if (response.Success)
             {
                 _logger.LogInformation("Email sent successfully");
+            }
+            else
+            {
+                _logger.LogError("Email delivery failed for message {Subject}", subject);
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
-            throw;
+            _logger.LogError(ex, "Email delivery failed for message {Subject}", subject);
         }
     }
     
         
     public Task SendConfirmationEmailAsync(string email, string confirmationLink)
     {
-        try
-        {
-            const string subject = "Confirm your email on Tripfinity";
-            var htmlBody = $$$"""
+        const string subject = "Confirm your email on Tripfinity";
+        var htmlBody = $$$"""
                               <!DOCTYPE html>
                               <html>
                               <head>
@@ -85,13 +91,7 @@ public class EmailService : IEmailService
                               </html>
                               """;
 
-            return SendEmailAsync(email, subject, htmlBody);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(ex.Message);
-            throw;
-        }
+        return SendEmailAsync(email, subject, htmlBody);
     }
     
     public async Task SendPasswordResetEmailAsync(string email, string resetLink)

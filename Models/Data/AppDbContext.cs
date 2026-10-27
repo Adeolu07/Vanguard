@@ -1,7 +1,7 @@
-using _Tripfinity.Models.Tables;
+using Tripfinity.Models.Tables;
 using Microsoft.EntityFrameworkCore;
 
-namespace _Tripfinity.Models.Data
+namespace Tripfinity.Models.Data
 {
     public class AppDbContext : DbContext
     {

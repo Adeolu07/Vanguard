@@ -1,11 +1,10 @@
-using _Tripfinity.Interfaces;
-using _Tripfinity.Models.Data.Requests;
-using _Tripfinity.Models.Data.Response;
-using _Tripfinity.Models.Tables;
+using Tripfinity.Interfaces;
+using Tripfinity.Models.Data.Requests;
+using Tripfinity.Models.Data.Response;
+using Tripfinity.Models.Tables;
 using Microsoft.AspNetCore.Mvc;
-using TransactionDetails = _Tripfinity.Models.Data.Response.TransactionDetails;
 
-namespace _Tripfinity.Controllers;
+namespace Tripfinity.Controllers;
 
 public class ParentController : Controller
 { 
@@ -14,7 +13,7 @@ public class ParentController : Controller
     
     protected IActionResult RedirectToLogin() => RedirectToAction("SignIn", "Auth");
 
-    protected static async Task<TransactionDetails?> FetchTransaction(IWalletService walletService, Booking booking)
+    protected static async Task<WalletTransactionDetails?> FetchTransaction(IWalletService walletService, Booking booking)
     {
         if (string.IsNullOrEmpty(booking.PaymentTransactionId))
             return null;

@@ -2,14 +2,14 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
-using _Tripfinity.Interfaces;
-using _Tripfinity.Models.Data.Requests;
-using _Tripfinity.Models.Data.Response;
-using _Tripfinity.Utilities;
+using Tripfinity.Interfaces;
+using Tripfinity.Models.Data.Requests;
+using Tripfinity.Models.Data.Response;
+using Tripfinity.Utilities;
 using Newtonsoft.Json;
-using TransactionDetails = _Tripfinity.Models.Data.Requests.TransactionDetails;
+using TransactionDetails = Tripfinity.Models.Data.Requests.TransactionDetails;
 
-namespace _Tripfinity.Services;
+namespace Tripfinity.Services;
 
 public class FastChannelService : IFastChannelService
 {
@@ -54,8 +54,7 @@ public class FastChannelService : IFastChannelService
 
         if (!res.IsSuccessStatusCode)
         {
-            _logger.LogError("FastChannel authentication failed [Status={StatusCode}]: {RawContent}",
-                (int)res.StatusCode, rawContent);
+            _logger.LogError("FastChannel authentication failed [Status={StatusCode}]", (int)res.StatusCode);
             throw new InvalidOperationException("FastChannel authentication failed.");
         }
 
@@ -83,18 +82,14 @@ public class FastChannelService : IFastChannelService
             var res = await _client.PostAsync("Authentication",
                 new StringContent(req, Encoding.UTF8, "application/json"));
             var rawContent = await res.Content.ReadAsStringAsync();
-            _logger.LogInformation("Authentication response [Status={StatusCode}]: {RawContent}",
-                (int)res.StatusCode, rawContent);
+            _logger.LogInformation("Authentication response [Status={StatusCode}]", (int)res.StatusCode);
 
             var response = JsonConvert.DeserializeObject<FcAuthRes>(rawContent);
 
             if (response is null)
             {
-                _logger.LogError("Failed to deserialize authentication response: {RawContent}", rawContent);
-                return (res.StatusCode, FailedAuth(
-                    string.IsNullOrWhiteSpace(rawContent)
-                        ? $"FastChannel returned HTTP {(int)res.StatusCode}."
-                        : rawContent));
+                _logger.LogError("Failed to deserialize the FastChannel authentication response");
+                return (res.StatusCode, FailedAuth($"FastChannel returned HTTP {(int)res.StatusCode}."));
             }
 
             _logger.LogInformation("FastChannel authentication successful");
@@ -103,7 +98,7 @@ public class FastChannelService : IFastChannelService
         catch (Exception ex)
         {
             _logger.LogError(ex, "FastChannel authentication error");
-            return (HttpStatusCode.BadGateway, FailedAuth(ex.Message));
+            return (HttpStatusCode.BadGateway, FailedAuth("FastChannel is unavailable."));
         }
     }
     
@@ -133,7 +128,7 @@ public class FastChannelService : IFastChannelService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Single Post error");
-            return (HttpStatusCode.BadGateway, FailedSinglePost(ex.Message));
+            return (HttpStatusCode.BadGateway, FailedSinglePost("FastChannel is unavailable."));
         }
     }
     
@@ -163,18 +158,14 @@ public class FastChannelService : IFastChannelService
                 var res = await _client.PostAsync("SinglePost",
                     new StringContent(req, Encoding.UTF8, "application/json"));
                 var rawContent = await res.Content.ReadAsStringAsync();
-                _logger.LogInformation("Single Post response [Status={StatusCode}], [ResponseCode={ResponseCode}]",
-                    (int)res.StatusCode, JsonConvert.DeserializeObject<FcSinglePostRes>(rawContent)?.ResponseHeader.ResponseCode);
-
                 var response = JsonConvert.DeserializeObject<FcSinglePostRes>(rawContent);
+                _logger.LogInformation("Single Post response [Status={StatusCode}], [ResponseCode={ResponseCode}]",
+                    (int)res.StatusCode, response?.ResponseHeader.ResponseCode);
 
                 if (response is null)
                 {
-                    _logger.LogError("Failed to deserialize Single Post response: {RawContent}", rawContent);
-                    return (res.StatusCode, FailedSinglePost(
-                        string.IsNullOrWhiteSpace(rawContent)
-                            ? $"FastChannel returned HTTP {(int)res.StatusCode}."
-                            : rawContent));
+                    _logger.LogError("Failed to deserialize the FastChannel Single Post response");
+                    return (res.StatusCode, FailedSinglePost($"FastChannel returned HTTP {(int)res.StatusCode}."));
                 }
 
                 _logger.LogInformation("Single Post processed");
@@ -183,7 +174,7 @@ public class FastChannelService : IFastChannelService
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Single Post send error");
-                return (HttpStatusCode.BadGateway, FailedSinglePost(ex.Message));
+                return (HttpStatusCode.BadGateway, FailedSinglePost("FastChannel is unavailable."));
             }
         }
     

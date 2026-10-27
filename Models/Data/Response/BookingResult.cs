@@ -1,8 +1,8 @@
-using _Tripfinity.Models.Enums;
-using _Tripfinity.Models.Tables;
-using _Tripfinity.Services;
+using Tripfinity.Models.Enums;
+using Tripfinity.Models.Tables;
+using Tripfinity.Services;
 
-namespace _Tripfinity.Models.Data.Response;
+namespace Tripfinity.Models.Data.Response;
 
 public class BookingResult
 {

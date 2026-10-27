@@ -1,10 +1,10 @@
-using _Tripfinity.Interfaces;
-using _Tripfinity.Models.Data;
-using _Tripfinity.Models.Tables;
-using _Tripfinity.Models.ViewModels;
+using Tripfinity.Interfaces;
+using Tripfinity.Models.Data;
+using Tripfinity.Models.Tables;
+using Tripfinity.Models.ViewModels;
 using Microsoft.EntityFrameworkCore;
 
-namespace _Tripfinity.Services;
+namespace Tripfinity.Services;
 
 public class AdminService : IAdminService
 {

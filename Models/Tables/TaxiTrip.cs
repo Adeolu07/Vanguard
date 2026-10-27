@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
-using _Tripfinity.Models.Enums;
+using Tripfinity.Models.Enums;
 
-namespace _Tripfinity.Models.Tables;
+namespace Tripfinity.Models.Tables;
 
 public class TaxiTrip : ITrip
 {

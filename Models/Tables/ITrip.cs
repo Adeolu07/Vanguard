@@ -1,6 +1,6 @@
-using _Tripfinity.Models.Enums;
+using Tripfinity.Models.Enums;
 
-namespace _Tripfinity.Models.Tables;
+namespace Tripfinity.Models.Tables;
 
 /// <summary>
 /// Common surface shared by BusTrip, RailwayTrip and TaxiTrip.
