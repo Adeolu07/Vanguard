@@ -1,11 +1,10 @@
-using _Tripfinity.Interfaces;
-using _Tripfinity.Models.Data;
-using _Tripfinity.Models.Enums;
-using _Tripfinity.Models.Tables;
-using _Tripfinity.Views;
-using Microsoft.EntityFrameworkCore; // needed for PaginatedList if it's defined elsewhere; adjust if it's in your own namespace
+using Tripfinity.Interfaces;
+using Tripfinity.Models.Data;
+using Tripfinity.Models.Enums;
+using Tripfinity.Models.Tables;
+using Tripfinity.Utilities;
 
-namespace _Tripfinity.Services;
+namespace Tripfinity.Services;
 
 public class TripListingService : ITripListingService
 {

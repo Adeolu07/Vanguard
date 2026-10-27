@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace _Tripfinity.Models.Data.Response;
+namespace Tripfinity.Models.Data.Response;
 
 public class GetTransactionListResponse
 {

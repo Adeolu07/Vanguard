@@ -1,4 +1,4 @@
-@model _Tripfinity.Models.ViewModels.MarshalDashboardViewModel?
+@model Tripfinity.Models.ViewModels.MarshalDashboardViewModel?
 @{
     ViewData["Title"] = "Marshal Dashboard";
     ViewData["ActiveNav"] = "Dashboard";
@@ -55,7 +55,7 @@
             Recent Tickets
             <a href="/marshal/trips" class="view-all">View All →</a>
         </div>
-        @if (Model.Tickets.Any())
+        @if (Model?.Tickets is { Count: > 0 })
         {
             <table class="tickets-table">
                 <thead>
@@ -68,7 +68,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                @foreach (var ticket in Model.Tickets)
+                @foreach (var ticket in Model?.Tickets ?? new List<Tripfinity.Models.Tables.Ticket>())
                 {
                     <tr>
                         <td>@ticket.TicketReference</td>

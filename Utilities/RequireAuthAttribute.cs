@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
-namespace _Tripfinity.Utilities;
+namespace Tripfinity.Utilities;
 
-public class RequireAuth : ActionFilterAttribute
+public class RequireAuthAttribute : ActionFilterAttribute
 {
     public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {

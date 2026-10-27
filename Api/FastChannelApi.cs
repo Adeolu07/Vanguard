@@ -1,12 +1,17 @@
 using System.Net;
-using _Tripfinity.Interfaces;
-using _Tripfinity.Models.Data.Requests;
+using Tripfinity.Interfaces;
+using Tripfinity.Models.Data.Requests;
+using Tripfinity.Utilities;
 using Microsoft.AspNetCore.Mvc;
 
-namespace _Tripfinity.Api;
+namespace Tripfinity.Api;
 
+// Raw payout rail. Server-side code calls IFastChannelService directly; these
+// endpoints exist for admin tooling only and must never be publicly reachable.
 [ApiController]
 [Route("api/fastchannel")]
+[IgnoreAntiforgeryToken]
+[ApiSessionAuth(Role = ApiRoles.Admin)]
 public class FastChannelApi : ControllerBase
 {
     private readonly IFastChannelService _fastChannelService;

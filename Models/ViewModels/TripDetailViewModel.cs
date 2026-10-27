@@ -1,4 +1,4 @@
-namespace _Tripfinity.Models.ViewModels;
+namespace Tripfinity.Models.ViewModels;
 
 public class TripDetailViewModel
 {

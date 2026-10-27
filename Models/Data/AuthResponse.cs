@@ -1,6 +1,6 @@
-using _Tripfinity.Models.Tables;
+using Tripfinity.Models.Tables;
 
-namespace _Tripfinity.Models.Data;
+namespace Tripfinity.Models.Data;
 
 public class AuthResponse
 {

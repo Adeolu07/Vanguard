@@ -1,10 +1,10 @@
-using _Tripfinity.Interfaces;
-using _Tripfinity.Models.Tables;
-using _Tripfinity.Models.ViewModels;
-using _Tripfinity.Utilities;
+using Tripfinity.Interfaces;
+using Tripfinity.Models.Tables;
+using Tripfinity.Models.ViewModels;
+using Tripfinity.Utilities;
 using Microsoft.AspNetCore.Mvc;
 
-namespace _Tripfinity.Controllers;
+namespace Tripfinity.Controllers;
 
 [Route("admin")]
 [ServiceFilter(typeof(AdminOnlyFilter))]

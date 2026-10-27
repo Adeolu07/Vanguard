@@ -1,8 +1,10 @@
-﻿<!DOCTYPE html>
+﻿@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="csrf-token" content="@Antiforgery.GetAndStoreTokens(Context).RequestToken" />
     <title>@ViewData["Title"] - Tripfinity</title>
 
     <!-- Global styles -->
@@ -15,7 +17,6 @@
         @if (ViewData["HideNavbar"] == null)
         {
             <nav class="navbar">
-                <!-- Corrected Brand Name matching the Mockup -->
                 <div class="logo">Tripfinity</div>
                 <div class="user-info">
                     @if (Context.Session.GetString("Username") != null)
@@ -23,7 +24,9 @@
                         <span class="user-name">👋 Hello, @Context.Session.GetString("Username")</span>
                         <a href="/Home/Dashboard" class="btn-secondary" style="margin-left: 10px;">📋 Dashboard</a>
                         <a href="/Home/Wallet" class="logout-btn" style="margin-left: 10px;">💳 Wallet</a>
-                        <a href="/Auth/Logout" class="logout-btn" style="margin-left: 10px;">Sign Out</a>
+                        <form method="post" asp-controller="Auth" asp-action="Logout" style="display:inline;margin-left:10px;">
+                            <button type="submit" class="logout-btn" style="background:none;border:0;padding:0;cursor:pointer;font:inherit;">Sign Out</button>
+                        </form>
                     }
                     else
                     {

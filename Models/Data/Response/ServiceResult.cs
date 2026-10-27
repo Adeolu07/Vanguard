@@ -1,4 +1,4 @@
-namespace _Tripfinity.Models.Data.Response;
+namespace Tripfinity.Models.Data.Response;
 
 public record ServiceResult(bool Success, string Message)
 {

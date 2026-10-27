@@ -1,12 +1,12 @@
-using _Tripfinity.Interfaces;
-using _Tripfinity.Models.Data;
-using _Tripfinity.Models.Data.Requests;
-using _Tripfinity.Models.Data.Response;
-using _Tripfinity.Models.Tables;
-using _Tripfinity.Models.ViewModels;
+using Tripfinity.Interfaces;
+using Tripfinity.Models.Data;
+using Tripfinity.Models.Data.Requests;
+using Tripfinity.Models.Data.Response;
+using Tripfinity.Models.Tables;
+using Tripfinity.Models.ViewModels;
 using Microsoft.EntityFrameworkCore;
 
-namespace _Tripfinity.Services;
+namespace Tripfinity.Services;
 
 public class PassengerService : IPassengerService
 {
@@ -53,8 +53,6 @@ public class PassengerService : IPassengerService
             .OrderByDescending(b => b.BookingDate)
             .Take(10)
             .ToListAsync();
-    
-    // New methods to add to the existing PassengerService class
 
     public async Task<TicketIndexViewModel> GetTicketIndexAsync(int userId)
     {
@@ -145,6 +143,40 @@ public class PassengerService : IPassengerService
         };
 
         return viewModel;
+    }
+
+    public async Task<ServiceResult> CreateWalletIfMissingAsync(int userId)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user is null)
+            return ServiceResult.Fail("Account not found.");
+
+        if (!user.IsEmailConfirmed || !user.IsActive)
+            return ServiceResult.Fail("Confirm your email address before setting up a wallet.");
+
+        if (!string.IsNullOrWhiteSpace(user.UserWalletId))
+            return ServiceResult.Ok("Your wallet is already active.");
+
+        var response = await _wallet.CreateWalletAsync(new CreateWalletRequest
+        {
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            CustomerAlias = user.Email
+        });
+
+        if (response?.ResponseHeader?.ResponseCode != "00"
+            || string.IsNullOrEmpty(response.AccountDetails?.CustomerId))
+        {
+            _logger.LogWarning("Wallet setup failed for user {UserId}: {Message}",
+                userId, response?.ResponseHeader?.ResponseMessage ?? "wallet service unavailable");
+            return ServiceResult.Fail("We could not set up your wallet yet. Please try again shortly.");
+        }
+
+        user.UserWalletId = response.AccountDetails.CustomerId;
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Wallet setup completed for user {UserId}", userId);
+        return ServiceResult.Ok("Your wallet is ready.");
     }
 }
 

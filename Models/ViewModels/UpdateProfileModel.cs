@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace _Tripfinity.Models.ViewModels;
+namespace Tripfinity.Models.ViewModels;
 
 public class UpdateProfileModel
 {

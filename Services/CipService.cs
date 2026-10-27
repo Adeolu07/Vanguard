@@ -1,23 +1,30 @@
 using System.Net;
 using System.Text;
-using _Tripfinity.Interfaces;
-using _Tripfinity.Models.Data.Requests;
-using _Tripfinity.Models.Data.Response;
+using Tripfinity.Interfaces;
+using Tripfinity.Models.Data.Requests;
+using Tripfinity.Models.Data.Response;
 using Newtonsoft.Json;
 
-namespace _Tripfinity.Services;
+namespace Tripfinity.Services;
 
 public class CipService : ICipService
 {
     private readonly HttpClient _client;
     private readonly ILogger<CipService> _logger;
+    private readonly string _institutionId;
+    private readonly string _senderAccountNumber;
 
-    private const string InstitutionId = "000966";
-    private const string SenderAccountNumber = "4275719875";
-    public CipService(HttpClient client, ILogger<CipService> logger)
+    // Operational identifiers. They are not secrets, but they are environment
+    // specific, so they can be overridden through configuration.
+    private const string DefaultInstitutionId = "000966";
+    private const string DefaultSenderAccountNumber = "4275719875";
+
+    public CipService(HttpClient client, ILogger<CipService> logger, IConfiguration configuration)
     {
         _client = client;
         _logger = logger;
+        _institutionId = configuration["Cip:InstitutionId"] ?? DefaultInstitutionId;
+        _senderAccountNumber = configuration["Cip:SenderAccountNumber"] ?? DefaultSenderAccountNumber;
     }
     
     public async Task<NameEnquiryWrapper> AccountEnquiry(string accountNumber, string bankCode)
@@ -27,7 +34,7 @@ public class CipService : ICipService
             var request = new NameEnquiryRequest
             {
                 SessionId = GenerateSessionId(),
-                SenderAccountNumber = SenderAccountNumber,
+                SenderAccountNumber = _senderAccountNumber,
                 DestinationInstitutionCode = bankCode,
                 DestinationAccountNumber = accountNumber
             };
@@ -57,12 +64,14 @@ public class CipService : ICipService
                     Message = wrapper.Data.ResponseMessage
                 };
             
-            _logger.LogInformation("Name Enquiry Successful for account {Account}", wrapper.Data.AccountName);
+            _logger.LogInformation("Name enquiry successful for account ending {Suffix}",
+                accountNumber.Length > 4 ? accountNumber[^4..] : "****");
             return wrapper;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Account enquiry failed for account {Account}", accountNumber);
+            _logger.LogError(ex, "Account enquiry failed for account ending {Suffix}",
+                accountNumber.Length > 4 ? accountNumber[^4..] : "****");
             return NameEnquiryError("Could not reach the account enquiry service.");
         }
     }
@@ -76,11 +85,11 @@ public class CipService : ICipService
         };
     
     
-    private static string GenerateSessionId()
+    private string GenerateSessionId()
     {
         var timestamp = DateTime.Now.ToString("yyMMddHHmmss");
         var random = Random.Shared.Next(100_000_000, 999_999_999).ToString("D12")[..12];
-        var sessionId = $"{InstitutionId}{timestamp}{random}";
+        var sessionId = $"{_institutionId}{timestamp}{random}";
         return sessionId;
     }
 }

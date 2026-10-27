@@ -1,20 +1,25 @@
-using _Tripfinity.Interfaces;
-using _Tripfinity.Models.ViewModels;
+using Tripfinity.Interfaces;
+using Tripfinity.Models.ViewModels;
+using Tripfinity.Utilities;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
-namespace _Tripfinity.Controllers;
+namespace Tripfinity.Controllers;
 
 public class AuthController : Controller
 {
     private readonly IAuthService _authService;
     private readonly IEmailService _emailService;
     private readonly ILogger<AuthController> _logger;
+    private readonly IConfiguration _config;
 
-    public AuthController(IAuthService authService, IEmailService emailService, ILogger<AuthController> logger)
+    public AuthController(IAuthService authService, IEmailService emailService, ILogger<AuthController> logger,
+        IConfiguration config)
     {
         _authService = authService;
         _emailService = emailService;
         _logger = logger;
+        _config = config;
     }
 
     [HttpGet] public IActionResult DecisionLogin() => View();
@@ -32,6 +37,7 @@ public class AuthController : Controller
     }
 
     [HttpPost]
+    [EnableRateLimiting(RateLimitPolicies.Authentication)]
     public async Task<IActionResult> SignIn(LoginViewModel model)
     {
         if (!ModelState.IsValid) 
@@ -45,10 +51,13 @@ public class AuthController : Controller
             return View(model);
         }
 
-        HttpContext.Session.SetString("FirstName", result.User.FirstName);
         await _authService.SetUserSession(HttpContext, result.User);
-        await HttpContext.Session.CommitAsync();
-        return RedirectToAction("Dashboard", "Home");
+        return result.User.Role switch
+        {
+            "Admin" => RedirectToAction("Index", "Admin"),
+            "Marshal" => RedirectToAction("Index", "Marshal"),
+            _ => RedirectToAction("Dashboard", "Home")
+        };
     }
 
     [HttpGet]
@@ -58,6 +67,7 @@ public class AuthController : Controller
     }
 
     [HttpPost]
+    [EnableRateLimiting(RateLimitPolicies.Authentication)]
     public async Task<IActionResult> MarshalSignIn(LoginViewModel model)
     {
         if (!ModelState.IsValid) 
@@ -67,6 +77,13 @@ public class AuthController : Controller
         if (result is null || !result.Success || result.User == null)
         {
             ModelState.AddModelError("", result?.Message ?? "Login Failed");
+            return View(model);
+        }
+
+        if (result.User.Role != "Marshal")
+        {
+            _logger.LogWarning("Marshal portal sign-in refused for non-marshal user {UserId}", result.User.Id);
+            ModelState.AddModelError("", "These credentials do not have marshal access.");
             return View(model);
         }
 
@@ -81,22 +98,34 @@ public class AuthController : Controller
     }
 
     [HttpPost]
+    [EnableRateLimiting(RateLimitPolicies.Authentication)]
     public async Task<IActionResult> MarshalSignUp(MarshalRegisterViewModel model)
     {
         if (!ModelState.IsValid) return View(model);
 
         var result = await _authService.RegisterMarshalAsync(model);
-        if (!result.Success || result.User == null)
+        if (!result.Success)
         {
-            ModelState.AddModelError("", result?.Message ?? "Unable to sign up");
+            ModelState.AddModelError("", result.Message);
             return View(model);
         }
 
-        _logger.LogInformation("Marshal Signup for {Email}", result.User.Email);
-        
-        var confirmationLink =  $"{Request.Scheme}://{Request.Host}/auth/ConfirmEmail?userId={result.User.Id}&token={result.User.EmailConfirmationToken}";
-        await _emailService.SendConfirmationEmailAsync(result.User.Email, confirmationLink);
-        _logger.LogInformation("Confirmation Email Sent to marshal with email: {Email}", result.User.Email);
+        // The service returns no user when the email already exists, so the
+        // response cannot be used to discover registered addresses.
+        if (result.User is not null)
+        {
+            _logger.LogInformation("Marshal registration created user {UserId}", result.User.Id);
+
+            var confirmationPath = Url.Action("ConfirmEmail", "Auth", new
+            {
+                userId = result.User.Id,
+                token = result.User.EmailConfirmationToken
+            })!;
+            await _emailService.SendConfirmationEmailAsync(result.User.Email,
+                PublicUrl.Build(HttpContext, _config, confirmationPath));
+            _logger.LogInformation("Confirmation email sent to user {UserId}", result.User.Id);
+        }
+
         TempData["SuccessMessage"] = "Registration successful. Please check your email to confirm your account.";
         
         return RedirectToAction("MarshalConfirmation");
@@ -109,29 +138,44 @@ public class AuthController : Controller
     }
 
     [HttpPost]
+    [EnableRateLimiting(RateLimitPolicies.Authentication)]
     public async Task<IActionResult> SignUp(RegisterViewModel model)
     {
         if (!ModelState.IsValid) return View(model);
 
         var result = await _authService.SignUpAsync(model);
-        if (!result.Success || result.User == null)
+        if (!result.Success)
         {
-            ModelState.AddModelError("", "Unable to sign up");
+            ModelState.AddModelError("", result.Message);
             return View(model);
         }
 
-        _logger.LogInformation("Passenger Signup for {Email}", result.User.Email);
+        if (result.User is not null)
+        {
+            _logger.LogInformation("Passenger registration created user {UserId}", result.User.Id);
 
-        var confirmationLink = $"{Request.Scheme}://{Request.Host}/auth/ConfirmEmail?userId={result.User.Id}&token={result.User.EmailConfirmationToken}";
-        await _emailService.SendConfirmationEmailAsync(result.User.Email, confirmationLink);
-        _logger.LogInformation("Confirmation email sent to {Email}", result.User.Email);
+            var confirmationPath = Url.Action("ConfirmEmail", "Auth", new
+            {
+                userId = result.User.Id,
+                token = result.User.EmailConfirmationToken
+            })!;
+            await _emailService.SendConfirmationEmailAsync(result.User.Email,
+                PublicUrl.Build(HttpContext, _config, confirmationPath));
+            _logger.LogInformation("Confirmation email sent to user {UserId}", result.User.Id);
+        }
 
         return RedirectToAction("PassengerConfirmation");
     }
 
     [HttpGet]
-    public async Task<IActionResult> ConfirmEmail([FromQuery] int userId, [FromQuery] string token)
+    public async Task<IActionResult> ConfirmEmail([FromQuery] int userId, [FromQuery] string? token)
     {
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            TempData["ErrorMessage"] = "Invalid or expired email confirmation token.";
+            return RedirectToAction("SignIn");
+        }
+
         var result = await _authService.ConfirmationEmailAsync(userId, token);
         if (!result)
         {
@@ -139,13 +183,14 @@ public class AuthController : Controller
             return RedirectToAction("SignIn");
         }
 
-        TempData["SuccessMessage"] = "Email confirmation and wallet creation successful.";
-        return RedirectToAction("Dashboard", "Home");
+        TempData["SuccessMessage"] = "Your email is confirmed. You can sign in now.";
+        return RedirectToAction("SignIn");
     }
 
     [HttpGet] public IActionResult ForgotPassword() => View();
 
     [HttpPost]
+    [EnableRateLimiting(RateLimitPolicies.Authentication)]
     public async Task<IActionResult> ForgotPassword(string email)
     {
         if (string.IsNullOrWhiteSpace(email))
@@ -154,20 +199,17 @@ public class AuthController : Controller
             return View();
         }
 
-        var resetLink = Url.Action(
+        var resetPath = Url.Action(
             "ResetPassword",
             "Auth",
-            new {email, token = "__TOKEN__" },
-            Request.Scheme
+            new {email, token = "__TOKEN__" }
         )!;
 
-        var result = await _authService.ForgotPasswordAsync(email,resetLink);
+        var result = await _authService.ForgotPasswordAsync(email,
+            PublicUrl.Build(HttpContext, _config, resetPath));
 
-        if (!result.Success) 
-            TempData["Error"] = result.Message;
-        else
-            TempData["SuccessMessage"] = result.Message;
-        
+        // Always report the same outcome so the form cannot be used to enumerate accounts.
+        TempData["SuccessMessage"] = result.Message;
         return RedirectToAction("ForgotPassword");
     }
 
@@ -178,6 +220,7 @@ public class AuthController : Controller
     }
 
     [HttpPost]
+    [EnableRateLimiting(RateLimitPolicies.Authentication)]
     public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
     {
         if (!ModelState.IsValid) return View(model);
@@ -193,6 +236,7 @@ public class AuthController : Controller
         return View(model);
     }
 
+    [HttpPost]
     public IActionResult Logout()
     {
         _authService.ClearUserSession(HttpContext);

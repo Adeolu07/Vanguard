@@ -1,12 +1,12 @@
-namespace _Tripfinity.Models.Data.Response;
+namespace Tripfinity.Models.Data.Response;
 
 public class GetTransactionResponse
 {
     public required ResponseHeader ResponseHeader { get; set; }
-    public TransactionDetails? TransactionDetails { get; set; } 
+    public WalletTransactionDetails? TransactionDetails { get; set; } 
 }
 
-public abstract class TransactionDetails
+public abstract class WalletTransactionDetails
 {
     public string? TranType { get; set; }
     public decimal Amount { get; set; }

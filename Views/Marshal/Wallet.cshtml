@@ -1,4 +1,4 @@
-@model _Tripfinity.Models.ViewModels.MarshalWalletViewModel?
+@model Tripfinity.Models.ViewModels.MarshalWalletViewModel?
 @{
     Layout = "_MarshalLayout";
     ViewData["Title"] = "My Wallet";
@@ -11,6 +11,22 @@
 }
 
 <div class="content">
+    @if (string.IsNullOrWhiteSpace(Model?.WalletId))
+    {
+        <div class="card">
+            <div class="section-header">
+                <h3>Finish setting up your wallet</h3>
+            </div>
+            <p class="fund-note">
+                Your account is confirmed, but your payout wallet was not created yet — this happens when the
+                payment service is briefly unavailable. Setting it up takes a moment and is safe to retry.
+            </p>
+            <form method="post" asp-controller="Home" asp-action="CreateWallet">
+                <button type="submit" class="btn btn-primary">Set up my wallet</button>
+            </form>
+        </div>
+    }
+
     <!-- Balance card -->
     <div class="card">
         <div class="balance-label">AVAILABLE BALANCE</div>

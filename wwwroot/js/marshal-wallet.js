@@ -109,7 +109,10 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
             const res = await fetch('/marshal/wallet/cashout', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': (document.querySelector('meta[name="csrf-token"]') || {}).content || ''
+                },
                 body: JSON.stringify({ amount })
             });
             const data = await res.json().catch(() => ({}));

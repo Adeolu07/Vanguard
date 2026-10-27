@@ -1,9 +1,9 @@
-using _Tripfinity.Interfaces;
-using _Tripfinity.Models.Data.Requests;
-using _Tripfinity.Models.Data.Response;
-using _Tripfinity.Models.Tables;
+using Tripfinity.Interfaces;
+using Tripfinity.Models.Data.Requests;
+using Tripfinity.Models.Data.Response;
+using Tripfinity.Models.Tables;
 
-namespace _Tripfinity.Services;
+namespace Tripfinity.Services;
 
 public class PaymentService : IPaymentService
 {
@@ -78,7 +78,7 @@ public class PaymentService : IPaymentService
             {
                 await _walletService.RefundAsync(new RefundRequest
                 {
-                    CustomerId = user.UserWalletId,
+                    CustomerId = user.UserWalletId!,
                     TransactionId = debit.TransactionId,
                     Description = "Split failed – refunding"
                 });

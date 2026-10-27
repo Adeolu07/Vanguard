@@ -1,4 +1,4 @@
-namespace _Tripfinity.Models.Tables;
+namespace Tripfinity.Models.Tables;
 
 public class MarshalBankAccount
 {

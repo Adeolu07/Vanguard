@@ -1,7 +1,7 @@
-using _Tripfinity.Models.Tables;
-using _Tripfinity.Views;
+using Tripfinity.Models.Tables;
+using Tripfinity.Utilities;
 
-namespace _Tripfinity.Interfaces;
+namespace Tripfinity.Interfaces;
 
 public interface ITripListingService
 {

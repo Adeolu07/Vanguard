@@ -7,24 +7,6 @@
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
-/* header bar */
-.dashboard-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 2.5rem;
-}
-.header-greeting h1 {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: #1e293b;
-    margin-bottom: 0.25rem;
-}
-.header-greeting p {
-    color: #64748b;
-    font-size: 0.95rem;
-}
-
 .btn-signout {
     display: inline-flex;
     align-items: center;
@@ -49,13 +31,6 @@
 }
 .alert-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
 .alert-danger  { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
-
-/* action cards */
-.dashboard-actions {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 1.5rem;
-}
 .action-card {
     background: #fff;
     border: 1px solid #e2e8f0;
@@ -73,7 +48,6 @@
     box-shadow: 0 10px 25px rgba(0,0,0,0.06);
     transform: translateY(-2px);
 }
-.card-icon { font-size: 2rem; }
 .action-card h3 { font-size: 1.2rem; margin: 0; color: #0f172a; }
 .action-card p  { margin: 0; color: #64748b; font-size: 0.9rem; }
 
@@ -128,12 +102,6 @@
 }
 .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
 .empty-state h3 { font-size: 1.3rem; margin-bottom: 0.5rem; color: #334155; }
-
-.trips-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 1.25rem;
-}
 .trip-card {
     background: #fff;
     border: 1px solid #e2e8f0;
@@ -143,12 +111,6 @@
     flex-direction: column;
     gap: 0.75rem;
 }
-.trip-route {
-    font-weight: 700;
-    font-size: 1.05rem;
-    color: #0f172a;
-}
-.trip-route span { color: #94a3b8; margin: 0 0.25rem; }
 .trip-meta {
     display: flex;
     flex-wrap: wrap;
@@ -156,29 +118,10 @@
     font-size: 0.85rem;
     color: #475569;
 }
-.trip-status {
-    font-size: 0.8rem;
-    font-weight: 600;
-    padding: 0.2rem 0.75rem;
-    border-radius: 20px;
-    width: fit-content;
-}
 .trip-status.inactive   { background: #f1f5f9; color: #64748b; }
 .trip-status.inprogress { background: #dbeafe; color: #1e40af; }
 .trip-status.completed  { background: #dcfce7; color: #166534; }
 .trip-status.cancelled  { background: #fef2f2; color: #991b1b; }
-
-.cancel-form {
-    display: flex;
-    gap: 0.5rem;
-    margin-top: 0.25rem;
-}
-.cancel-form input {
-    flex: 1;
-    padding: 0.5rem 0.75rem;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-}
 .btn-danger {
     background: #ef4444;
     color: #fff;
@@ -198,30 +141,6 @@
     padding: 0 1.5rem;
     font-family: 'Inter', system-ui, sans-serif;
 }
-.scan-form {
-    display: flex;
-    gap: 0.75rem;
-    margin: 1.5rem 0 2rem;
-}
-.scan-form input {
-    flex: 1;
-    padding: 0.75rem 1rem;
-    border: 1px solid #cbd5e1;
-    border-radius: 10px;
-    font-size: 1rem;
-}
-.validated-ticket {
-    background: #f0fdf4;
-    border: 1px solid #bbf7d0;
-    border-radius: 16px;
-    padding: 1.5rem;
-    box-shadow: 0 4px 12px rgba(22, 101, 52, 0.15); 
-    transition: box-shadow 0.3s ease;
-}
-
-    .validated-ticket:hover {
-        box-shadow: 0 6px 16px rgba(22, 101, 52, 0.25);
-    }
 
 .ticket-confirmed {
     font-weight: 700;
@@ -238,43 +157,12 @@
     color: #334155;
 }
 
-/* Camera QR Scanner */
-.qr-scanner {
-    margin: 1.5rem 0;
-    padding: 1rem;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    background: #f9fafb;
-    text-align: center;
-}
-
-    .qr-scanner h3 {
-        font-size: 1rem;
-        font-weight: 600;
-        color: #334155;
-        margin-bottom: 0.75rem;
-    }
-
-    .qr-scanner #reader {
-        width: 100%;
-        max-width: 400px;
-        margin: 0 auto;
-        border-radius: 8px;
-        overflow: hidden;
-    }
-
-
 /* ── Create forms ────────────────────────────────────── */
 .marshal-create {
     max-width: 640px;
     margin: 2rem auto;
     padding: 0 1.5rem;
     font-family: 'Inter', system-ui, sans-serif;
-}
-.create-form {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
 }
 .form-group {
     display: flex;
@@ -303,13 +191,7 @@
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 1rem;
 }
-.form-actions {
-    display: flex;
-    gap: 1rem;
-    margin-top: 0.5rem;
-}
 .text-danger { color: #dc2626; font-size: 0.85rem; }
-
 
 :root {
     --marshal-deep: #0f254c;
@@ -501,35 +383,9 @@ body {
     margin-bottom: 16px;
 }
 
-
 .marshal-dashboard {
     max-width: 900px;
     margin: 0 auto;
-}
-
-.dashboard-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    margin-bottom: 32px;
-}
-
-.header-greeting h1 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: #0f254c;
-    margin: 0 0 4px 0;
-}
-
-.header-greeting p {
-    color: #64748b;
-    font-size: 0.9rem;
-}
-
-.action-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 16px;
 }
 
 .action-card {
@@ -548,11 +404,6 @@ body {
 .action-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 18px rgba(0,0,0,0.07);
-}
-
-.card-icon {
-    font-size: 2rem;
-    margin-bottom: 4px;
 }
 
 .action-card h3 {

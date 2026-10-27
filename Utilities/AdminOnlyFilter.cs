@@ -1,8 +1,8 @@
-using _Tripfinity.Interfaces;
+using Tripfinity.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
-namespace _Tripfinity.Utilities;
+namespace Tripfinity.Utilities;
 public class AdminOnlyFilter : IAsyncActionFilter
 {
     private readonly IAdminService _adminService;
