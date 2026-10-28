@@ -22,6 +22,10 @@ public class WalletService : IWalletService
     private readonly ExternalTokenStore _tokenStore;
     private readonly AppDbContext _context;
 
+    // WalletStation (like FastChannel) reports an invalidated/obsolete token
+    // with response code "01".
+    private const string ObsoleteTokenCode = "01";
+
     public WalletService(HttpClient client,
         ILogger<WalletService> logger, IConfiguration config,
         AppDbContext context, ExternalTokenStore tokenStore)
@@ -33,13 +37,61 @@ public class WalletService : IWalletService
         _context = context;
     }
 
-    public async Task EnsureAuthenticatedAsync()
+    public async Task EnsureAuthenticatedAsync() =>
+        await SetAuthenticationAsync(forceRefresh: false);
+
+    /// <summary>
+    /// Discards the cached token and authenticates again, persisting the fresh
+    /// token in the external token store table.
+    /// </summary>
+    private async Task RefreshAuthenticationAsync()
+    {
+        _logger.LogWarning("WalletStation reported an obsolete token; acquiring a fresh token.");
+        await SetAuthenticationAsync(forceRefresh: true);
+    }
+
+    private async Task SetAuthenticationAsync(bool forceRefresh)
     {
         var token = await _tokenStore.GetTokenAsync(
-            ExternalTokenStore.Providers.WalletStation,AcquireTokenAsync);
+            ExternalTokenStore.Providers.WalletStation,
+            AcquireTokenAsync,
+            forceRefresh);
 
         _client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", token);
+    }
+
+    /// <summary>
+    /// Runs a WalletStation call once. When the provider answers with the
+    /// obsolete-token code ("01"), a fresh token is acquired through the auth
+    /// endpoint and the call is retried once.
+    /// </summary>
+    private async Task<T> ExecuteWithObsoleteTokenRetryAsync<T>(
+        string operation,
+        Func<Task<T>> execute,
+        Func<T, ResponseHeader?> getHeader)
+    {
+        var result = await execute();
+
+        if (getHeader(result)?.ResponseCode != ObsoleteTokenCode)
+            return result;
+
+        _logger.LogWarning(
+            "WalletStation {Operation} returned an obsolete token; retrying once with a fresh token.",
+            operation);
+
+        try
+        {
+            await RefreshAuthenticationAsync();
+            result = await execute();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "WalletStation token refresh after obsolete-token response failed for {Operation}", operation);
+        }
+
+        return result;
     }
     
     private async Task<(string Token, DateTime ExpiryDate)> AcquireTokenAsync()
@@ -174,6 +226,15 @@ public class WalletService : IWalletService
     {
         await EnsureAuthenticatedAsync();
         _logger.LogInformation("Creating Wallet...");
+
+        return await ExecuteWithObsoleteTokenRetryAsync(
+            "CreateAccount",
+            () => CreateWalletCoreAsync(createWallet),
+            result => result.ResponseHeader);
+    }
+
+    private async Task<CreateWalletResponse> CreateWalletCoreAsync(CreateWalletRequest createWallet)
+    {
         try
         {
             var requestBody = JsonConvert.SerializeObject(createWallet);
@@ -215,6 +276,15 @@ public class WalletService : IWalletService
     {
         await EnsureAuthenticatedAsync();
         _logger.LogInformation("Crediting Wallet...");
+
+        return await ExecuteWithObsoleteTokenRetryAsync(
+            "Credit",
+            () => CreditWalletCoreAsync(creditWallet),
+            result => result.ResponseHeader);
+    }
+
+    private async Task<WalletTransaction> CreditWalletCoreAsync(CreditWalletRequest creditWallet)
+    {
         try
         {
             var requestBody = JsonConvert.SerializeObject(creditWallet);
@@ -251,6 +321,15 @@ public class WalletService : IWalletService
     {
         await EnsureAuthenticatedAsync();
         _logger.LogInformation("Debit Wallet...");
+
+        return await ExecuteWithObsoleteTokenRetryAsync(
+            "Debit",
+            () => DebitWalletCoreAsync(debitWallet),
+            result => result.ResponseHeader);
+    }
+
+    private async Task<WalletTransaction> DebitWalletCoreAsync(DebitWalletRequest debitWallet)
+    {
         try
         {
             var requestBody = JsonConvert.SerializeObject(debitWallet);
@@ -287,6 +366,15 @@ public class WalletService : IWalletService
     {
         await EnsureAuthenticatedAsync();
         _logger.LogInformation("Get Balance...");
+
+        return await ExecuteWithObsoleteTokenRetryAsync(
+            "GetBalance",
+            () => GetBalanceCoreAsync(getBalance),
+            result => result.ResponseHeader);
+    }
+
+    private async Task<GetBalanceResponse> GetBalanceCoreAsync(GetBalanceRequest getBalance)
+    {
         try
         {
             var requestBody = JsonConvert.SerializeObject(getBalance);
@@ -322,6 +410,15 @@ public class WalletService : IWalletService
     {
         await EnsureAuthenticatedAsync();
         _logger.LogInformation("Get Transaction...");
+
+        return await ExecuteWithObsoleteTokenRetryAsync(
+            "GetTransaction",
+            () => GetTransactionCoreAsync(getTransaction),
+            result => result.ResponseHeader);
+    }
+
+    private async Task<GetTransactionResponse> GetTransactionCoreAsync(GetTransactionRequest getTransaction)
+    {
         try
         {
             var requestBody = JsonConvert.SerializeObject(getTransaction);
@@ -358,6 +455,15 @@ public class WalletService : IWalletService
     {
         await EnsureAuthenticatedAsync();
         _logger.LogInformation("Refund initiated");
+
+        return await ExecuteWithObsoleteTokenRetryAsync(
+            "DebitReversal",
+            () => RefundCoreAsync(refund),
+            result => result.ResponseHeader);
+    }
+
+    private async Task<RefundResponse> RefundCoreAsync(RefundRequest refund)
+    {
         try
         {
             var requestBody = JsonConvert.SerializeObject(refund);
@@ -422,6 +528,15 @@ public class WalletService : IWalletService
     {
         await EnsureAuthenticatedAsync();
         _logger.LogInformation("Get Transaction List");
+
+        return await ExecuteWithObsoleteTokenRetryAsync(
+            "GetTransactionList",
+            () => GetTransactionListCoreAsync(request),
+            result => result.ResponseHeader);
+    }
+
+    private async Task<GetTransactionListResponse> GetTransactionListCoreAsync(GetTransactionListRequest request)
+    {
         try
         {
             var requestBody = JsonConvert.SerializeObject(request);
@@ -459,6 +574,15 @@ public class WalletService : IWalletService
     {
         await EnsureAuthenticatedAsync();
         _logger.LogInformation("Name Enquiry...");
+
+        return await ExecuteWithObsoleteTokenRetryAsync(
+            "NameEnquiry",
+            () => WalletNameEnquiryCoreAsync(request),
+            result => result.ResponseHeader);
+    }
+
+    private async Task<WalletNameEnquiryResponse> WalletNameEnquiryCoreAsync(WalletNameEnquiryRequest request)
+    {
         try
         {
             var requestBody = JsonConvert.SerializeObject(request);
@@ -471,12 +595,23 @@ public class WalletService : IWalletService
             var rawContent = await response.Content.ReadAsStringAsync();
             var json = JObject.Parse(rawContent);
             var header = json["responseHeader"]?.ToObject<ResponseHeader>();
-            
-            if (header?.ResponseCode != "00")
+
+            if (header == null)
+            {
+                _logger.LogWarning("Name Enquiry returned no response header.");
+                return FailedNameEnquiry("Unable to load account details.");
+            }
+
+            if (header.ResponseCode != "00")
             {
                 _logger.LogWarning("Name Enquiry unsuccessful: {ResponseCode} {ResponseMessage}",
-                    header?.ResponseCode, header?.ResponseMessage);
-                return FailedNameEnquiry(header?.ResponseMessage ?? "Unable to load account details.");
+                    header.ResponseCode, header.ResponseMessage);
+
+                // Preserve the obsolete-token code so the caller can refresh
+                // the token and retry.
+                return header.ResponseCode == ObsoleteTokenCode
+                    ? FailedNameEnquiry(header)
+                    : FailedNameEnquiry(header.ResponseMessage ?? "Unable to load account details.");
             }
 
             var accountDetails = json["accountDetails"] as JObject;
@@ -516,6 +651,20 @@ public class WalletService : IWalletService
         new()
         {
             ResponseHeader = new ResponseHeader { ResponseCode = "99", ResponseMessage = message },
+            AccountNumber = null,
+            FirstName = null,
+            LastName = null,
+            CustomerId = null,
+            CustomerAlias = null,
+            BankCode = null,
+            BankName = null,
+            Bvn = null,
+        };
+
+    private static WalletNameEnquiryResponse FailedNameEnquiry(ResponseHeader header) =>
+        new()
+        {
+            ResponseHeader = header,
             AccountNumber = null,
             FirstName = null,
             LastName = null,
