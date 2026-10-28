@@ -13,7 +13,7 @@ public class AuthServiceTests
         new(context, wallet ?? new UnusedWalletService(), email ?? new FakeEmailService(), new FakeCipService(),
             NullLogger<AuthService>.Instance);
 
-    private static async Task<Tripfinity.Models.Tables.User> AddUnconfirmedUserWithTokenAsync(
+    private static async Task<Models.Tables.User> AddUnconfirmedUserWithTokenAsync(
         TestDatabase db, string email, string token, string? walletId = null)
     {
         var user = await db.AddUserAsync(email, "CorrectHorse1", confirmed: false, active: false, walletId: walletId);
