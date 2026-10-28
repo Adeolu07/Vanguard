@@ -11,7 +11,8 @@ public static class PublicUrl
     {
         var configured = configuration["App:PublicBaseUrl"];
         if (!string.IsNullOrWhiteSpace(configured)
-            && Uri.TryCreate(configured.TrimEnd('/') + "/", UriKind.Absolute, out var baseUri))
+            && Uri.TryCreate(configured.TrimEnd('/') + "/", UriKind.Absolute, out var baseUri)
+            && (baseUri.Scheme == Uri.UriSchemeHttp || baseUri.Scheme == Uri.UriSchemeHttps))
         {
             return new Uri(baseUri, path.TrimStart('/')).ToString();
         }
