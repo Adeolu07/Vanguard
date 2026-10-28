@@ -48,32 +48,47 @@ public class ExternalTokenStore
     /// Returns the stored token for a provider (or acquires one through
     /// <paramref name="acquireFreshToken"/> if none is unexpired).
     /// Flow per request: memory cache -> database -> provider auth endpoint.
+    /// When <paramref name="forceRefresh"/> is true, cached and stored tokens
+    /// are ignored and a fresh token is always acquired and persisted.
     /// </summary>
-    public async Task<string> GetTokenAsync(string provider, Func<Task<(string Token, DateTime ExpiryDate)>> acquireFreshToken)
+    public async Task<string> GetTokenAsync(
+        string provider,
+        Func<Task<(string Token, DateTime ExpiryDate)>> acquireFreshToken,
+        bool forceRefresh = false)
     {
         var cacheKey = $"Token:{provider}";
 
-        if (_cache.TryGetValue(cacheKey, out string? cached) && cached is not null)
+        if (!forceRefresh && _cache.TryGetValue(cacheKey, out string? cached) && cached is not null)
         {
             _logger.LogDebug("{Provider} token from memory cache", provider);
             return cached;
         }
 
-        var stored = await _context.ExternalApiTokens
-            .AsNoTracking()
-            .FirstOrDefaultAsync(t => t.Provider == provider && t.ExpiryDate > DateTime.Now);
-
-        if (stored is not null)
+        if (!forceRefresh)
         {
-            var plaintext = Unprotect(stored.Token);
-            _cache.Set(cacheKey, plaintext, stored.ExpiryDate - DateTime.Now);
-            _logger.LogDebug("{Provider} token from database", provider);
-            return plaintext;
+            var stored = await _context.ExternalApiTokens
+                .AsNoTracking()
+                .FirstOrDefaultAsync(t => t.Provider == provider && t.ExpiryDate > DateTime.Now);
+
+            if (stored is not null)
+            {
+                var plaintext = Unprotect(stored.Token);
+                _cache.Set(cacheKey, plaintext, stored.ExpiryDate - DateTime.Now);
+                _logger.LogDebug("{Provider} token from database", provider);
+                return plaintext;
+            }
         }
 
         await RefreshLock.WaitAsync();
         try
         {
+            // Re-check after acquiring the lock (another request may have just refreshed).
+            if (!forceRefresh && _cache.TryGetValue(cacheKey, out string? cachedAfterLock) && cachedAfterLock is not null)
+            {
+                _logger.LogDebug("{Provider} token from memory cache (after lock)", provider);
+                return cachedAfterLock;
+            }
+
             var (freshToken, expiresAt) = await acquireFreshToken();
 
             var existing = await _context.ExternalApiTokens.FirstOrDefaultAsync(t => t.Provider == provider);
